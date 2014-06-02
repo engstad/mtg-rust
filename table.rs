@@ -1,4 +1,4 @@
-#[deriving(Clone, PartialEq, TotalEq, PartialOrd, TotalOrd)]
+#[deriving(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TableElem {
     Empty,
     LStr(String),

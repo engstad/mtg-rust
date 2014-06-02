@@ -6,7 +6,7 @@
 use std::rc::Rc;
 
 
-#[deriving(Clone, Show, PartialEq, TotalEq, PartialOrd, TotalOrd)]
+#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Color { W, U, B, R, G } 
 
 impl Color {
@@ -25,7 +25,7 @@ impl Color {
     pub fn size() -> uint { 5 }
 }
 
-#[deriving(Clone, Show, PartialEq, TotalEq, PartialOrd, TotalOrd)]
+#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Dual  { WU, UB, BR, RG, GW, 
              WB, UR, BG, RW, GU }
 
@@ -104,7 +104,7 @@ impl Sub<Mana, Mana> for Mana {
     }
 }
 
-#[deriving(Clone, Show, PartialEq, TotalEq, PartialOrd, TotalOrd)]
+#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Land {
     Basic(Color),
     Shock(Dual),
@@ -189,7 +189,7 @@ impl Land {
     pub fn size() -> uint { Color::size() + 3 * Dual::size() }
 }
 
-#[deriving(Clone, Show, PartialEq, TotalEq, PartialOrd, TotalOrd)]
+#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Card {
     Land(Land),
     Spell
