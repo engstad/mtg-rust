@@ -9,6 +9,7 @@
 #![feature(globs)]
 
 extern crate debug;
+extern crate collections;
 
 use pile::{Pile, GenPile, PileInfo, DualPile, LandPile, ColoredPile};
 use std::os;
@@ -18,6 +19,7 @@ mod prob;
 mod pile;
 mod standard;
 mod table;
+
 
 //
 // Mulligan Rule: 
@@ -232,13 +234,10 @@ mod gen {
                         let r = deck.sub(&hand);
                         draw(info, &hand, draws, &r, |g| goal(g))
                     };
-                    //println!("hand: {} {:8.6} || {} {}", hand, d0, hand.spells(), hand.lands());
                     d0 * p0
                 })
                 .sum();
             
-            //println!("({:8.6}, {:8.6}, {:8.6})", 1.0 - keep, cast, mull);
-
             succ += mull * cast;
             mull *= 1.0 - keep;
         }

@@ -3,68 +3,209 @@
 // Specify the output type
 //#![crate_type = "lib"]
 
-use std::rc::Rc;
+use collections::treemap::{TreeMap};
+use std::iter::AdditiveIterator;
 
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Color { W, U, B, R, G } 
 
+trait Enum {
+    fn show(&self) -> String;
+    fn to_uint(&self) -> uint;
+    fn from_uint(n: uint) -> Option<Self>;
+}
+
 impl Color {
-    pub fn show(&self) -> String { 
+    fn size() -> uint { 5 }
+}
+
+impl Enum for Color {
+    fn show(&self) -> String { 
         match *self {
             W => "W", U => "U", B => "B", R => "R", G => "G"
         }.to_string()
     }
 
-    pub fn to_uint(&self) -> uint { *self as uint }
-    pub fn from_uint(n: uint) -> Color { 
+    fn to_uint(&self) -> uint { *self as uint }
+    fn from_uint(n: uint) -> Option<Color> { 
         match n {
-            0 => W, 1 => U, 2 => B, 3 => R, 4 => G, _ => fail!("wrong color")
+            0 => Some(W), 1 => Some(U), 2 => Some(B), 3 => Some(R), 4 => Some(G), 
+            _ => None
         }
     }
-    pub fn size() -> uint { 5 }
 }
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Dual  { WU, UB, BR, RG, GW, 
-             WB, UR, BG, RW, GU }
+pub enum Dual { 
+    WU, UB, BR, RG, GW, 
+    WB, UR, BG, RW, GU 
+}
 
 impl Dual {
-    pub fn show(&self) -> String { 
+    pub fn size() -> uint { 10 }
+}
+
+impl Enum for Dual {
+    fn show(&self) -> String { 
         match *self {
             WU => "WU", UB => "UB", BR => "BR", RG => "RG", GW => "GW",
             WB => "WB", UR => "UR", BG => "BG", RW => "RW", GU => "GU"
         }.to_string()
     }
 
-    pub fn to_uint(&self) -> uint { *self as uint }
-    pub fn from_uint(n: uint) -> Dual { 
+    fn to_uint(&self) -> uint { *self as uint }
+    fn from_uint(n: uint) -> Option<Dual> { 
         match n {
-            0 => WU, 1 => UB, 2 => BR, 3 => RG, 4 => GW, 
-            5 => WB, 6 => UR, 7 => BG, 8 => RW, 9 => GU, 
-            _ => fail!("wrong color")
+            0 => Some(WU), 1 => Some(UB), 2 => Some(BR), 3 => Some(RG), 4 => Some(GW), 
+            5 => Some(WB), 6 => Some(UR), 7 => Some(BG), 8 => Some(RW), 9 => Some(GU), 
+            _ => None
         }
     }
-    pub fn size() -> uint { 10 }
 }
 
-pub struct Mana([int, ..6]);
+#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Land {
+    Basic(Color),
+    Shock(Dual),
+    Gate(Dual),
+    Scry(Dual)
+}
+
+impl Land {
+    pub fn size() -> uint { Color::size() + 3 * Dual::size() }
+}
+
+impl Enum for Land {
+    fn show(&self) -> String { 
+        match *self {
+            Basic(c) => match c {
+                W => "Plains",
+                U => "Island",
+                B => "Swamp",
+                R => "Mountain",
+                G => "Forest"
+            },
+            Shock(d) => match d {
+                WU => "Hallowed Fountain", 
+		UB => "Watery Grave", 
+		BR => "Blood Crypt", 
+		RG => "Stomping Ground", 
+		GW => "Temple Garden", 
+		WB => "Godless Shrine",
+		UR => "Steam Vents",
+		BG => "Overgrown Tomb",
+		RW => "Sacred Foundry",
+		GU => "Breeding Pool"
+            },
+            Gate(d) => match d {
+                WU => "Azorius Guildgate",
+		UB => "Dimir Guildgate",
+		BR => "Rakdos Guildgate",
+		RG => "Gruul Guildgate",
+		GW => "Selesnya Guildgate",
+		WB => "Orzhov Guildgate",
+		UR => "Izzet Guildgate",
+		BG => "Golgari Guildgate",
+		RW => "Boros Guildgate",
+		GU => "Simic Guildgate"
+            },
+            Scry(d) => match d {
+                WU => "Temple of Enlightenment",
+		UB => "Temple of Deceit",
+		BR => "Temple of Malice",
+		RG => "Temple of Abandon",
+		GW => "Temple of Plenty",
+		WB => "Temple of Silence",
+		UR => "Temple of Epiphany",
+		BG => "Temple of Malady",
+		RW => "Temple of Triumph",
+		GU => "Temple of Mystery"
+            }
+        }.to_string()
+    }
+
+    fn to_uint(&self) -> uint { 
+        match *self {
+            Basic(c) => c.to_uint(),
+            Shock(d) => Color::size() + d.to_uint(),
+            Gate(d)  => Color::size() + Dual::size() + d.to_uint(),
+            Scry(d)  => Color::size() + 2u * Dual::size() + d.to_uint()
+        }
+    }
+
+    fn from_uint(d: uint) -> Option<Land> {
+        if d < Color::size() { 
+            Some(Basic(Enum::from_uint(d).unwrap()))
+        }
+        else if d < Color::size() + Dual::size() { 
+            Some(Shock(Enum::from_uint(d - Color::size()).unwrap()))
+        }
+        else if d < Color::size() + 2 * Dual::size() {
+            Some(Gate(Enum::from_uint(d - Color::size() - Dual::size()).unwrap()))
+        } 
+        else if d < Color::size() + 3 * Dual::size() {
+            Some(Scry(Enum::from_uint(d - Color::size() - 2 * Dual::size()).unwrap()))
+        }
+        else {
+            None
+        }
+    }
+}
+
+#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Card {
+    Land(Land),
+    Spell
+}
+
+impl Card {
+    pub fn size() -> uint { Land::size() + 1 }
+}
+
+impl Enum for Card {
+    fn show(&self) -> String { 
+        match *self {
+            Land(l) => l.show(),
+            Spell   => "Spell".to_string()
+        }
+    }
+
+    fn to_uint(&self) -> uint {
+        match *self {
+            Spell   => 0u,
+            Land(l) => l.to_uint() + 1u,
+        }
+    }
+
+    fn from_uint(v: uint) -> Option<Card> {
+        if v == 0u { Some(Spell) }
+        else {
+            match Enum::from_uint(v-1) {
+                Some(l) => Some(Land(l)),
+                None => None
+            }
+        }
+    }
+}
+
+pub struct Mana([uint, ..6]);
 
 impl Mana {
     pub fn zero() -> Mana { 
         Mana([0, 0, 0, 0, 0, 0]) 
     }
 
-    pub fn w(n : int) -> Mana { Mana([n, 0, 0, 0, 0, 0]) }
-    pub fn u(n : int) -> Mana { Mana([0, n, 0, 0, 0, 0]) }
-    pub fn b(n : int) -> Mana { Mana([0, 0, n, 0, 0, 0]) }
-    pub fn r(n : int) -> Mana { Mana([0, 0, 0, n, 0, 0]) }
-    pub fn g(n : int) -> Mana { Mana([0, 0, 0, 0, n, 0]) }
-    pub fn c(n : int) -> Mana { Mana([0, 0, 0, 0, 0, n]) }
+    pub fn w(n : uint) -> Mana { Mana([n, 0, 0, 0, 0, 0]) }
+    pub fn u(n : uint) -> Mana { Mana([0, n, 0, 0, 0, 0]) }
+    pub fn b(n : uint) -> Mana { Mana([0, 0, n, 0, 0, 0]) }
+    pub fn r(n : uint) -> Mana { Mana([0, 0, 0, n, 0, 0]) }
+    pub fn g(n : uint) -> Mana { Mana([0, 0, 0, 0, n, 0]) }
+    pub fn c(n : uint) -> Mana { Mana([0, 0, 0, 0, 0, n]) }
     
-    pub fn cmc(&self) -> int { 
+    pub fn cmc(&self) -> uint { 
         let Mana(v) = *self;
-        v.iter().fold(0, |a, &b| a + b) 
+        v.iter().map(|&x| x).sum()
     }
 
     pub fn show(&self) -> String { 
@@ -104,240 +245,14 @@ impl Sub<Mana, Mana> for Mana {
     }
 }
 
-#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Land {
-    Basic(Color),
-    Shock(Dual),
-    Gate(Dual),
-    Scry(Dual)
-}
-
-impl Land {
-    pub fn show(&self) -> String { 
-        match *self {
-            Basic(c) => match c {
-                W => "Plains",
-                U => "Island",
-                B => "Swamp",
-                R => "Mountain",
-                G => "Forest"
-            },
-            Shock(d) => match d {
-                WU => "Hallowed Fountain", 
-				UB => "Watery Grave", 
-				BR => "Blood Crypt", 
-				RG => "Stomping Ground", 
-				GW => "Temple Garden", 
-				WB => "Godless Shrine",
-				UR => "Steam Vents",
-				BG => "Overgrown Tomb",
-				RW => "Sacred Foundry",
-				GU => "Breeding Pool"
-            },
-            Gate(d) => match d {
-                WU => "Azorius Guildgate",
-				UB => "Dimir Guildgate",
-				BR => "Rakdos Guildgate",
-				RG => "Gruul Guildgate",
-				GW => "Selesnya Guildgate",
-				WB => "Orzhov Guildgate",
-				UR => "Izzet Guildgate",
-				BG => "Golgari Guildgate",
-				RW => "Boros Guildgate",
-				GU => "Simic Guildgate"
-            },
-            Scry(d) => match d {
-                WU => "Temple of Enlightenment",
-				UB => "Temple of Deceit",
-				BR => "Temple of Malice",
-				RG => "Temple of Abandon",
-				GW => "Temple of Plenty",
-				WB => "Temple of Silence",
-				UR => "Temple of Epiphany",
-				BG => "Temple of Malady",
-				RW => "Temple of Triumph",
-				GU => "Temple of Mystery"
-            }
-        }.to_string()
-    }
-
-    pub fn to_uint(&self) -> uint { match *self {
-            Basic(c) => c.to_uint(),
-            Shock(d) => Color::size() + d.to_uint(),
-            Gate(d)  => Color::size() + Dual::size() + d.to_uint(),
-            Scry(d)  => Color::size() + 2u * Dual::size() + d.to_uint()
-        }
-    }
-    pub fn from_uint(d: uint) -> Land {
-        if d < Color::size() { 
-            Basic(Color::from_uint(d)) 
-        }
-        else if d < Color::size() + Dual::size() { 
-            Shock(Dual::from_uint(d - Color::size()))
-        }
-        else if d < Color::size() + 2 * Dual::size() {
-            Gate(Dual::from_uint(d - Color::size() - Dual::size()))
-        } 
-        else if d < Color::size() + 3 * Dual::size() {
-            Scry(Dual::from_uint(d - Color::size() - 2 * Dual::size()))
-        }
-        else {
-            fail!("Out of range")
-        }
-    }
-
-    pub fn size() -> uint { Color::size() + 3 * Dual::size() }
-}
-
-#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Card {
-    Land(Land),
-    Spell
-}
-
-impl Card {
-    pub fn show(&self) -> String { 
-        match *self {
-            Land(l) => l.show(),
-            Spell   => "Spell".to_string()
-        }
-    }
-
-    pub fn to_uint(&self) -> uint {
-        match *self {
-            Spell   => 0u,
-            Land(l) => l.to_uint() + 1u,
-        }
-    }
-
-    pub fn from_uint(v: uint) -> Card {
-        if v == 0u { Spell }
-        else { Land(Land::from_uint(v - 1u)) }
-    }
-
-    pub fn size() -> uint { Land::size() + 1 }
-}
-
-
-
-
-type Map = Option<Rc<Node>>;
-
-struct Node {
-    key   : Card,
-    value : int, 
-    left  : Map,
-    right : Map
-}
-
-pub fn lookup(m: Map, k:Card) -> Option<int> {
-    match m {
-        None =>               { None }
-        Some(n) => {
-            let key = n.key;
-            let val = n.value;
-            let lft = n.left.clone();
-            let rgt = n.right.clone();
-            
-            if k == key { 
-                Some(val) 
-            }
-            else if k < key { 
-                lookup(lft, k) 
-            }
-            else { 
-                lookup(rgt, k) 
-            }
-        }
-    }
-}
-
-pub fn update(m: Map, k:Card, f: |Option<int>| -> int) -> Map {
-    match m {
-        None    => 
-            { Some(Rc::new(Node{key:k, value:f(None), left:None, right:None})) }
-        Some(n) => {
-            let key = n.key;
-            let val = n.value;
-            if k == key { 
-                Some(Rc::new(Node{key:k, value:f(Some(val)), 
-                                  left:n.left.clone(), right:n.right.clone()}))
-            } else if k < key {
-                let l = update(n.left.clone(), k, f);
-                Some(Rc::new(Node{key:key, value:val, 
-                                  left: l, right: n.right.clone()}))
-            } else {
-                let r = update(n.right.clone(), k, f);
-                Some(Rc::new(Node{key:key, value:val, 
-                                  left: n.left.clone(), right: r}))
-            }
-        }
-    }
-}                
-
-pub fn insert(m: Map, k: Card, n : int) -> Map {
-    update(m, k, |oi:Option<int>| { match oi { None => n, Some(v) => v + n }})
-}
-
-pub fn remove(m: Map, k: Card, n : int) -> Map {
-    if n > 0 {
-        update(m, k, |oi:Option<int>| { 
-                match oi { 
-                    None => { fail!("impossible"); }
-                    Some(v) => { 
-                        if v > n { v - n } else { fail!("impossible"); }
-                    }
-                }
-            })
-    }
-    else {
-        m
-    }
-}
-
-pub fn fold<A>(m: Map, acc : A, f: fn (A, Card, int) -> A) -> A {
-    match m {
-        None => { acc }
-        Some(n) => {
-            let key = n.key;
-            let val = n.value;
-            let lft = n.left.clone();
-            let rgt = n.right.clone();
-            
-            let acc = fold(lft, acc, f);
-            let acc = f(acc, key, val);
-            let acc = fold(rgt, acc, f);
-            acc
-        }
-    }
-}
-
-pub fn iter<B>(m: Map, f: fn (Card, int) -> B) {
-    match m {
-        None => { }
-        Some(n) => {
-            let key = n.key;
-            let val = n.value;
-            let lft = n.left.clone();
-            let rgt = n.right.clone();
-            
-            iter(lft, f);
-            f(key, val);
-            iter(rgt, f)
-        }
-    }
-}
-
-
 //
 // Representing a set of cards
 //  - Must quickly know how many of a particular card there is
 //
-struct Cards(Map);
 
 pub fn test()
 {
-	let m = Mana::b(2) + Mana::u(1) + Mana::c(2);
+    let m = Mana::b(2) + Mana::u(1) + Mana::c(2);
     
     println!("cmc({}) = {}", m.pretty(), m.cmc());
     
@@ -348,19 +263,31 @@ pub fn test()
     println!("{:12} : {:20s}, id={}", l2.to_str(), l2.show(), l2.to_uint() );
     println!("Cmp: {}", (Shock(UB) > Basic(U)).to_str());
     
-    let ls = None;
-    let ls = insert(ls, Land(Shock(BR)), 4);
-    let ls = insert(ls, Land(Shock(UB)), 4);
-    let ls = insert(ls, Land(Shock(UR)), 4);
-    let ls = insert(ls, Land(Scry(BR)), 4);
-    let ls = insert(ls, Land(Scry(UB)), 4);
-    let ls = insert(ls, Land(Scry(UR)), 4);
-    let ls = insert(ls, Land(Basic(U)), 2);
-    let ls = insert(ls, Spell, 36);
+    let mut ls = TreeMap::<Card, int>::new();
+    ls.insert(Land(Shock(BR)), 4);
+    ls.insert(Land(Shock(UB)), 4);
+    ls.insert(Land(Shock(UR)), 4);
+    ls.insert(Land(Scry(BR)), 4);
+    ls.insert(Land(Scry(UB)), 4);
+    ls.insert(Land(Scry(UR)), 4);
+    ls.insert(Land(Basic(U)), 2);
+    ls.insert(Spell, 36);
     
-    let ls = remove(ls, Land(Shock(UR)), 2);
+    {
+        let key = Land(Shock(UR));
+        let rem = match ls.find_mut(&key) {
+            Some(v) => {
+                if *v > 2 { *v -= 2; None } 
+                else if *v == 2 { Some(&key) } 
+                else { None }
+            },                
+            _ => None
+        };
+        match rem { Some(k) => { ls.remove(k); },
+                    None => () }
+    }
     
-    fn conc(acc:String, card:Card, num:int) -> String {
+    let conc = |acc:String, (&card, &num): (&Card, &int)| -> String {
         if acc == "".to_string() {
             format!("{:2d} {:-30s} {:2}", num, card.show(), card.to_uint())
         } else {
@@ -368,6 +295,6 @@ pub fn test()
         }
     };
     
-    let res = fold(ls, "".to_string(), conc);
+    let res = ls.iter().fold("".to_string(), conc);
     println!("Res:\n{}", res);
 }
