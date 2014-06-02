@@ -1,11 +1,5 @@
-// Crate ID
-//#![crate_id = "standard"]
-// Specify the output type
-//#![crate_type = "lib"]
-
 use collections::treemap::{TreeMap};
 use std::iter::AdditiveIterator;
-
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Color { W, U, B, R, G } 

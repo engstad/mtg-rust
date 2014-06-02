@@ -51,7 +51,7 @@ mod single {
         if draws > 0 {
             ColoredPile::iter(draws)
                 .filter(|draw| deck.has(draw) && goal(&(hand.add(draw))))
-                .map(|draw| deck.p(&draw))
+                .map(|draw| deck.prob_draw(&draw))
                 .sum()
         } else {
             prob::cond(goal(hand))
@@ -65,14 +65,15 @@ mod single {
         
         // Probability of keeping 
         let keep = range_inclusive(lands_min, lands_max)
-            .map(|lands| deck.p_lands(lands, hand_size - lands))
+            .map(|lands| deck.prob_land(lands, hand_size - lands))
             .sum();
         
         // Probability of casting (where we auto-fail if we don't have the lands)
         let cast = ColoredPile::iter(hand_size)
             .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
             .filter(|hand| deck.has(hand))
-            .map(|hand| deck.p(&hand) * draw(&hand, draws, &(deck.sub(&hand)), |g| goal(g)))
+            .map(|hand| (deck.prob_draw(&hand) * 
+                         draw(&hand, draws, &deck.sub(&hand), |g| goal(g))))
             .sum();
 
         // So cast * keep = chance of reaching goals, *given* no mulligan.
@@ -122,7 +123,7 @@ mod dual {
         if draws > 0 {
             DualPile::iter(draws)
                 .filter(|draw| deck.has(draw) && goal(&hand.add(draw)))
-                .map(|draw| deck.p(&draw))
+                .map(|draw| deck.prob_draw(&draw))
                 .sum()
         } else {
             prob::cond(goal(hand))
@@ -139,14 +140,14 @@ mod dual {
             
             // Probability of keeping 
             let keep = range_inclusive(lands_min, lands_max)
-                .map(|lands| deck.p_lands(lands, hand_size - lands))
+                .map(|lands| deck.prob_land(lands, hand_size - lands))
                 .sum();
             
             // Probability of casting
             let cast = DualPile::iter(hand_size)
                 .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
                 .filter(|hand| deck.has(hand))
-                .map(|hand| deck.p(&hand) * draw(&hand, draws, &deck.sub(&hand), 
+                .map(|hand| deck.prob_draw(&hand) * draw(&hand, draws, &deck.sub(&hand), 
                                                  |g| goal(g)))
                 .sum();
 
@@ -200,7 +201,7 @@ mod gen {
         if draws > 0 {
             GenPile::iter(draws, info)
                 .filter(|draw| deck.has(draw) && goal(&(hand.add(draw))))
-                .map(|draw| deck.p(&draw))
+                .map(|draw| deck.prob_draw(&draw))
                 .sum()
         } else {
             prob::cond(goal(hand)) 
@@ -217,11 +218,7 @@ mod gen {
             
             // Probability of keeping 
             let keep = range_inclusive(lands_min, lands_max)
-                .map(|lands| {
-                    let p = deck.p_lands(lands, hand_size - lands);
-                    //println!("land: {} {:8.6}", lands, p);
-                    p
-                })
+                .map(|lands| deck.prob_land(lands, hand_size - lands))
                 .sum();
             
             // Probability of casting
@@ -229,7 +226,7 @@ mod gen {
                 .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
                 .filter(|hand| deck.has(hand))
                 .map(|hand| {
-                    let d0 = deck.p(&hand);
+                    let d0 = deck.prob_draw(&hand);
                     let p0 = {
                         let r = deck.sub(&hand);
                         draw(info, &hand, draws, &r, |g| goal(g))
@@ -262,33 +259,67 @@ pub fn b_minc(bh: &mut BenchHarness) {
 
 #[main]
 fn main() {
-    use std::iter::{range_inclusive};
-
     let args = os::args();
 
     if args.len() < 2 {
         
         if true {
+            #[inline(always)]
+            fn min(a:uint, b:uint) -> uint { if a < b { a } else { b } };
             fn is_land(idx: uint) -> bool { idx == 0 || idx == 1 || idx == 2 };
-            let info = PileInfo::new(5, is_land);
-            let mut it = GenPile::iter(4, info); 
+            fn can_cast(la:uint, lb:uint, lab:uint, 
+                        a: uint, b: uint, x: uint) -> bool {
+                let ta = min(la, a);
+                let (la, a) = (la - ta, a - ta);
 
-            println!("{}", it.collect::<Vec<GenPile>>().len());
+                let tb = min(lb, b);
+                let (lb, b) = (lb - tb, b - tb);
 
-            for i in range_inclusive(1u, 4u) {
-                let deck = GenPile::new(vec![9, 8, 0, i, 23-i], info);
-                let g0 = |hand:&GenPile| { hand.get(1) > 0 && hand.get(3) > 0};
-                let g1 = |hand:&GenPile| { hand.get(3) > 0};
-                let g2 = |hand:&GenPile| { hand.get(1) > 0};
-                
-                let r0 = gen::turn0(info, &deck, 0, g0);
-                let r1 = gen::turn0(info, &deck, 0, g1);
-                let r2 = gen::turn0(info, &deck, 0, g2);
-                
-                print!("P[L] = {:6.2}%, ", r2 * 100.0);
-                print!("P[L&S] = {:6.2}%, ", r0 * 100.0);
-                print!("P[S] = {:6.2}%, ", r1 * 100.0);
-                println!("P[L|S] = {:6.2}% [{:6.2}%]", (r0 / r1) * 100.0, (1.0-r0/r1)*100.0);
+                let ab = a+b;
+                let tab = min(lab, ab);
+                let (lab, ab) = (lab - tab, ab - tab);
+
+                if ab > 0 { false }
+                else {
+                    let lx = la + lb + lab;
+                    x <= lx
+                }
+            }
+
+            {                
+                assert!( can_cast(1, 0, 1,   1, 0, 0));
+                assert!( can_cast(1, 0, 1,   0, 1, 0));
+                assert!( can_cast(1, 0, 1,   0, 0, 1));
+                assert!( can_cast(1, 0, 1,   2, 0, 0));
+                assert!( can_cast(1, 0, 1,   1, 1, 0));
+                assert!(!can_cast(1, 0, 1,   0, 2, 0));
+                assert!( can_cast(1, 0, 1,   1, 0, 1));
+                assert!( can_cast(1, 0, 1,   0, 1, 1));
+                assert!( can_cast(1, 0, 1,   0, 0, 2));
+                assert!(!can_cast(1, 0, 1,   1, 1, 1));
+                assert!(!can_cast(1, 0, 1,   0, 1, 2));
+                assert!(!can_cast(1, 0, 1,   1, 0, 2));
+                assert!(!can_cast(1, 0, 1,   0, 0, 3));
+            }
+
+            {
+                // a,b,c,ab,bc,ac,s,o
+                fn is_land(idx: uint) -> bool { idx < 6  };
+                let info = PileInfo::new(8, is_land);
+
+                let deck = GenPile::new(vec![1,0,0,8,7,8,4,32], info);
+                let g0 = |hand:&GenPile| { 
+                    can_cast(hand.get(0) + hand.get(3) + hand.get(5), 
+                             hand.get(1) + hand.get(2) + hand.get(4),
+                             0,
+                             2, 0, 1) && hand.get(6) > 0
+                };
+                let g1 = |hand:&GenPile| { hand.lands() >= 3 };
+                let r0 = gen::turn0(info, &deck, 2, g0);
+                let r1 = gen::turn0(info, &deck, 2, g1);
+                println!("P[R]   = {:6.2}% ", r0 * 100.0);
+                println!("P[L]   = {:6.2}% ", r1 * 100.0);
+                println!("P[R|L] = {:6.2}% ", r0 / r1 * 100.0);
             }
         }
 

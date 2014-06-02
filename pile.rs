@@ -14,22 +14,14 @@ pub trait Pile {
     fn add(&self, &Self) -> Self;
     fn sub(&self, &Self) -> Self;
 
-    fn p(&self, draw: &Self) -> f64 {
-	    let mut nT:uint = 0;
-	    let mut kT:uint = 0;
-	    let mut cT = 1.0f64;
-   
-	    let nlen = self.keys();
+    fn prob_draw(&self, draw: &Self) -> f64 {
+        let (nT, kT, cT) =             
+            range(0, self.keys())
+            .map(|i| (self.get(i), draw.get(i)))
+            .fold((0, 0, 1.0), 
+                  |(nT, kT, cT), (nI, kI)| (nT + nI, kT + kI, cT * prob::c(nI, kI)));
 
-	    for i in range(0, nlen) {
-            let nI = self.get(i);
-            let kI = draw.get(i);
-		    nT = nT + nI;
-		    kT = kT + kI;
-		    cT *= prob::c(nI, kI);
-	    }
-
-	    cT / prob::c(nT, kT)
+        cT / prob::c(nT, kT)
     }
 }
 
@@ -37,7 +29,7 @@ pub trait LandPile {
     fn spells(&self) -> uint;
     fn lands(&self) -> uint;
 
-    fn p_lands(&self, l:uint, s:uint) -> f64 {
+    fn prob_land(&self, l:uint, s:uint) -> f64 {
         let L = self.lands();
         let S = self.spells();
         prob::h(L, l, S, s)
