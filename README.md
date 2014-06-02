@@ -1,7 +1,7 @@
 # Magic Math in Rust
 
 This is an implementation of various math and probability theory written in 
-[Rust][http://www.rust-lang.org].
+[Rust](http://www.rust-lang.org).
 
 ## Quick start
 
