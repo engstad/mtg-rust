@@ -11,7 +11,7 @@
 extern crate debug;
 extern crate collections;
 
-use pile::{Pile, GenPile, PileInfo, DualPile, LandPile, ColoredPile};
+use pile::{KvMap, GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use std::os;
 use table::{Table, LStr, RStr, Int, UInt, Empty};
 
@@ -41,7 +41,7 @@ fn mull_rule(hand_size: uint) -> (uint, uint) {
 }
 
 mod single {
-    use pile::{Pile, LandPile, ColoredPile};
+    use pile::{KvMap, LandPile, ColoredPile};
     use std::iter::{range_inclusive, AdditiveIterator};
     use prob;
 
@@ -113,7 +113,7 @@ mod single {
 // ================================================================================
 
 mod dual {
-    use pile::{Pile, LandPile, DualPile};
+    use pile::{KvMap, LandPile, DualPile};
     use std::iter::{range_inclusive, AdditiveIterator};
     use prob;
 
@@ -191,12 +191,12 @@ mod dual {
 // ================================================================================
 
 mod gen {
-    use pile::{Pile, PileInfo, LandPile, GenPile};
+    use pile::{KvMap, GenPileKeys, LandPile, GenPile};
     use std::iter::{range_inclusive, AdditiveIterator};
     use prob;
 
-    fn draw(info: PileInfo, hand: &GenPile, draws: uint, deck: &GenPile, 
-            goal: |&GenPile|->bool) -> f64 
+    fn draw(info: GenPileKeys, hand: &GenPile<GenPileKeys>, draws: uint, deck: &GenPile<GenPileKeys>, 
+            goal: |&GenPile<GenPileKeys>|->bool) -> f64 
     {
         if draws > 0 {
             GenPile::iter(draws, info)
@@ -208,8 +208,8 @@ mod gen {
         }
     }        
 
-    pub fn turn0(info: PileInfo, deck: &GenPile, draws: uint, 
-                 goal: |&GenPile|->bool) -> f64 {
+    pub fn turn0(info: GenPileKeys, deck: &GenPile<GenPileKeys>, draws: uint, 
+                 goal: |&GenPile<GenPileKeys>|->bool) -> f64 {
         let mut mull = 1.0;
         let mut succ = 0.0;
         
@@ -264,6 +264,16 @@ fn main() {
     if args.len() < 2 {
         
         if true {
+            let v = vec![0,1,2,2,2,3,3];
+            let mut n = vec![0,1,2,2];
+            loop {
+                println!("{}", n);
+                if !pile::mc_next(v.as_slice(), n.as_mut_slice()) { break }
+            } 
+
+            let cs = ColoredPile::new(2, 0, 0);
+            println!("{}", cs.get(pile::C));
+
             #[inline(always)]
             fn min(a:uint, b:uint) -> uint { if a < b { a } else { b } };
             fn is_land(idx: uint) -> bool { idx == 0 || idx == 1 || idx == 2 };
@@ -305,16 +315,16 @@ fn main() {
             {
                 // a,b,c,ab,bc,ac,s,o
                 fn is_land(idx: uint) -> bool { idx < 6  };
-                let info = PileInfo::new(8, is_land);
+                let info = GenPileKeys::new(8, is_land);
 
                 let deck = GenPile::new(vec![1,0,0,8,7,8,4,32], info);
-                let g0 = |hand:&GenPile| { 
+                let g0 = |hand:&GenPile<GenPileKeys>| { 
                     can_cast(hand.get(0) + hand.get(3) + hand.get(5), 
                              hand.get(1) + hand.get(2) + hand.get(4),
                              0,
                              2, 0, 1) && hand.get(6) > 0
                 };
-                let g1 = |hand:&GenPile| { hand.lands() >= 3 };
+                let g1 = |hand:&GenPile<GenPileKeys>| { hand.lands() >= 3 };
                 let r0 = gen::turn0(info, &deck, 2, g0);
                 let r1 = gen::turn0(info, &deck, 2, g1);
                 println!("P[R]   = {:6.2}% ", r0 * 100.0);

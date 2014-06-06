@@ -1,31 +1,49 @@
 use collections::treemap::{TreeMap};
 use std::iter::AdditiveIterator;
 
+pub trait Keys<K> {
+    fn size(&self) -> uint;
+    fn to_uint(&self, K) -> uint;
+    fn from_uint(&self, n: uint) -> K;
+    fn iter<'a>(&'a self) -> KeysIterator<'a, K> {
+        KeysIterator { keys : self, idx : 0 }
+    }
+}
+
+struct KeysIterator<'a, K> {
+    keys : &'a Keys<K>,
+    idx : uint
+}
+
+impl<'a,K> Iterator<K> for KeysIterator<'a, K> {
+    fn next(&mut self) -> Option<K> {
+        let i = self.idx;
+        self.idx += 1;
+        if i < self.keys.size() {
+            Some(self.keys.from_uint(i))
+        }
+        else {
+            None
+        }
+    }
+}
+
+fn to_vec<K>(k : &Keys<K>) -> Vec<K> {
+    k.iter().collect::<Vec<K>>()
+}
+
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Color { W, U, B, R, G } 
 
-trait Enum {
-    fn show(&self) -> String;
-    fn to_uint(&self) -> uint;
-    fn from_uint(n: uint) -> Option<Self>;
-}
+struct ColorKeys;
 
-impl Color {
-    fn size() -> uint { 5 }
-}
-
-impl Enum for Color {
-    fn show(&self) -> String { 
-        match *self {
-            W => "W", U => "U", B => "B", R => "R", G => "G"
-        }.to_string()
-    }
-
-    fn to_uint(&self) -> uint { *self as uint }
-    fn from_uint(n: uint) -> Option<Color> { 
+impl Keys<Color> for ColorKeys {
+    fn size(&self) -> uint { 5 }
+    fn to_uint(&self, c:Color) -> uint { c as uint }
+    fn from_uint(&self, n:uint) -> Color { 
         match n {
-            0 => Some(W), 1 => Some(U), 2 => Some(B), 3 => Some(R), 4 => Some(G), 
-            _ => None
+            0 => W, 1 => U, 2 => B, 3 => R, 4 => G, 
+            _ => fail!("out of range")
         }
     }
 }
@@ -36,26 +54,18 @@ pub enum Dual {
     WB, UR, BG, RW, GU 
 }
 
-impl Dual {
-    pub fn size() -> uint { 10 }
-}
+struct DualKeys;
 
-impl Enum for Dual {
-    fn show(&self) -> String { 
-        match *self {
-            WU => "WU", UB => "UB", BR => "BR", RG => "RG", GW => "GW",
-            WB => "WB", UR => "UR", BG => "BG", RW => "RW", GU => "GU"
-        }.to_string()
-    }
-
-    fn to_uint(&self) -> uint { *self as uint }
-    fn from_uint(n: uint) -> Option<Dual> { 
+impl Keys<Dual> for DualKeys {
+    fn size(&self) -> uint { 10 }
+    fn to_uint(&self, c:Dual) -> uint { c as uint }
+    fn from_uint(&self, n:uint) -> Dual { 
         match n {
             0 => Some(WU), 1 => Some(UB), 2 => Some(BR), 3 => Some(RG), 4 => Some(GW), 
             5 => Some(WB), 6 => Some(UR), 7 => Some(BG), 8 => Some(RW), 9 => Some(GU), 
             _ => None
-        }
-    }
+        }.unwrap()
+    }    
 }
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
@@ -67,10 +77,6 @@ pub enum Land {
 }
 
 impl Land {
-    pub fn size() -> uint { Color::size() + 3 * Dual::size() }
-}
-
-impl Enum for Land {
     fn show(&self) -> String { 
         match *self {
             Basic(c) => match c {
@@ -118,34 +124,42 @@ impl Enum for Land {
             }
         }.to_string()
     }
+}
 
-    fn to_uint(&self) -> uint { 
-        match *self {
-            Basic(c) => c.to_uint(),
-            Shock(d) => Color::size() + d.to_uint(),
-            Gate(d)  => Color::size() + Dual::size() + d.to_uint(),
-            Scry(d)  => Color::size() + 2u * Dual::size() + d.to_uint()
+struct LandKeys;
+
+impl Keys<Land> for LandKeys {
+    fn size(&self) -> uint { ColorKeys.size() + 3 * DualKeys.size() }
+
+    fn to_uint(&self, l:Land) -> uint { 
+        match l {
+            Basic(c) => ColorKeys.to_uint(c),
+            Shock(d) => ColorKeys.size() + DualKeys.to_uint(d),
+            Gate(d)  => ColorKeys.size() + DualKeys.size() + DualKeys.to_uint(d),
+            Scry(d)  => ColorKeys.size() + 2u * DualKeys.size() + DualKeys.to_uint(d)
         }
     }
 
-    fn from_uint(d: uint) -> Option<Land> {
-        if d < Color::size() { 
-            Some(Basic(Enum::from_uint(d).unwrap()))
+    fn from_uint(&self, d: uint) -> Land {
+        if d < ColorKeys.size() { 
+            Basic(ColorKeys.from_uint(d))
         }
-        else if d < Color::size() + Dual::size() { 
-            Some(Shock(Enum::from_uint(d - Color::size()).unwrap()))
+        else if d < ColorKeys.size() + DualKeys.size() { 
+            Shock(DualKeys.from_uint(d - ColorKeys.size()))
         }
-        else if d < Color::size() + 2 * Dual::size() {
-            Some(Gate(Enum::from_uint(d - Color::size() - Dual::size()).unwrap()))
+        else if d < ColorKeys.size() + 2 * DualKeys.size() {
+            Gate(DualKeys.from_uint(d - ColorKeys.size() - DualKeys.size()))
         } 
-        else if d < Color::size() + 3 * Dual::size() {
-            Some(Scry(Enum::from_uint(d - Color::size() - 2 * Dual::size()).unwrap()))
+        else if d < ColorKeys.size() + 3 * DualKeys.size() {
+            Scry(DualKeys.from_uint(d - ColorKeys.size() - 2 * DualKeys.size()))
         }
         else {
-            None
+            fail!("out of range")
         }
     }
 }
+
+
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Card {
@@ -154,34 +168,34 @@ pub enum Card {
 }
 
 impl Card {
-    pub fn size() -> uint { Land::size() + 1 }
+    fn show(&self) -> String {
+        match *self { Land(l) => l.show(), _ => "Spell".to_string() }
+    }
 }
 
-impl Enum for Card {
-    fn show(&self) -> String { 
-        match *self {
-            Land(l) => l.show(),
-            Spell   => "Spell".to_string()
-        }
-    }
+struct CardKeys;
 
-    fn to_uint(&self) -> uint {
-        match *self {
+impl Keys<Card> for CardKeys {
+    fn size(&self) -> uint { 1 + 35 }
+    fn to_uint(&self, c:Card) -> uint {
+        match c {
             Spell   => 0u,
-            Land(l) => l.to_uint() + 1u,
+            Land(l) => LandKeys.to_uint(l) + 1u,
         }
     }
-
-    fn from_uint(v: uint) -> Option<Card> {
-        if v == 0u { Some(Spell) }
+    fn from_uint(&self, v:uint) -> Card { 
+        if v < 1u { 
+            Spell 
+        }
+        else if v < self.size() {
+            Land(LandKeys.from_uint(v - 1u))
+        }
         else {
-            match Enum::from_uint(v-1) {
-                Some(l) => Some(Land(l)),
-                None => None
-            }
+            fail!("out of range")
         }
     }
 }
+
 
 pub struct Mana([uint, ..6]);
 
@@ -246,6 +260,11 @@ impl Sub<Mana, Mana> for Mana {
 
 pub fn test()
 {
+    println!("Colors: {}", to_vec(&ColorKeys));
+    println!("Duals : {}", to_vec(&DualKeys));
+    //println!("Lands : {}", LandKeys.all());
+    //println!("Cards : {}", CardKeys.all());
+
     let m = Mana::b(2) + Mana::u(1) + Mana::c(2);
     
     println!("cmc({}) = {}", m.pretty(), m.cmc());
@@ -253,8 +272,8 @@ pub fn test()
     let l1 = Shock(UB);
     let l2 = Scry(BR);
     
-    println!("{:12} : {:20s}, id={}", l1.to_str(), l1.show(), l1.to_uint() );
-    println!("{:12} : {:20s}, id={}", l2.to_str(), l2.show(), l2.to_uint() );
+    println!("{:12} : {:20s}, id={}", l1.to_str(), l1.show(), LandKeys.to_uint(l1) );
+    println!("{:12} : {:20s}, id={}", l2.to_str(), l2.show(), LandKeys.to_uint(l2) );
     println!("Cmp: {}", (Shock(UB) > Basic(U)).to_str());
     
     let mut ls = TreeMap::<Card, int>::new();
@@ -283,9 +302,9 @@ pub fn test()
     
     let conc = |acc:String, (&card, &num): (&Card, &int)| -> String {
         if acc == "".to_string() {
-            format!("{:2d} {:-30s} {:2}", num, card.show(), card.to_uint())
+            format!("{:2d} {:-30s}", num, card.show())
         } else {
-            format!("{}\n{:2d} {:-30s} {:2}", acc, num, card.show(), card.to_uint())
+            format!("{}\n{:2d} {:-30s}", acc, num, card.show())
         }
     };
     
