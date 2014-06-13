@@ -7,6 +7,7 @@
 // #![feature(macro_rules)]
 // #![feature(simd)]
 #![feature(globs)]
+#![feature(macro_rules)]
 
 extern crate debug;
 extern crate collections;
@@ -19,7 +20,7 @@ mod prob;
 mod pile;
 mod standard;
 mod table;
-
+mod perm;
 
 //
 // Mulligan Rule: 
@@ -195,20 +196,21 @@ mod gen {
     use std::iter::{range_inclusive, AdditiveIterator};
     use prob;
 
-    fn draw(info: GenPileKeys, hand: &GenPile<GenPileKeys>, draws: uint, deck: &GenPile<GenPileKeys>, 
+    fn draw(hand: &GenPile<GenPileKeys>, draws: uint, 
+            deck: &GenPile<GenPileKeys>, 
             goal: |&GenPile<GenPileKeys>|->bool) -> f64 
     {
         if draws > 0 {
-            GenPile::iter(draws, info)
-                .filter(|draw| deck.has(draw) && goal(&(hand.add(draw))))
-                .map(|draw| deck.prob_draw(&draw))
+            deck.subsets(draws).iter()
+                .filter(|&draw| goal(&hand.add(draw)))
+                .map(|draw| deck.prob_draw(draw))
                 .sum()
         } else {
             prob::cond(goal(hand)) 
         }
     }        
 
-    pub fn turn0(info: GenPileKeys, deck: &GenPile<GenPileKeys>, draws: uint, 
+    pub fn turn0(deck: &GenPile<GenPileKeys>, draws: uint, 
                  goal: |&GenPile<GenPileKeys>|->bool) -> f64 {
         let mut mull = 1.0;
         let mut succ = 0.0;
@@ -222,14 +224,13 @@ mod gen {
                 .sum();
             
             // Probability of casting
-            let cast = GenPile::iter(hand_size, info)
+            let cast = deck.subsets(hand_size).iter()
                 .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
-                .filter(|hand| deck.has(hand))
                 .map(|hand| {
-                    let d0 = deck.prob_draw(&hand);
+                    let d0 = deck.prob_draw(hand);
                     let p0 = {
-                        let r = deck.sub(&hand);
-                        draw(info, &hand, draws, &r, |g| goal(g))
+                        let r = deck.sub(hand);
+                        draw(hand, draws, &r, |g| goal(g))
                     };
                     d0 * p0
                 })
@@ -264,12 +265,6 @@ fn main() {
     if args.len() < 2 {
         
         if true {
-            let v = vec![0,1,2,2,2,3,3];
-            let mut n = vec![0,1,2,2];
-            loop {
-                println!("{}", n);
-                if !pile::mc_next(v.as_slice(), n.as_mut_slice()) { break }
-            } 
 
             let cs = ColoredPile::new(2, 0, 0);
             println!("{}", cs.get(pile::C));
@@ -325,8 +320,8 @@ fn main() {
                              2, 0, 1) && hand.get(6) > 0
                 };
                 let g1 = |hand:&GenPile<GenPileKeys>| { hand.lands() >= 3 };
-                let r0 = gen::turn0(info, &deck, 2, g0);
-                let r1 = gen::turn0(info, &deck, 2, g1);
+                let r0 = gen::turn0(&deck, 2, g0);
+                let r1 = gen::turn0(&deck, 2, g1);
                 println!("P[R]   = {:6.2}% ", r0 * 100.0);
                 println!("P[L]   = {:6.2}% ", r1 * 100.0);
                 println!("P[R|L] = {:6.2}% ", r0 / r1 * 100.0);

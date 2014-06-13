@@ -2,6 +2,7 @@ use std::iter::AdditiveIterator;
 use std::fmt;
 use prob;
 use standard::Keys;
+use perm::MultiSubSetIterator;
 
 //
 // A Pile is like a key-value map, where the values are always uint.
@@ -80,7 +81,7 @@ pub struct GenPile<Keys> {
     k: Keys
 }
 
-impl<Ks : Keys<uint>> GenPile<Ks> {
+impl<Ks : Keys<uint> + Copy> GenPile<Ks> {
     pub fn new(l : Vec<uint>, ks : Ks) -> GenPile<Ks> {
         GenPile { e : l, k : ks }
     }
@@ -89,6 +90,12 @@ impl<Ks : Keys<uint>> GenPile<Ks> {
         let sz = ks.size();
         let l = Vec::from_fn(sz, |idx| if idx == 0 { n } else { 0 });
         GenPile { e : l, k : ks }
+    }
+
+    pub fn subsets(&self, n : uint) -> Vec<GenPile<Ks>> {
+        MultiSubSetIterator::new(self.e.as_slice(), n)
+            .map(|e| GenPile { e:e, k:self.k })
+            .collect()
     }
 }
 
