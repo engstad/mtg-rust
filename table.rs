@@ -86,17 +86,52 @@ impl Table {
                 width[c] = if w > width[c] { w } else { width[c] }
             }
         }
+
+        struct TeX { ind: uint };
+
+        impl TeX { 
+            fn indent(&mut self) {
+                print!("{}", " ".repeat(self.ind));
+            }
+
+            fn cmd(&mut self, what: &str) {
+                self.indent();
+                println!("\\{}", what);
+            }
+            fn cmd_opt(&mut self, what: &str, opt: &str) {
+                self.indent();
+                println!("\\{}{{{}}}", what, opt);
+            }
+            fn cmd_opt2(&mut self, what: &str, opt: &str, opt2: &str) {
+                self.indent();
+                println!("\\{}{{{}}}{{{}}}", what, opt, opt2);
+            }
+
+            fn begin(&mut self, what: &str) { 
+                self.cmd_opt("begin", what); 
+                self.ind += 2 
+            }
+            fn begin_opt(&mut self, what: &str, opt: &str) {
+                self.cmd_opt2("begin", what, opt);
+                self.ind += 2
+            }
+            fn end(&mut self, what: &str) { 
+                self.ind -= 2 ;
+                self.cmd_opt("end", what);
+            }
+        }
         
-        fn begin(what: &str) { println!("\\\\begin\\{{}\\}", what) }
-        fn end(what: &str) { println!("\\\\end\\{{}\\}", what) }
-        
-        begin("figure");
-        begin("center");
-        println!("{}\\{{}\\}", r#"\begin{tabular}"#, "c".repeat(self.rows.get(0).len()));
+        let mut tex = TeX { ind : 0 };
+
+        tex.begin("figure");
+        tex.begin("center");
+        tex.begin_opt("tabular", "c".repeat(self.rows.get(0).len()).as_slice());
         
         for (r, line) in self.rows.iter().enumerate() {
-            if r == 0 { println!("{}", r#"\toprule"#) }
-            if r == 1 { println!("{}", r#"\midrule"#) }
+            if r == 0 { tex.cmd("toprule") }
+            if r == 1 { tex.cmd("midrule") }
+
+            tex.indent();
             
             for (c, elem) in line.iter().enumerate() {
                 match *elem {
@@ -110,16 +145,16 @@ impl Table {
                 if c < line.len() - 1 {
                     print!(" & ")
                 } else {
-                    print!(" {}\n", "\\\\")
+                    print!(" \\\\\n")
                 }
             }        
         }
 
-        println!("{}", r#"\bottomrule"#);
-        println!("{}", r#"\end{tabular}"#);
-        end("centering");
-        println!("\\\\caption\\{{}\\}", caption);
-        end("figure");
+        tex.cmd("bottomrule");
+        tex.end("tabular");
+        tex.end("centering");
+        tex.cmd_opt("caption", caption);
+        tex.end("figure");
         
         print!("\n");
     }
