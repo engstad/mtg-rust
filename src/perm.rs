@@ -1,14 +1,15 @@
-#[deriving(Clone)]
+#[deriving(Show)]
+pub struct MultiSubSetIterator<'a> {
+    ns : &'a [uint],
+    stack : Vec<Stack>
+}
+
+#[deriving(Clone, Show)]
 struct Stack { 
     k : uint,       // how many left to add
     n : uint,       // how many left to chose from
     l : uint,       // where we are next
     a : Vec<uint>
-}
-
-pub struct MultiSubSetIterator<'a> {
-    ns : &'a [uint],
-    stack : Vec<Stack>
 }
 
 impl<'a> MultiSubSetIterator<'a> {
@@ -55,6 +56,7 @@ impl<'a> Iterator<Vec<uint>> for MultiSubSetIterator<'a> {
     }
 }
 
+#[test]
 pub fn test_gen() {
     for it in MultiSubSetIterator::new(vec![2,4,1].as_slice(), 2) {
         println!("{}", it);
