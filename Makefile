@@ -39,7 +39,7 @@ EXAMPLE_FILES = examples/*.rs
 SOURCE_FILES = $(shell test -e src/ && find src -type f)
 
 COMPILER = rustc
-EXECUTABLE = bin/cards
+EXECUTABLE = cards
 
 # For release:
 COMPILER_FLAGS = --opt-level 3 -Adead_code
@@ -239,14 +239,14 @@ doc: $(SOURCE_FILES) | src/
 
 run: exe
 	$(Q)cd bin/ \
-	&& ./main
+	&& ./$(EXECUTABLE)
 
 target-dir: $(TARGET_LIB_DIR)
 
-exe: $(EXECUTABLE) | $(TARGET_LIB_DIR)
+exe: bin/$(EXECUTABLE) | $(TARGET_LIB_DIR)
 
-$(EXECUTABLE): $(SOURCE_FILES) | bin/ $(EXE_ENTRY_FILE)
-	$(Q)$(COMPILER) --target "$(TARGET)" $(COMPILER_FLAGS) $(EXE_ENTRY_FILE) -o $(EXECUTABLE) -L "target/$(TARGET)/lib" \
+bin/$(EXECUTABLE): $(SOURCE_FILES) | bin/ $(EXE_ENTRY_FILE)
+	$(Q)$(COMPILER) --target "$(TARGET)" $(COMPILER_FLAGS) $(EXE_ENTRY_FILE) -o bin/$(EXECUTABLE) -L "target/$(TARGET)/lib" \
 	&& echo "--- Built executable" \
 	&& echo "--- Type 'make run' to run executable"
 
@@ -321,7 +321,7 @@ git-ignore:
 	) \
 	|| \
 	( \
-		echo -e ".DS_Store\n*~\n*#\n*.o\n*.so\n*.swp\n*.dylib\n*.dSYM\n*.dll\n*.rlib\n*.dummy\n*.exe\n*-test\n/$(EXECUTABLE)\n/bin/test-internal\n/bin/test-external\n/doc/\n/target/\n/build/\n/.rust/\nrusti.sh\nwatch.sh\n/examples/**\n!/examples/*.rs\n!/examples/assets/" > .gitignore \
+		echo -e ".DS_Store\n*~\n*#\n*.o\n*.so\n*.swp\n*.dylib\n*.dSYM\n*.dll\n*.rlib\n*.dummy\n*.exe\n*-test\n/bin/$(EXECUTABLE)\n/bin/test-internal\n/bin/test-external\n/doc/\n/target/\n/build/\n/.rust/\nrusti.sh\nwatch.sh\n/examples/**\n!/examples/*.rs\n!/examples/assets/" > .gitignore \
 		&& echo "--- Created '.gitignore' for git" \
 		&& cat .gitignore \
 	)
@@ -357,7 +357,7 @@ clean:
 	$(Q)rm -f "$(RLIB)"
 	$(Q)rm -f "$(DYLIB)"
 	$(Q)rm -rf "doc/"
-	$(Q)rm -f "$(EXECUTABLE)"
+	$(Q)rm -f "bin/$(EXECUTABLE)"
 	$(Q)rm -f "bin/test-internal"
 	$(Q)rm -f "bin/test-external"
 	$(Q)echo "--- Deleted binaries and documentation"
