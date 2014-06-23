@@ -308,23 +308,33 @@ fn main() {
             }
 
             {
+                enum CardTypes { A,B,C,AB,BC,AC,S,O };
+
                 // a,b,c,ab,bc,ac,s,o
                 fn is_land(idx: uint) -> bool { idx < 6  };
                 let info = GenPileKeys::new(8, is_land);
 
                 let deck = GenPile::new(vec![1,0,0,8,7,8,4,32], info);
                 let g0 = |hand:&GenPile<GenPileKeys>| { 
-                    can_cast(hand.get(0) + hand.get(3) + hand.get(5), 
-                             hand.get(1) + hand.get(2) + hand.get(4),
+                    can_cast(hand.get(A as uint) + hand.get(AB as uint) + hand.get(AC as uint), 
+                             hand.get(B as uint) + hand.get(C as uint) + hand.get(BC as uint), 
                              0,
-                             2, 0, 1) && hand.get(6) > 0
+                             2, 0, 1) && hand.get(S as uint) > 0
                 };
-                let g1 = |hand:&GenPile<GenPileKeys>| { hand.lands() >= 3 };
+                let g1 = |hand:&GenPile<GenPileKeys>| { 
+                    hand.lands() >= 3 && hand.get(S as uint) > 0
+                };
+                let g2 = |hand:&GenPile<GenPileKeys>| { hand.lands() >= 3 };
                 let r0 = gen::turn0(&deck, 2, g0);
                 let r1 = gen::turn0(&deck, 2, g1);
-                println!("P[R]   = {:6.2}% ", r0 * 100.0);
-                println!("P[L]   = {:6.2}% ", r1 * 100.0);
-                println!("P[R|L] = {:6.2}% ", r0 / r1 * 100.0);
+                let r2 = gen::turn0(&deck, 2, g2);
+                println!("Deck: 1A, 8AB, 7BC, 8AC, 4S, 32O");
+                println!("Turn 3: P0 = Pr[can_cast AND #S >= 1   ] = {:6.2}% ", r0 * 100.0);
+                println!("        P1 = Pr[has 3 lands AND #S >= 1] = {:6.2}% ", r1 * 100.0);
+                println!("        P2 = Pr[has 3 lands            ] = {:6.2}% ", r2 * 100.0);
+                println!("        P0 / P1                          = {:6.2}% ", r0 / r1 * 100.0);
+                println!("        P1 / P2                          = {:6.2}% ", r0 / r2 * 100.0);
+                return;
             }
         }
 
@@ -566,25 +576,14 @@ fn main() {
         }
     }
     else if args.len() == 2 {
-        let a = match from_str(args.get(1).as_slice()) {
-            Some(x) => x,
-            None    => -1
-        };
-
+        let a = from_str(args.get(1).as_slice()).unwrap_or(0);
         for k in range(0, 10) {
             println!("{}^{} = {}", a, k, prob::pow(a, k, 1));
         }
     }
     else {
-        let a:uint = match from_str(args.get(1).as_slice()) {
-            Some(x) => x,
-            None    => -1
-        };
-        
-        let b:uint = match from_str(args.get(2).as_slice()) {
-            Some(x) => x,
-            None    => -1
-        };
+        let a:uint = from_str(args.get(1).as_slice()).unwrap_or(0);
+        let b:uint = from_str(args.get(2).as_slice()).unwrap_or(1);
         
         for n in range(a, b) {
             println!("c({:3u}, {:2u}) = {:60.0f}", 100u, n, prob::c(100, n));
