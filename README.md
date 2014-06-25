@@ -7,7 +7,11 @@ This is an implementation of various math and probability theory written in
 
 You should be able to compile the program using
 
-	$ rustc -L. --opt-level 3 -Adead_code cards.rs
+	$ make run
+
+Or, if using windows
+
+	$ make -f Makefile-win
 
 ## The Rules of the Game
 
