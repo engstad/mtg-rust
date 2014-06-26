@@ -24,9 +24,11 @@
 
 SHELL := /bin/bash
 
+EXECUTABLE = cards
+
 # The default make command.
 # Change this to 'lib' if you are building a library.
-DEFAULT = exe
+DEFAULT = bin/$(EXECUTABLE)
 # The entry file of library source.
 # Change this to support multi-crate source structure.
 # For advanced usage, you can rename the file 'rust-empty.mk'
@@ -39,7 +41,6 @@ EXAMPLE_FILES = examples/*.rs
 SOURCE_FILES = $(shell test -e src/ && find src -type f)
 
 COMPILER = rustc
-EXECUTABLE = cards
 
 # For release:
 COMPILER_FLAGS = --opt-level 3 -Adead_code
@@ -49,8 +50,8 @@ COMPILER_FLAGS = --opt-level 3 -Adead_code
 RUSTDOC = rustdoc
 
 # Extracts target from rustc.
-TARGET = $(shell rustc --version 2> /dev/null | awk "/host:/ { print \$$2 }")
-# TARGET = x86_64-unknown-linux-gnu
+# TARGET = $(shell rustc --version 2> /dev/null | awk "/host:/ { print \$$2 }")
+TARGET = x86_64-unknown-linux-gnu
 # TARGET = x86_64-apple-darwin
 
 TARGET_LIB_DIR = target/$(TARGET)/lib/

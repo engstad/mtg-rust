@@ -426,7 +426,7 @@ fn main() {
             {
                 table.set(0, 0, LStr(format!("{}/{}", L, D)));
                 table.set(0, 1, RStr("--".to_string()));
-                for cless in range (1, 8) { 
+                for cless in range (1i, 8) { 
                     table.set(0, (1 + cless) as uint, Int(cless)) 
                 };
             }
@@ -473,39 +473,37 @@ fn main() {
             // Making the Frank 1 colored mana table:
             fn frank(colored_mana: uint, cmc: uint) -> Table {
 
-                let manas = vec!(16u, 17, 18);
-                let mut lines = manas.iter().map(|l| {
-                        let f = 10.0;
-                        (40u, *l, 0u, (f-1.0)/f) 
-                    }).enumerate();
-                
                 let mut t1 = Table::new(4, 8);
                 
                 let ps = pm(colored_mana, cmc);
                 
                 t1.set(0, 0, LStr(ps));
                 
-                for turn in range(1, 8) { t1.set(0, turn as uint, Int(turn)) };
-                
+                for turn in range(1i, 8) { t1.set(0u, turn as uint, Int(turn)) };
+
+                let manas = vec!(16u, 17, 18);
+                let mut lines = manas.iter().map(|l| {
+                        let f = 10.0f64;
+                        (40u, *l, 0u, (f-1.0)/f) 
+                    }).enumerate();
+
                 for (line_no, line) in lines {
                     let (d, l, e, pc) = line;
-                    
-                    t1.set(1u+line_no, 0,
-                           LStr(format!("{} lands {}", l, 
-                                        if e == 0 { 'p' } 
-                                        else { 'd' })));
-                    
-                    for turn in range(1u, 8) {
-                        let draws = turn - 1 + e;
+                    let sym = if e == 0u {'p'} else {'d'};
+                    t1.set(1u+line_no, 0u, LStr(format!("{} lands {}", l as uint, sym)));
+                                    
+                    for turn in range(1u, 8u) {
+                        let draws = turn - 1u + e;
                         let goal = |hand: &ColoredPile| { 
                         hand.colored() >= colored_mana // colors okay
                                 && hand.lands() >= cmc // enough lands for cmc
                                 && turn >= cmc // one land per turn
                         };
                         let res = single::cards(l, d, draws, pc, goal);
-                        t1.set(1u+line_no, turn, if res == 0 { Empty } else { Int(res) }) 
+                        t1.set(1u+line_no, turn, if res == 0i { Empty } else { Int(res) }) 
                     }
-                }
+                };
+
                 t1
             };
 
@@ -571,7 +569,7 @@ fn main() {
             None    => -1
         };
 
-        for k in range(0, 10) {
+        for k in range(0i, 10) {
             println!("{}^{} = {}", a, k, prob::pow(a, k, 1));
         }
     }
