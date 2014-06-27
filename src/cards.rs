@@ -11,16 +11,19 @@
 
 extern crate debug;
 extern crate collections;
+extern crate num;
 
 use pile::{KvMap, GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use std::os;
 use table::{Table, LStr, RStr, Int, UInt, Empty};
+//use interval::closed;
 
 mod prob;
 mod pile;
 mod standard;
 mod table;
 mod perm;
+mod interval;
 
 //
 // Mulligan Rule: 
@@ -45,6 +48,7 @@ mod single {
     use pile::{KvMap, LandPile, ColoredPile};
     use std::iter::{range_inclusive, AdditiveIterator};
     use prob;
+    use interval::closed;
 
     fn draw(hand: &ColoredPile, draws: uint, deck: &ColoredPile, 
             goal: |&ColoredPile|->bool) -> f64 
@@ -100,7 +104,7 @@ mod single {
         let deck1 = ColoredPile::new(L, 0, D-L);
         let r1 = turn0(&deck1, draws, |g| goal(g));
         
-        for k in range(0, L+1) {
+        for k in closed(0, L).iter() {
             let deck0 = ColoredPile::new(k, L-k, D-L);
             let r0 = turn0(&deck0, draws, |g| goal(g));
             if r0 >= perc * r1 {
@@ -117,6 +121,7 @@ mod dual {
     use pile::{KvMap, LandPile, DualPile};
     use std::iter::{range_inclusive, AdditiveIterator};
     use prob;
+    use interval::closed;
 
     fn draw(hand: &DualPile, draws: uint, deck: &DualPile, 
             goal: |&DualPile|->bool) -> f64 
@@ -172,7 +177,7 @@ mod dual {
             return -1
         }
         
-        for ab in range(0u, L+1) {
+        for ab in closed(0u, L).iter() {
             let mono = L - ab - X;
             let a = ((mono as f64) * a_rate + 0.5).round() as uint;
             let b = mono - a;
@@ -260,9 +265,15 @@ pub fn b_minc(bh: &mut BenchHarness) {
 
 #[main]
 fn main() {
+    use interval::closed;
+
     let args = os::args();
 
     if args.len() < 2 {
+
+        if true {
+            interval::test()
+        }
         
         if true {
 
@@ -340,7 +351,7 @@ fn main() {
 
         if false {
             let mut dp = Table::new(18, 2);
-            for a in range(0u, 18) {
+            for a in closed(0u, 17).iter() {
                 let goal = |hand: &DualPile| { (hand.a >= 1) || hand.ab >= 1 };
                 let td = DualPile::new(a, 17-a, 0, 0, 23);
                 let rt = dual::turn0(&td, 1, |g| goal(g));
@@ -372,19 +383,19 @@ fn main() {
             {
                 table.set(0, 0, LStr(format!("{}/{}({})", L, D, X)));
                 table.set(0, 1, RStr("--".to_string()));
-                for cless in range (1u, 8) { 
+                for cless in closed(1u, 7).iter() { 
                     table.set(0, 1u + cless, UInt(cless)) 
                 }
             }
 
-            for cmana in range (2u, 6u) {
-                for bmana in range (1, cmana/2+1) {
+            for cmana in closed(2u, 5u).iter() {
+                for bmana in closed(1, cmana/2).iter() {
                     let amana = cmana - bmana;
 
                     let gstr = pm2(amana, bmana, cmana - amana - bmana);
                     table.set(cmana-1, 0, RStr(gstr));   
                     
-                    for cless in range (0u, 8) { 
+                    for cless in closed(0u, 7).iter() { 
                         
                         let arate = (amana as f64) / (amana + bmana) as f64;
                         let cmc = cmana + cless;
@@ -424,7 +435,7 @@ fn main() {
         if false {
             let l = 26;
             let d = 60;
-            for u in range(0u, 4u+1) {
+            for u in closed(0u, 4u).iter() {
                 summary(l, d, u)
             }
         }
@@ -436,16 +447,16 @@ fn main() {
             {
                 table.set(0, 0, LStr(format!("{}/{}", L, D)));
                 table.set(0, 1, RStr("--".to_string()));
-                for cless in range (1i, 8) { 
+                for cless in closed(1i, 7).iter() { 
                     table.set(0, (1 + cless) as uint, Int(cless)) 
                 };
             }
 
-            for cmana in range (1u, 5u) {
+            for cmana in closed(1u, 4u).iter() {
                 let gstr = pm(cmana, cmana);
                 table.set(cmana, 0, RStr(gstr));                
                     
-                for cless in range (0u, 8) {                     
+                for cless in closed(0u, 7).iter() {                     
                     let cmc = cmana + cless;
                     let draws = cmc - 1;
                     let goal = |hand: &ColoredPile| { 
@@ -489,7 +500,7 @@ fn main() {
                 
                 t1.set(0, 0, LStr(ps));
                 
-                for turn in range(1i, 8) { t1.set(0u, turn as uint, Int(turn)) };
+                for turn in closed(1i, 7).iter() { t1.set(0u, turn as uint, Int(turn)) };
 
                 let manas = vec!(16u, 17, 18);
                 let mut lines = manas.iter().map(|l| {
@@ -502,7 +513,7 @@ fn main() {
                     let sym = if e == 0u {'p'} else {'d'};
                     t1.set(1u+line_no, 0u, LStr(format!("{} lands {}", l as uint, sym)));
                                     
-                    for turn in range(1u, 8u) {
+                    for turn in closed(1u, 7u).iter() {
                         let draws = turn - 1u + e;
                         let goal = |hand: &ColoredPile| { 
                         hand.colored() >= colored_mana // colors okay
@@ -559,7 +570,7 @@ fn main() {
 		    let D = 60u;
 		    
 		    println!("{:8}: {:8}", "Colored", "Absolute");
-		    for k in range(0u, L+1) {
+		    for k in closed(0u, L).iter() {
 				let r1 = single::turn0(&ColoredPile::new(k, L-k, D-L), draws, g1);
 				let r2 = single::turn0(&ColoredPile::new(k, L-k, D-L), draws, g2);
 				//let r3 = turn0(ColoredPile::new(k, L-k, D-L), draws, g3);
@@ -575,7 +586,7 @@ fn main() {
     }
     else if args.len() == 2 {
         let a = from_str(args.get(1).as_slice()).unwrap_or(0);
-        for k in range(0i, 10) {
+        for k in closed(0i, 10).iter() {
             println!("{}^{} = {}", a, k, prob::pow(a, k, 1));
         }
     }
