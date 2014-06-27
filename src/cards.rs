@@ -319,33 +319,49 @@ fn main() {
             }
 
             {
-                enum CardTypes { A,B,C,AB,BC,AC,S,O };
+                enum CardTypes { A, B, C,
+                                 AB, BC, AC,
+                                 S1, S2, O };
 
                 // a,b,c,ab,bc,ac,s,o
                 fn is_land(idx: uint) -> bool { idx < 6  };
-                let info = GenPileKeys::new(8, is_land);
+                let info = GenPileKeys::new(9, is_land);
 
-                let deck = GenPile::new(vec![1,0,0,8,7,8,4,32], info);
-                let g0 = |hand:&GenPile<GenPileKeys>| { 
+                // 17 lands, 23 spells
+                let deck = GenPile::new(vec![6, 6, 0,
+                                             5, 0, 0,
+                                             1, 4, 12], info);
+                let g00 = |hand:&GenPile<GenPileKeys>| { 
                     can_cast(hand.get(A as uint) + hand.get(AB as uint) + hand.get(AC as uint), 
                              hand.get(B as uint) + hand.get(C as uint) + hand.get(BC as uint), 
                              0,
-                             2, 0, 1) && hand.get(S as uint) > 0
+                             2, 0, 1) && hand.get(S1 as uint) > 0
                 };
-                let g1 = |hand:&GenPile<GenPileKeys>| { 
-                    hand.lands() >= 3 && hand.get(S as uint) > 0
+                let g10 = |hand:&GenPile<GenPileKeys>| { 
+                    hand.lands() >= 3 && hand.get(S1 as uint) > 0
                 };
-                let g2 = |hand:&GenPile<GenPileKeys>| { hand.lands() >= 3 };
-                let r0 = gen::turn0(&deck, 2, g0);
-                let r1 = gen::turn0(&deck, 2, g1);
-                let r2 = gen::turn0(&deck, 2, g2);
-                println!("Deck: 1A, 8AB, 7BC, 8AC, 4S, 32O");
-                println!("Turn 3: P0 = Pr[can_cast AND #S >= 1   ] = {:6.2}% ", r0 * 100.0);
-                println!("        P1 = Pr[has 3 lands AND #S >= 1] = {:6.2}% ", r1 * 100.0);
-                println!("        P2 = Pr[has 3 lands            ] = {:6.2}% ", r2 * 100.0);
-                println!("        P0 / P1                          = {:6.2}% ", r0 / r1 * 100.0);
-                println!("        P1 / P2                          = {:6.2}% ", r0 / r2 * 100.0);
-                return;
+                let r00 = gen::turn0(&deck, 2, g00);
+                let r10 = gen::turn0(&deck, 2, g10);
+
+                let g01 = |hand:&GenPile<GenPileKeys>| { 
+                    can_cast(hand.get(B as uint) + hand.get(AB as uint) + hand.get(BC as uint), 
+                             hand.get(A as uint) + hand.get(C as uint) + hand.get(AC as uint), 
+                             0,
+                             2, 0, 1) && hand.get(S2 as uint) > 0
+                };
+                let g11 = |hand:&GenPile<GenPileKeys>| { 
+                    hand.lands() >= 3 && hand.get(S2 as uint) > 0
+                };
+                let r01 = gen::turn0(&deck, 2, g01);
+                let r11 = gen::turn0(&deck, 2, g11);
+
+                println!("Deck: {}", deck);
+                println!("Turn 3: P0 = Pr[can_cast AND S1 >= 1   ] = {:6.2}% ", r00 * 100.0);
+                println!("        P1 = Pr[has 3 lands AND S1 >= 1] = {:6.2}% ", r10 * 100.0);
+                println!("        P0 / P1                          = {:6.2}% ", r00 / r10 * 100.0);
+                println!("Turn 3: P0 = Pr[can_cast AND S1 >= 1   ] = {:6.2}% ", r01 * 100.0);
+                println!("        P1 = Pr[has 3 lands AND S1 >= 1] = {:6.2}% ", r11 * 100.0);
+                println!("        P0 / P1                          = {:6.2}% ", r01 / r11 * 100.0);
             }
         }
 
@@ -516,7 +532,7 @@ fn main() {
                     for turn in closed(1u, 7u).iter() {
                         let draws = turn - 1u + e;
                         let goal = |hand: &ColoredPile| { 
-                        hand.colored() >= colored_mana // colors okay
+                            hand.colored() >= colored_mana // colors okay
                                 && hand.lands() >= cmc // enough lands for cmc
                                 && turn >= cmc // one land per turn
                         };
