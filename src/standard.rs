@@ -224,7 +224,7 @@ impl Mana {
     
     pub fn pretty(&self) -> String {
         let Mana(v) = *self;
-        let ns = if v[5] > 0 { v[5].to_str() } else { "".to_string() };
+        let ns = if v[5] > 0 { v[5].to_string() } else { "".to_string() };
         format!("{}{}{}{}{}{}",
                 ns, 
                 "W".repeat(v[0] as uint),
@@ -272,9 +272,9 @@ pub fn test()
     let l1 = Shock(UB);
     let l2 = Scry(BR);
     
-    println!("{:12} : {:20s}, id={}", l1.to_str(), l1.show(), LandKeys.to_uint(l1) );
-    println!("{:12} : {:20s}, id={}", l2.to_str(), l2.show(), LandKeys.to_uint(l2) );
-    println!("Cmp: {}", (Shock(UB) > Basic(U)).to_str());
+    println!("{:12} : {:20s}, id={}", l1.to_string(), l1.show(), LandKeys.to_uint(l1) );
+    println!("{:12} : {:20s}, id={}", l2.to_string(), l2.show(), LandKeys.to_uint(l2) );
+    println!("Cmp: {}", (Shock(UB) > Basic(U)).to_string());
     
     let mut ls = TreeMap::<Card, int>::new();
     ls.insert(Land(Shock(BR)), 4);

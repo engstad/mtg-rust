@@ -72,7 +72,7 @@ impl Keys<uint> for GenPileKeys {
 impl PartialEq for GenPileKeys {
     fn eq(&self, b : &GenPileKeys) -> bool {
         self.num_keys == b.num_keys &&
-        (self.is_land as *u8) == (b.is_land as *u8)
+        (self.is_land as *const u8) == (b.is_land as *const u8)
     }
 }
 

@@ -319,9 +319,15 @@ fn main() {
             }
 
             {
-                enum CardTypes { A, B, C,
-                                 AB, BC, AC,
-                                 S1, S2, O };
+                static A  :uint = 0;
+                static B  :uint = 1;
+                static C  :uint = 2;
+                static AB :uint = 3;
+                static BC :uint = 4;
+                static AC :uint = 5;
+                static S1 :uint = 6;
+                static S2 :uint = 7;
+                static O  :uint = 8;
 
                 // a,b,c,ab,bc,ac,s,o
                 fn is_land(idx: uint) -> bool { idx < 6  };
@@ -332,25 +338,25 @@ fn main() {
                                              5, 0, 0,
                                              1, 4, 12], info);
                 let g00 = |hand:&GenPile<GenPileKeys>| { 
-                    can_cast(hand.get(A as uint) + hand.get(AB as uint) + hand.get(AC as uint), 
-                             hand.get(B as uint) + hand.get(C as uint) + hand.get(BC as uint), 
+                    can_cast(hand.get(A) + hand.get(AB) + hand.get(AC), 
+                             hand.get(B) + hand.get(C) + hand.get(BC), 
                              0,
-                             2, 0, 1) && hand.get(S1 as uint) > 0
+                             2, 0, 1) && hand.get(S1) > 0
                 };
                 let g10 = |hand:&GenPile<GenPileKeys>| { 
-                    hand.lands() >= 3 && hand.get(S1 as uint) > 0
+                    hand.lands() >= 3 && hand.get(S1) > 0
                 };
                 let r00 = gen::turn0(&deck, 2, g00);
                 let r10 = gen::turn0(&deck, 2, g10);
 
                 let g01 = |hand:&GenPile<GenPileKeys>| { 
-                    can_cast(hand.get(B as uint) + hand.get(AB as uint) + hand.get(BC as uint), 
-                             hand.get(A as uint) + hand.get(C as uint) + hand.get(AC as uint), 
+                    can_cast(hand.get(B) + hand.get(AB) + hand.get(BC), 
+                             hand.get(A) + hand.get(C) + hand.get(AC), 
                              0,
-                             2, 0, 1) && hand.get(S2 as uint) > 0
+                             2, 0, 1) && hand.get(S2) > 0
                 };
                 let g11 = |hand:&GenPile<GenPileKeys>| { 
-                    hand.lands() >= 3 && hand.get(S2 as uint) > 0
+                    hand.lands() >= 3 && hand.get(S2) > 0
                 };
                 let r01 = gen::turn0(&deck, 2, g01);
                 let r11 = gen::turn0(&deck, 2, g11);
@@ -381,12 +387,12 @@ fn main() {
 
         fn pm(colored_mana:uint, cmc:uint) -> String {
             let nc = cmc - colored_mana;
-            (if nc > 0 { nc.to_str() } else { "".to_string() })
+            (if nc > 0 { nc.to_string() } else { "".to_string() })
                 .append("C".repeat(colored_mana).as_slice())
         }  
 
         fn pm2(a:uint, b:uint, c:uint) -> String {
-            (if c > 0 { c.to_str() } else { "".to_string() })
+            (if c > 0 { c.to_string() } else { "".to_string() })
                 .append("A".repeat(a).as_slice())
                 .append("B".repeat(b).as_slice())
         }

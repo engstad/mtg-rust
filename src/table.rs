@@ -10,11 +10,11 @@ pub enum TableElem {
 impl TableElem {
     fn to_string(&self) -> String {
         match *self {
-            Int(i) => i.to_str(),
-            UInt(u) => u.to_str(),
+            Int(i) => i.to_string(),
+            UInt(u) => u.to_string(),
             Empty => "".to_string(),
-            LStr(ref s) => s.to_str(),
-            RStr(ref s) => s.to_str()
+            LStr(ref s) => s.to_string(),
+            RStr(ref s) => s.to_string()
         }
     }
 }
@@ -63,8 +63,8 @@ impl Table {
                     Int(i)     => print!("{:w$i}", i,           w=width[c]),
                     UInt(u)    => print!("{:w$u}", u,           w=width[c]),
                     Empty      => print!("{:>w$s}", "-",        w=width[c]),
-                    LStr(ref s) => print!("{:<w$s}", s.to_str(), w=width[c]),
-                    RStr(ref s) => print!("{:>w$s}", s.to_str(), w=width[c])
+                    LStr(ref s) => print!("{:<w$s}", s.to_string(), w=width[c]),
+                    RStr(ref s) => print!("{:>w$s}", s.to_string(), w=width[c])
                 }
             }
             print!("\n");
@@ -138,8 +138,8 @@ impl Table {
                     Int(i)     => print!("{:w$i}", i,           w=width[c]),
                     UInt(u)    => print!("{:w$u}", u,           w=width[c]),
                     Empty      => print!("{:>w$s}", "\\cdots",        w=width[c]),
-                    LStr(ref s) => print!("{:<w$s}", s.to_str(), w=width[c]),
-                    RStr(ref s) => print!("{:>w$s}", s.to_str(), w=width[c])
+                    LStr(ref s) => print!("{:<w$s}", s.to_string(), w=width[c]),
+                    RStr(ref s) => print!("{:>w$s}", s.to_string(), w=width[c])
                 }
                 
                 if c < line.len() - 1 {
