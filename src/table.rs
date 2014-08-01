@@ -34,14 +34,14 @@ impl Table {
     }
 
     pub fn get<'a>(&'a self, r:uint, c:uint) -> &'a TableElem {
-        self.rows.get(r).get(c)
+        &self.rows[r][c]
     }
 
     pub fn print(&self, caption: &str) {
         if self.rows.len() == 0 { return }
         
         let min_width = 4u; 
-        let mut width_tbl = Vec::from_elem(self.rows.get(0).len(), min_width);
+        let mut width_tbl = Vec::from_elem(self.rows[0].len(), min_width);
         let width = width_tbl.as_mut_slice();
         
         for row in self.rows.iter() {
@@ -77,7 +77,7 @@ impl Table {
         if self.rows.len() == 0 { return }
         
         let min_width = 0u; 
-        let mut width_tbl = Vec::from_elem(self.rows.get(0).len(), min_width);
+        let mut width_tbl = Vec::from_elem(self.rows[0].len(), min_width);
         let width = width_tbl.as_mut_slice();
         
         for row in self.rows.iter() {
@@ -125,7 +125,7 @@ impl Table {
 
         tex.begin("figure");
         tex.begin("center");
-        tex.begin_opt("tabular", "c".repeat(self.rows.get(0).len()).as_slice());
+        tex.begin_opt("tabular", "c".repeat(self.rows[0].len()).as_slice());
         
         for (r, line) in self.rows.iter().enumerate() {
             if r == 0 { tex.cmd("toprule") }

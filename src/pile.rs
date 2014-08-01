@@ -103,7 +103,7 @@ impl KvMap<uint, GenPileKeys> for GenPile<GenPileKeys> {
     fn keys(&self) -> GenPileKeys { self.k }
 
     fn get(&self, k: uint) -> uint { 
-        *self.e.get(k)
+        self.e[k]
     }
 
     fn has(&self, other: &GenPile<GenPileKeys>) -> bool {
@@ -142,7 +142,7 @@ impl Iterator<GenPile<GenPileKeys>> for GenPile<GenPileKeys> {
     fn next(&mut self) -> Option<GenPile<GenPileKeys>> {
         let res = GenPile { e: self.e.clone(), k : self.k };
 
-        if *self.e.get(0) > 0 {
+        if self.e[0] > 0 {
             *self.e.get_mut(0) -= 1;
             *self.e.get_mut(1) += 1;
             Some(res)

@@ -383,7 +383,7 @@ fn main() {
             dp.print("Duals");
         }
             
-        fn pl(e:int) -> &str { if e == 0 {"play"} else {"draw"} };
+        fn pl(e:int) -> &'static str { if e == 0 {"play"} else {"draw"} };
 
         fn pm(colored_mana:uint, cmc:uint) -> String {
             let nc = cmc - colored_mana;
@@ -607,14 +607,14 @@ fn main() {
         }
     }
     else if args.len() == 2 {
-        let a = from_str(args.get(1).as_slice()).unwrap_or(0);
+        let a = from_str(args[1].as_slice()).unwrap_or(0);
         for k in closed(0i, 10).iter() {
             println!("{}^{} = {}", a, k, prob::pow(a, k, 1));
         }
     }
     else {
-        let a:uint = from_str(args.get(1).as_slice()).unwrap_or(0);
-        let b:uint = from_str(args.get(2).as_slice()).unwrap_or(1);
+        let a:uint = from_str(args[1].as_slice()).unwrap_or(0);
+        let b:uint = from_str(args[2].as_slice()).unwrap_or(1);
         
         for n in range(a, b) {
             println!("c({:3u}, {:2u}) = {:60.0f}", 100u, n, prob::c(100, n));
