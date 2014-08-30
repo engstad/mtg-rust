@@ -501,15 +501,8 @@ fn main() {
         }
 
         if true {
-            summary_c(16, 40);
-            summary_c(17, 40);
-            summary_c(18, 40);
-
-            summary_c(22, 60);
-            summary_c(23, 60);
-            summary_c(24, 60);
-            summary_c(25, 60);
-            summary_c(26, 60);
+	    for i in closed(16, 18).iter() { summary_c(i, 40); }
+	    for i in closed(22, 28).iter() { summary_c(i, 60); }
         }
 
         if false {
