@@ -10,8 +10,8 @@ pub trait Keys<K> {
     }
 }
 
-struct KeysIterator<'a, K> {
-    keys : &'a Keys<K>,
+struct KeysIterator<'a, K:'a> {
+    keys : &'a Keys<K>+'a,
     idx : uint
 }
 
