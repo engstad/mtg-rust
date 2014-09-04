@@ -12,13 +12,14 @@ pub trait KvMap<K : Copy, Ks : Copy + Keys<K>> {
     fn get<'a>(&'a self, K) -> uint;
 
     fn prob_draw(&self, draw: &Self) -> f64 {
-        let (nT, kT, cT) =
+        let (n, k, c) =
             self.keys().iter()
             .map(|k| (self.get(k), draw.get(k)))
             .fold((0, 0, 1.0), 
-                  |(nT, kT, cT), (nI, kI)| (nT + nI, kT + kI, cT * prob::c(nI, kI)));
+                  |(n, k, c), (n_i, k_i)| 
+                  (n + n_i, k + k_i, c * prob::c(n_i, k_i)));
 
-        cT / prob::c(nT, kT)
+        c / prob::c(n, k)
     }    
 
     fn total(&self) -> uint {
@@ -123,6 +124,14 @@ impl KvMap<uint, GenPileKeys> for GenPile<GenPileKeys> {
                      self.k)
     }        
 }
+
+impl Index<uint,uint> for GenPile<GenPileKeys> {
+    #[inline]
+    fn index<'a>(&'a self, i: &uint) -> &'a uint {
+        &self.e[*i]
+    }
+}
+
 
 impl fmt::Show for GenPile<GenPileKeys> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {        

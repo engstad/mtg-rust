@@ -1,7 +1,7 @@
 // compile with: rustc --opt-level 3 -Adead_code cards.rs
 
 // #![allow(dead_code)]
-#![allow(uppercase_variables)]
+// #![allow(uppercase_variables)]
 // #![allow(unused_imports)]
 // #![feature(globs)]
 // #![feature(macro_rules)]
@@ -98,14 +98,15 @@ mod single {
         succ
     }
     
-    pub fn cards(L: uint, D: uint, draws: uint, perc: f64, goal: |&ColoredPile|->bool) -> 
+    pub fn cards(lands: uint, deck: uint, draws: uint, perc: f64, 
+                 goal: |&ColoredPile|->bool) -> 
         int 
     {
-        let deck1 = ColoredPile::new(L, 0, D-L);
+        let deck1 = ColoredPile::new(lands, 0, deck-lands);
         let r1 = turn0(&deck1, draws, |g| goal(g));
         
-        for k in closed(0, L).iter() {
-            let deck0 = ColoredPile::new(k, L-k, D-L);
+        for k in closed(0, lands).iter() {
+            let deck0 = ColoredPile::new(k, lands-k, deck-lands);
             let r0 = turn0(&deck0, draws, |g| goal(g));
             if r0 >= perc * r1 {
                 return k as int
@@ -164,11 +165,11 @@ mod dual {
         succ
     }
     
-    pub fn cards(L: uint, D: uint, X: uint,
-             a_rate: f64, draws: uint, perc: f64, goal: |&DualPile|->bool) -> int {
+    pub fn cards(lands: uint, deck: uint, uncolored: uint,
+                 a_rate: f64, draws: uint, perc: f64, goal: |&DualPile|->bool) -> int {
         
-        let deck0 = DualPile::new(0, 0, L, 0, D-L);
-        let deck1 = DualPile::new(0, 0, L-X, X, D-L);
+        let deck0 = DualPile::new(0, 0, lands, 0, deck-lands);
+        let deck1 = DualPile::new(0, 0, lands-uncolored, uncolored, deck-lands);
         
         let r0 = turn0(&deck0, draws, |g| goal(g));
         let r1 = turn0(&deck1, draws, |g| goal(g));
@@ -177,14 +178,14 @@ mod dual {
             return -1
         }
         
-        for ab in closed(0u, L).iter() {
-            let mono = L - ab - X;
+        for ab in closed(0u, lands).iter() {
+            let mono = lands - ab - uncolored;
             let a = ((mono as f64) * a_rate + 0.5).round() as uint;
             let b = mono - a;
             
-            assert!(a+b+ab+X+(D-L) == D);
+            assert!(a+b+ab+uncolored+(deck-lands) == deck);
             
-            let deck0 = DualPile::new(a, b, ab, X, D-L);
+            let deck0 = DualPile::new(a, b, ab, uncolored, deck-lands);
             let r = turn0(&deck0, draws, |g| goal(g));
             if r >= perc * r0 {
                 return ab as int
@@ -319,6 +320,8 @@ fn main() {
             }
 
             {
+                use std::iter::range_inclusive;
+
                 static A  :uint = 0;
                 static B  :uint = 1;
                 static C  :uint = 2;
@@ -333,41 +336,60 @@ fn main() {
                 fn is_land(idx: uint) -> bool { idx < 6  };
                 let info = GenPileKeys::new(9, is_land);
 
-                // 17 lands, 23 spells
-                let deck = GenPile::new(vec![6, 6, 0,
-                                             5, 0, 0,
-                                             1, 4, 12], info);
-                let g00 = |hand:&GenPile<GenPileKeys>| { 
-                    can_cast(hand.get(A) + hand.get(AB) + hand.get(AC), 
-                             hand.get(B) + hand.get(C) + hand.get(BC), 
-                             0,
-                             2, 0, 1) && hand.get(S1) > 0
-                };
-                let g10 = |hand:&GenPile<GenPileKeys>| { 
-                    hand.lands() >= 3 && hand.get(S1) > 0
-                };
-                let r00 = gen::turn0(&deck, 2, g00);
-                let r10 = gen::turn0(&deck, 2, g10);
+                for cmc2s in range_inclusive(2u, 10) {
+                    for s1 in range_inclusive(0u, cmc2s) {
+                        let s2 = cmc2s - s1;
 
-                let g01 = |hand:&GenPile<GenPileKeys>| { 
-                    can_cast(hand.get(B) + hand.get(AB) + hand.get(BC), 
-                             hand.get(A) + hand.get(C) + hand.get(AC), 
-                             0,
-                             2, 0, 1) && hand.get(S2) > 0
-                };
-                let g11 = |hand:&GenPile<GenPileKeys>| { 
-                    hand.lands() >= 3 && hand.get(S2) > 0
-                };
-                let r01 = gen::turn0(&deck, 2, g01);
-                let r11 = gen::turn0(&deck, 2, g11);
+                        let mut best_p = 0.0;
+                        let mut best_a = 0u;
+                        
+                        for a in range_inclusive(0u, 17) {
+                            let b = 17 - a;
+                            
+                            // 17 lands, 23 spells
+                            let deck = GenPile::new(vec![a, b, 0,
+                                                         0, 0, 0,
+                                                         s1, s2, 17-s1-s2], info);
+                            // 
+                            // Assumption is that we have 2 lands and one of the CMC 2 spells
+                            // Want to know the chance of not being able to cast one of them.
+                            // 
+                            
+                            let p_base = gen::turn0(&deck, 2, 
+                                                    |hand:&GenPile<GenPileKeys>| { 
+                                                        hand.lands() >= 2 && hand[S1] + hand[S2] > 0
+                                                    });
+                            
+                            //
+                    
+                            let p_succ = gen::turn0(&deck, 2, 
+                                                    |hand:&GenPile<GenPileKeys>| { 
+                                                        (can_cast(hand[A] + hand[AB] + hand[AC], 
+                                                                  hand[B] + hand[C] + hand[BC], 
+                                                                  0,
+                                                                  1, 0, 1) && hand[S1] > 0) ||
+                                                        (can_cast(hand[B] + hand[AB] + hand[BC], 
+                                                                  hand[A] + hand[C] + hand[AC], 
+                                                                  0,
+                                                                  1, 0, 1) && hand[S2] > 0)
+                                                    });
+                    
+                            let p_rel = p_succ / p_base;
+                            
+                            if p_rel >= best_p {
+                                best_p = p_rel;
+                                best_a = a;
+                            }
+                        }
 
-                println!("Deck: {}", deck);
-                println!("Turn 3: P0 = Pr[can_cast AND S1 >= 1   ] = {:6.2}% ", r00 * 100.0);
-                println!("        P1 = Pr[has 3 lands AND S1 >= 1] = {:6.2}% ", r10 * 100.0);
-                println!("        P0 / P1                          = {:6.2}% ", r00 / r10 * 100.0);
-                println!("Turn 3: P0 = Pr[can_cast AND S1 >= 1   ] = {:6.2}% ", r01 * 100.0);
-                println!("        P1 = Pr[has 3 lands AND S1 >= 1] = {:6.2}% ", r11 * 100.0);
-                println!("        P0 / P1                          = {:6.2}% ", r01 / r11 * 100.0);
+                        println!("{:2},{:2} : {:2},{:2} {:6.2}%", 
+                                 s1, s2,
+                                 best_a, 17 - best_a,
+                                 best_p * 100.0)
+                    }
+                    println!("----------------------");
+                }
+                return;
             }
         }
 
@@ -397,13 +419,13 @@ fn main() {
                 .append("B".repeat(b).as_slice())
         }
 
-        // Summary of [L] lands in a [D] card deck
-        fn summary(L: uint, D: uint, X: uint) {
+        // Summary of [lands] lands in a [D] card deck
+        fn summary(lands: uint, deck: uint, uncolored_lands: uint) {
 
             let mut table = Table::new(5, 9);
 
             {
-                table.set(0, 0, LStr(format!("{}/{}({})", L, D, X)));
+                table.set(0, 0, LStr(format!("{}/{}({})", lands, deck, uncolored_lands)));
                 table.set(0, 1, RStr("--".to_string()));
                 for cless in closed(1u, 7).iter() { 
                     table.set(0, 1u + cless, UInt(cless)) 
@@ -434,11 +456,11 @@ fn main() {
                             //if ok { println!("{}/{}: {}\n", gstr, draws, hand) };
                             ok
                         };
-                        let res = dual::cards(L, D, X, arate, draws, 0.90, goal);
+                        let res = dual::cards(lands, deck, uncolored_lands, arate, draws, 0.90, goal);
 
                         table.set(cmana-1, cless + 1, 
                                   if res == 0 { Empty } 
-                                  //else if res == (L - X) as int { RStr("**") }
+                                  //else if res == (lands - uncolored_lands) as int { RStr("**") }
                                   else if res == -1 { RStr("**".to_string()) }
                                   else { Int(res) })
                     }
@@ -446,7 +468,7 @@ fn main() {
             }
 
             println!("");
-            table.print(format!("{} lands, {} colorless", L, X).as_slice());
+            table.print(format!("{} lands, {} colorless", lands, uncolored_lands).as_slice());
         }
 
         //summary(16, 40);
@@ -462,12 +484,12 @@ fn main() {
             }
         }
 
-        fn summary_c(L: uint, D: uint) {
+        fn summary_c(lands: uint, deck: uint) {
             // Making my adjusted tables
             let mut table = Table::new(5, 9);
 
             {
-                table.set(0, 0, LStr(format!("{}/{}", L, D)));
+                table.set(0, 0, LStr(format!("{}/{}", lands, deck)));
                 table.set(0, 1, RStr("--".to_string()));
                 for cless in closed(1i, 7).iter() { 
                     table.set(0, (1 + cless) as uint, Int(cless)) 
@@ -487,17 +509,17 @@ fn main() {
                         
                         ok
                     };
-                    let res = single::cards(L, D, draws, 0.90, goal);
+                    let res = single::cards(lands, deck, draws, 0.90, goal);
                     table.set(cmana, 1u+cless,
                               if res == 0 { Empty } 
-                              //else if res == (L - X) as int { RStr("**") }
+                              //else if res == (lands - uncolored_lands) as int { RStr("**") }
                               else if res == -1 { RStr("**".to_string()) }
                               else { Int(res) })
                 }
             }
 
             println!("");
-            table.print(format!("{} lands", L).as_slice());
+            table.print(format!("{} lands", lands).as_slice());
         }
 
         if true {
@@ -581,16 +603,16 @@ fn main() {
 		    
 		    let draws = 2;
 		    
-		    let L = 24u;
-		    let D = 60u;
+		    let lands = 24u;
+		    let deck = 60u;
 		    
 		    println!("{:8}: {:8}", "Colored", "Absolute");
-		    for k in closed(0u, L).iter() {
-				let r1 = single::turn0(&ColoredPile::new(k, L-k, D-L), draws, g1);
-				let r2 = single::turn0(&ColoredPile::new(k, L-k, D-L), draws, g2);
-				//let r3 = turn0(ColoredPile::new(k, L-k, D-L), draws, g3);
+		    for k in closed(0u, lands).iter() {
+				let r1 = single::turn0(&ColoredPile::new(k, lands-k, deck-lands), draws, g1);
+				let r2 = single::turn0(&ColoredPile::new(k, lands-k, deck-lands), draws, g2);
+				//let r3 = turn0(ColoredPile::new(k, lands-k, deck-lands), draws, g3);
 				
-				println!("{:2} of {:2}: {:8.3}% {:8.3}% {:8.3}%", k, L,
+				println!("{:2} of {:2}: {:8.3}% {:8.3}% {:8.3}%", k, lands,
 				         100.0 * r1, 100.0 * r2, 100.0 * r1 / r2)
 			}
 	    }

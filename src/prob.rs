@@ -67,10 +67,10 @@ pub fn h(n0 : uint, k0 : uint, n1 : uint, k1 : uint) -> f64
 
 fn h3(num: [uint, ..3], den: [uint, ..3]) -> f64
 {
-    let nT = num[0] + num[1] + num[2];
-    let kT = den[0] + den[1] + den[2];
-    let cT = c(num[0], den[0]) * c(num[1], den[1]) * c(num[2], den[2]);
-    cT / c(nT, kT)
+    let n_t = num[0] + num[1] + num[2];
+    let k_t = den[0] + den[1] + den[2];
+    let c_t = c(num[0], den[0]) * c(num[1], den[1]) * c(num[2], den[2]);
+    c_t / c(n_t, k_t)
 }
 
 pub fn when(cond: bool, what: || -> f64) -> f64 {
