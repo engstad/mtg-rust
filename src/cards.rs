@@ -13,7 +13,7 @@ extern crate debug;
 extern crate collections;
 extern crate num;
 
-use pile::{KvMap, GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
+use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use std::os;
 use table::{Table, LStr, RStr, Int, UInt, Empty};
 //use interval::closed;
@@ -272,51 +272,50 @@ fn main() {
 
     if args.len() < 2 {
 
-        if true {
-            interval::test()
-        }
-        
-        if true {
-
-            let cs = ColoredPile::new(2, 0, 0);
-            println!("{}", cs.get(pile::C));
+        if false {
 
             #[inline(always)]
-            fn min(a:uint, b:uint) -> uint { if a < b { a } else { b } };
-            fn is_land(idx: uint) -> bool { idx == 0 || idx == 1 || idx == 2 };
-            fn can_cast(la:uint, lb:uint, lab:uint, 
+            fn min(a:uint, b:uint) -> uint { if a < b { a } else { b } }
+
+            #[inline(always)]
+            fn is_land(idx: uint) -> bool { idx == 0 || idx == 1 || idx == 2 }
+
+            fn can_cast(la:uint, lb:uint, lab:uint, lx:uint,
                         a: uint, b: uint, x: uint) -> bool {
+                // tap for A
                 let ta = min(la, a);
                 let (la, a) = (la - ta, a - ta);
 
+                // tap for B
                 let tb = min(lb, b);
                 let (lb, b) = (lb - tb, b - tb);
 
+                // tap for A or B
                 let ab = a+b;
                 let tab = min(lab, ab);
                 let (lab, ab) = (lab - tab, ab - tab);
 
                 if ab > 0 { false }
                 else {
-                    let lx = la + lb + lab;
-                    x <= lx
+                    // tap for X
+                    x <= lx + la + lb + lab
                 }
             }
 
             {                
-                assert!( can_cast(1, 0, 1,   1, 0, 0));
-                assert!( can_cast(1, 0, 1,   0, 1, 0));
-                assert!( can_cast(1, 0, 1,   0, 0, 1));
-                assert!( can_cast(1, 0, 1,   2, 0, 0));
-                assert!( can_cast(1, 0, 1,   1, 1, 0));
-                assert!(!can_cast(1, 0, 1,   0, 2, 0));
-                assert!( can_cast(1, 0, 1,   1, 0, 1));
-                assert!( can_cast(1, 0, 1,   0, 1, 1));
-                assert!( can_cast(1, 0, 1,   0, 0, 2));
-                assert!(!can_cast(1, 0, 1,   1, 1, 1));
-                assert!(!can_cast(1, 0, 1,   0, 1, 2));
-                assert!(!can_cast(1, 0, 1,   1, 0, 2));
-                assert!(!can_cast(1, 0, 1,   0, 0, 3));
+                assert!( can_cast(1, 0, 1, 0,   1, 0, 0));
+                assert!( can_cast(1, 0, 1, 0,   0, 1, 0));
+                assert!( can_cast(1, 0, 1, 0,   0, 0, 1));
+                assert!( can_cast(1, 0, 1, 0,   2, 0, 0));
+                assert!( can_cast(1, 0, 1, 0,   1, 1, 0));
+                assert!(!can_cast(1, 0, 1, 0,   0, 2, 0));
+                assert!( can_cast(1, 0, 1, 0,   1, 0, 1));
+                assert!( can_cast(1, 0, 1, 0,   0, 1, 1));
+                assert!( can_cast(1, 0, 1, 0,   0, 0, 2));
+                assert!(!can_cast(1, 0, 1, 0,   1, 1, 1));
+                assert!(!can_cast(1, 0, 1, 0,   0, 1, 2));
+                assert!(!can_cast(1, 0, 1, 0,   1, 0, 2));
+                assert!(!can_cast(1, 0, 1, 0,   0, 0, 3));
             }
 
             {
@@ -333,11 +332,19 @@ fn main() {
                 static O  :uint = 8;
 
                 // a,b,c,ab,bc,ac,s,o
-                fn is_land(idx: uint) -> bool { idx < 6  };
+                fn is_land(idx: uint) -> bool { idx < 6 }
+
                 let info = GenPileKeys::new(9, is_land);
 
-                for cmc2s in range_inclusive(2u, 10) {
-                    for s1 in range_inclusive(0u, cmc2s) {
+                fn cc(hand: &GenPile<GenPileKeys>, a: uint, b: uint, x: uint) -> bool {
+                    can_cast(hand[A] + hand[AC], hand[B] + hand[BC], hand[AB], hand[C],
+                             a, b, x)
+                }
+
+                let turn = 3;
+
+                for cmc2s in range_inclusive(2u, 16) {
+                    for s1 in range_inclusive(1u, cmc2s-1) {
                         let s2 = cmc2s - s1;
 
                         let mut best_p = 0.0;
@@ -346,32 +353,17 @@ fn main() {
                         for a in range_inclusive(0u, 17) {
                             let b = 17 - a;
                             
-                            // 17 lands, 23 spells
                             let deck = GenPile::new(vec![a, b, 0,
                                                          0, 0, 0,
-                                                         s1, s2, 17-s1-s2], info);
-                            // 
-                            // Assumption is that we have 2 lands and one of the CMC 2 spells
-                            // Want to know the chance of not being able to cast one of them.
-                            // 
-                            
-                            let p_base = gen::turn0(&deck, 2, 
-                                                    |hand:&GenPile<GenPileKeys>| { 
-                                                        hand.lands() >= 2 && hand[S1] + hand[S2] > 0
+                                                         s1, s2, 23-s1-s2], info);
+                            let p_base = gen::turn0(&deck, turn, 
+                                                    |hand| { 
+                                                        hand.lands() >= turn && hand[S1] + hand[S2] > 0
                                                     });
-                            
-                            //
-                    
-                            let p_succ = gen::turn0(&deck, 2, 
-                                                    |hand:&GenPile<GenPileKeys>| { 
-                                                        (can_cast(hand[A] + hand[AB] + hand[AC], 
-                                                                  hand[B] + hand[C] + hand[BC], 
-                                                                  0,
-                                                                  1, 0, 1) && hand[S1] > 0) ||
-                                                        (can_cast(hand[B] + hand[AB] + hand[BC], 
-                                                                  hand[A] + hand[C] + hand[AC], 
-                                                                  0,
-                                                                  1, 0, 1) && hand[S2] > 0)
+                            let p_succ = gen::turn0(&deck, turn, 
+                                                    |hand| { 
+                                                        (cc(hand, 2, 0, turn-2) && hand[S1] > 0) ||
+                                                        (cc(hand, 0, 2, turn-2) && hand[S2] > 0)
                                                     });
                     
                             let p_rel = p_succ / p_base;
@@ -409,14 +401,16 @@ fn main() {
 
         fn pm(colored_mana:uint, cmc:uint) -> String {
             let nc = cmc - colored_mana;
-            (if nc > 0 { nc.to_string() } else { "".to_string() })
-                .append("C".repeat(colored_mana).as_slice())
+            let mut res = if nc > 0 { nc.to_string() } else { "".to_string() };
+            res.push_str("C".repeat(colored_mana).as_slice());
+            res
         }  
 
         fn pm2(a:uint, b:uint, c:uint) -> String {
-            (if c > 0 { c.to_string() } else { "".to_string() })
-                .append("A".repeat(a).as_slice())
-                .append("B".repeat(b).as_slice())
+            let mut res = if c > 0 { c.to_string() } else { "".to_string() };
+            res.push_str("A".repeat(a).as_slice());
+            res.push_str("B".repeat(b).as_slice());
+            res
         }
 
         // Summary of [lands] lands in a [D] card deck
