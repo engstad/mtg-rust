@@ -8,6 +8,7 @@
 // #![feature(simd)]
 #![feature(globs)]
 #![feature(macro_rules)]
+#![feature(tuple_indexing)]
 
 extern crate debug;
 extern crate collections;
@@ -263,6 +264,112 @@ pub fn b_minc(bh: &mut BenchHarness) {
     bh.iter(|| single::cards(l, d, draws, pc, |h| goal(h)))
 }
 
+fn pm2(a:uint, b:uint, c:uint) -> String {
+    let mut res = if c > 0 { c.to_string() } else { "".to_string() };
+    res.push_str("A".repeat(a).as_slice());
+    res.push_str("B".repeat(b).as_slice());
+    res
+}
+
+// Summary of [lands] lands in a [D] card deck
+fn summary(lands: uint, deck: uint, uncolored_lands: uint) {
+    use interval::closed;
+    
+    let mut table = Table::new(5, 9);
+    
+    {
+        table.set(0, 0, LStr(format!("{}/{}({})", lands, deck, uncolored_lands)));
+        table.set(0, 1, RStr("--".to_string()));
+        for cless in closed(1u, 7).iter() { 
+            table.set(0, 1u + cless, UInt(cless)) 
+        }
+    }
+    
+    for cmana in closed(2u, 5u).iter() {
+        for bmana in closed(1, cmana/2).iter() {
+            let amana = cmana - bmana;
+            
+            let gstr = pm2(amana, bmana, cmana - amana - bmana);
+            table.set(cmana-1, 0, RStr(gstr));   
+            
+            for cless in closed(0u, 7).iter() { 
+                
+                let arate = (amana as f64) / (amana + bmana) as f64;
+                let cmc = cmana + cless;
+                let draws = cmc - 1;
+                let goal = |hand: &DualPile| { 
+                    
+                    let a_left = if amana > hand.a { amana - hand.a } else { 0 };
+                    let b_left = if bmana > hand.b { bmana - hand.b } else { 0 };
+                    
+                    let ok = (a_left + b_left) <= hand.ab 
+                        && hand.lands() >= cmc; // enough lands for cmc
+                    
+                    //let gstr = pm2(amana, bmana, cmana - amana - bmana);
+                    //if ok { println!("{}/{}: {}\n", gstr, draws, hand) };
+                    ok
+                };
+                let res = dual::cards(lands, deck, uncolored_lands, arate, draws, 0.90, goal);
+                
+                table.set(cmana-1, cless + 1, 
+                          if res == 0 { Empty } 
+                          //else if res == (lands - uncolored_lands) as int { RStr("**") }
+                          else if res == -1 { RStr("**".to_string()) }
+                                  else { Int(res) })
+            }
+        }
+    }
+    
+    println!("");
+    table.print(format!("{} lands, {} colorless", lands, uncolored_lands).as_slice());
+}
+
+fn pm(colored_mana:uint, cmc:uint) -> String {
+    let nc = cmc - colored_mana;
+    let mut res = if nc > 0 { nc.to_string() } else { "".to_string() };
+    res.push_str("C".repeat(colored_mana).as_slice());
+    res
+}  
+
+pub fn summary_c(lands: uint, deck: uint) {
+    use interval::closed;
+
+    // Making my adjusted tables
+    let mut table = Table::new(5, 9);
+    
+    {
+        table.set(0, 0, LStr(format!("{}/{}", lands, deck)));
+        table.set(0, 1, RStr("--".to_string()));
+        for cless in closed(1i, 7).iter() { 
+            table.set(0, (1 + cless) as uint, Int(cless)) 
+        };
+    }
+    
+    for cmana in closed(1u, 4u).iter() {
+        let gstr = pm(cmana, cmana);
+        table.set(cmana, 0, RStr(gstr));                
+        
+        for cless in closed(0u, 7).iter() {                     
+            let cmc = cmana + cless;
+            let draws = cmc - 1;
+            let goal = |hand: &ColoredPile| { 
+                let ok = hand.colored() >= cmana // colors okay
+                    && hand.lands() >= cmc; // enough lands for cmc
+                
+                ok
+            };
+            let res = single::cards(lands, deck, draws, 0.90, goal);
+            table.set(cmana, 1u+cless,
+                      if res == 0 { Empty } 
+                      //else if res == (lands - uncolored_lands) as int { RStr("**") }
+                      else if res == -1 { RStr("**".to_string()) }
+                      else { Int(res) })
+        }
+    }
+    
+    println!("");
+    table.print(format!("{} lands", lands).as_slice());
+}
 
 #[main]
 fn main() {
@@ -271,7 +378,10 @@ fn main() {
     let args = os::args();
 
     if args.len() < 2 {
-
+        let lands = standard::test();
+        summary_c(lands, 60);
+    }
+    else if args.len() == 2 && args[1].as_slice() == "land" {
         if false {
 
             #[inline(always)]
@@ -399,71 +509,8 @@ fn main() {
             
         fn pl(e:int) -> &'static str { if e == 0 {"play"} else {"draw"} };
 
-        fn pm(colored_mana:uint, cmc:uint) -> String {
-            let nc = cmc - colored_mana;
-            let mut res = if nc > 0 { nc.to_string() } else { "".to_string() };
-            res.push_str("C".repeat(colored_mana).as_slice());
-            res
-        }  
 
-        fn pm2(a:uint, b:uint, c:uint) -> String {
-            let mut res = if c > 0 { c.to_string() } else { "".to_string() };
-            res.push_str("A".repeat(a).as_slice());
-            res.push_str("B".repeat(b).as_slice());
-            res
-        }
 
-        // Summary of [lands] lands in a [D] card deck
-        fn summary(lands: uint, deck: uint, uncolored_lands: uint) {
-
-            let mut table = Table::new(5, 9);
-
-            {
-                table.set(0, 0, LStr(format!("{}/{}({})", lands, deck, uncolored_lands)));
-                table.set(0, 1, RStr("--".to_string()));
-                for cless in closed(1u, 7).iter() { 
-                    table.set(0, 1u + cless, UInt(cless)) 
-                }
-            }
-
-            for cmana in closed(2u, 5u).iter() {
-                for bmana in closed(1, cmana/2).iter() {
-                    let amana = cmana - bmana;
-
-                    let gstr = pm2(amana, bmana, cmana - amana - bmana);
-                    table.set(cmana-1, 0, RStr(gstr));   
-                    
-                    for cless in closed(0u, 7).iter() { 
-                        
-                        let arate = (amana as f64) / (amana + bmana) as f64;
-                        let cmc = cmana + cless;
-                        let draws = cmc - 1;
-                        let goal = |hand: &DualPile| { 
-                            
-                            let a_left = if amana > hand.a { amana - hand.a } else { 0 };
-                            let b_left = if bmana > hand.b { bmana - hand.b } else { 0 };
-                            
-                            let ok = (a_left + b_left) <= hand.ab 
-                                && hand.lands() >= cmc; // enough lands for cmc
-                            
-                            //let gstr = pm2(amana, bmana, cmana - amana - bmana);
-                            //if ok { println!("{}/{}: {}\n", gstr, draws, hand) };
-                            ok
-                        };
-                        let res = dual::cards(lands, deck, uncolored_lands, arate, draws, 0.90, goal);
-
-                        table.set(cmana-1, cless + 1, 
-                                  if res == 0 { Empty } 
-                                  //else if res == (lands - uncolored_lands) as int { RStr("**") }
-                                  else if res == -1 { RStr("**".to_string()) }
-                                  else { Int(res) })
-                    }
-                }
-            }
-
-            println!("");
-            table.print(format!("{} lands, {} colorless", lands, uncolored_lands).as_slice());
-        }
 
         //summary(16, 40);
         //summary(17, 40);
@@ -478,43 +525,6 @@ fn main() {
             }
         }
 
-        fn summary_c(lands: uint, deck: uint) {
-            // Making my adjusted tables
-            let mut table = Table::new(5, 9);
-
-            {
-                table.set(0, 0, LStr(format!("{}/{}", lands, deck)));
-                table.set(0, 1, RStr("--".to_string()));
-                for cless in closed(1i, 7).iter() { 
-                    table.set(0, (1 + cless) as uint, Int(cless)) 
-                };
-            }
-
-            for cmana in closed(1u, 4u).iter() {
-                let gstr = pm(cmana, cmana);
-                table.set(cmana, 0, RStr(gstr));                
-                    
-                for cless in closed(0u, 7).iter() {                     
-                    let cmc = cmana + cless;
-                    let draws = cmc - 1;
-                    let goal = |hand: &ColoredPile| { 
-                        let ok = hand.colored() >= cmana // colors okay
-                            && hand.lands() >= cmc; // enough lands for cmc
-                        
-                        ok
-                    };
-                    let res = single::cards(lands, deck, draws, 0.90, goal);
-                    table.set(cmana, 1u+cless,
-                              if res == 0 { Empty } 
-                              //else if res == (lands - uncolored_lands) as int { RStr("**") }
-                              else if res == -1 { RStr("**".to_string()) }
-                              else { Int(res) })
-                }
-            }
-
-            println!("");
-            table.print(format!("{} lands", lands).as_slice());
-        }
 
         if true {
 	    for i in closed(16, 18).iter() { summary_c(i, 40); }
@@ -609,11 +619,7 @@ fn main() {
 				println!("{:2} of {:2}: {:8.3}% {:8.3}% {:8.3}%", k, lands,
 				         100.0 * r1, 100.0 * r2, 100.0 * r1 / r2)
 			}
-	    }
-        
-        if true {
-            standard::test();
-        }
+	    }        
     }
     else if args.len() == 2 {
         let a = from_str(args[1].as_slice()).unwrap_or(0);

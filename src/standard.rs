@@ -156,14 +156,81 @@ impl Keys<Dual> for DualKeys {
 }
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Shard {
+    WUB, UBR, BRG, RGW, GWU 
+}
+
+impl Shard {
+    fn source(&self) -> Mana {
+        match *self {
+            WUB => Mana::w(1) + Mana::u(1) + Mana::b(1), 
+            UBR => Mana::u(1) + Mana::b(1) + Mana::r(1), 
+            BRG => Mana::b(1) + Mana::r(1) + Mana::g(1), 
+            RGW => Mana::r(1) + Mana::g(1) + Mana::w(1),
+            GWU => Mana::g(1) + Mana::w(1) + Mana::u(1) 
+        }
+    }    
+}
+
+struct ShardKeys;
+
+impl Keys<Shard> for ShardKeys {
+    fn size(&self) -> uint { 5 }
+    fn to_uint(&self, c:Shard) -> uint { c as uint }
+    fn from_uint(&self, n:uint) -> Shard { 
+        match n {
+            0 => Some(WUB), 1 => Some(UBR), 2 => Some(BRG), 3 => Some(RGW), 4 => Some(GWU), 
+            _ => None
+        }.unwrap()
+    }    
+}
+
+// WUBRG
+
+#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Wedge {
+    WBR, URG, BGW, RWU, GUB
+}
+
+impl Wedge {
+    fn source(&self) -> Mana {
+        match *self {
+            WBR => Mana::w(1) + Mana::b(1) + Mana::r(1), 
+            URG => Mana::u(1) + Mana::r(1) + Mana::g(1), 
+            BGW => Mana::b(1) + Mana::g(1) + Mana::w(1), 
+            RWU => Mana::r(1) + Mana::w(1) + Mana::u(1),
+            GUB => Mana::g(1) + Mana::u(1) + Mana::b(1) 
+        }
+    }    
+}
+
+struct WedgeKeys;
+
+impl Keys<Wedge> for WedgeKeys {
+    fn size(&self) -> uint { 5 }
+    fn to_uint(&self, c:Wedge) -> uint { c as uint }
+    fn from_uint(&self, n:uint) -> Wedge { 
+        match n {
+            0 => Some(WBR), 1 => Some(URG), 2 => Some(BGW), 3 => Some(RWU), 4 => Some(GUB), 
+            _ => None
+        }.unwrap()
+    }    
+}
+
+
+#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Land {
+    EvolvingWild,
+    Urborg,
+    ManaConfluence,
     Basic(Color),
     Shock(Dual),
     Gate(Dual),
     Scry(Dual),
     Refu(Dual),
     Fetch(Dual),
-    Pain(Enemy)
+    Pain(Enemy),
+    Khan(Wedge)
 }
 
 impl Land {
@@ -244,8 +311,20 @@ impl Land {
                 BG => "Llanowar Wastes",
                 RW => "Battlefield Forge",
                 GU => "Yavimaya Coast"
-            }                
-
+            },
+            Khan(w) => match w {
+                WBR => "Nomad Outpost",
+                URG => "Frontier Bivouac",
+                BGW => "Sandsteppe Citadel",
+                RWU => "Mystic Monestary",
+                GUB => "Opulent Palace"
+            },
+            EvolvingWild =>
+                "Evolving Wild",
+            Urborg => 
+                "Urborg, Tomb of Yawgmoth",
+            ManaConfluence =>
+                "Mana Confluence"
 
             //Frontier Bivouac
             //Mystic Monastery
@@ -263,7 +342,11 @@ impl Land {
             Scry(d) => d.source(),
             Refu(d) => d.source(),
             Fetch(d) => d.source(),
-            Pain(e) => e.source()
+            Pain(e) => e.source(),
+            Khan(w) => w.source(),
+            EvolvingWild => Mana::w(1) + Mana::u(1) + Mana::b(1) + Mana::r(1) + Mana::g(1),
+            ManaConfluence => Mana::w(1) + Mana::u(1) + Mana::b(1) + Mana::r(1) + Mana::g(1),
+            Urborg => Mana::b(1)
         }
     }
 
@@ -273,9 +356,13 @@ impl Land {
             Shock(_) => true,
             Gate(_) => false,
             Scry(_) => false,
-            Refu(_) => true,
+            Refu(_) => false,
             Fetch(_) => true,
-            Pain(_) => true
+            Pain(_) => true,
+            Khan(_) => false,
+            EvolvingWild => false,
+            Urborg => true,
+            ManaConfluence => true
 	    }	
     }
 
@@ -289,36 +376,50 @@ impl Keys<Land> for LandKeys {
 
     fn to_uint(&self, l:Land) -> uint { 
         match l {
-            Basic(c) => ColorKeys.to_uint(c),
-            Shock(d) => ColorKeys.size() + DualKeys.to_uint(d),
-            Gate(d)  => ColorKeys.size() + DualKeys.size() + DualKeys.to_uint(d),
-            Scry(d)  => ColorKeys.size() + 2u * DualKeys.size() + DualKeys.to_uint(d),
-            Refu(d)  => ColorKeys.size() + 3u * DualKeys.size() + DualKeys.to_uint(d),
-            Fetch(d) => ColorKeys.size() + 4u * DualKeys.size() + DualKeys.to_uint(d),
-            Pain(e)  => ColorKeys.size() + 5u * DualKeys.size() + EnemyKeys.to_uint(e)
+            EvolvingWild => 0,
+            Urborg => 1,
+            ManaConfluence => 2,
+            Basic(c) => 3 + ColorKeys.to_uint(c),
+            Shock(d) => 3 + ColorKeys.size() + DualKeys.to_uint(d),
+            Gate(d)  => 3 + ColorKeys.size() + DualKeys.size() + DualKeys.to_uint(d),
+            Scry(d)  => 3 + ColorKeys.size() + 2u * DualKeys.size() + DualKeys.to_uint(d),
+            Refu(d)  => 3 + ColorKeys.size() + 3u * DualKeys.size() + DualKeys.to_uint(d),
+            Fetch(d) => 3 + ColorKeys.size() + 4u * DualKeys.size() + DualKeys.to_uint(d),
+            Pain(e)  => 3 + ColorKeys.size() + 5u * DualKeys.size() + EnemyKeys.to_uint(e),
+            Khan(w)  => 3 + ColorKeys.size() + 5u * DualKeys.size() + EnemyKeys.size() + WedgeKeys.to_uint(w),
         }
     }
 
     fn from_uint(&self, d: uint) -> Land {
-        if d < ColorKeys.size() { 
-            Basic(ColorKeys.from_uint(d))
+        if d == 0 { EvolvingWild }
+        else if d == 1 { Urborg }
+        else if d == 2 { ManaConfluence }
+        else if d < 3 + ColorKeys.size() { 
+            Basic(ColorKeys.from_uint(d - 2))
         }
-        else if d < ColorKeys.size() + DualKeys.size() { 
-            Shock(DualKeys.from_uint(d - ColorKeys.size()))
+        else if d < (3 + ColorKeys.size()) + DualKeys.size() { 
+            Shock(DualKeys.from_uint(d - (3 + ColorKeys.size())))
         }
-        else if d < ColorKeys.size() + 2 * DualKeys.size() {
-            Gate(DualKeys.from_uint(d - ColorKeys.size() - DualKeys.size()))
+        else if d < (3 + ColorKeys.size()) + 2 * DualKeys.size() {
+            Gate(DualKeys.from_uint(d - (3 + ColorKeys.size()) - DualKeys.size()))
         } 
-        else if d < ColorKeys.size() + 3 * DualKeys.size() {
-            Scry(DualKeys.from_uint(d - ColorKeys.size() - 2 * DualKeys.size()))
+        else if d < (3 + ColorKeys.size()) + 3 * DualKeys.size() {
+            Scry(DualKeys.from_uint(d - (3 + ColorKeys.size()) - 2 * DualKeys.size()))
         }
+        else if d < (3 + ColorKeys.size()) + 4 * DualKeys.size() {
+            Refu(DualKeys.from_uint(d - (3 + ColorKeys.size()) - 3 * DualKeys.size()))
+        }
+        else if d < (3 + ColorKeys.size()) + 5 * DualKeys.size() {
+            Fetch(DualKeys.from_uint(d - (3 + ColorKeys.size()) - 4 * DualKeys.size()))
+        }        
         else {
             fail!("out of range")
         }
     }
 }
 
-
+#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
+enum LandType { Special, BasicLand, ShockLand, Gates, ScryLand, RefuLand, FetchLand, PainLand, WedgeLand }
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Card {
@@ -337,6 +438,20 @@ impl Card {
 
     fn untapped(&self) -> bool { 
         match *self { L(l) => l.untapped(), S => false }
+    }
+
+    fn land_type(&self) -> LandType {
+        match *self { 
+            L(Basic(_)) => BasicLand,
+            L(Shock(_)) => ShockLand,
+            L(Gate(_)) => Gates,
+            L(Scry(_)) => ScryLand,
+            L(Refu(_)) => RefuLand,
+            L(Fetch(_)) => FetchLand,
+            L(Pain(_)) => PainLand,
+            L(Khan(_)) => WedgeLand,
+            _ => Special
+        }
     }
 }
 
@@ -377,6 +492,17 @@ impl Mana {
     pub fn r(n : uint) -> Mana { Mana([0, 0, 0, n, 0, 0]) }
     pub fn g(n : uint) -> Mana { Mana([0, 0, 0, 0, n, 0]) }
     pub fn c(n : uint) -> Mana { Mana([0, 0, 0, 0, 0, n]) }
+
+    pub fn reset(&self, color: Color) -> Mana {
+        let Mana(v) = *self;
+        match color { 
+            W => Mana([0, v[1], v[2], v[3], v[4], v[5]]),
+            U => Mana([v[0], 0, v[2], v[3], v[4], v[5]]),
+            B => Mana([v[0], v[1], 0, v[3], v[4], v[5]]),
+            R => Mana([v[0], v[1], v[2], 0, v[4], v[5]]),
+            G => Mana([v[0], v[1], v[2], v[3], 0, v[5]])
+        }
+    }
     
     pub fn cmc(&self) -> uint { 
         let Mana(v) = *self;
@@ -404,12 +530,12 @@ impl Mana {
     pub fn src(&self) -> String {
         let Mana(v) = *self;
         format!("{}{}{}{}{}{}",
-                if v[0] > 0 { format!("W:{:u} ", v[0]) } else { "".to_string() }, 
-                if v[1] > 0 { format!("U:{:u} ", v[1]) } else { "".to_string() }, 
-                if v[2] > 0 { format!("B:{:u} ", v[2]) } else { "".to_string() }, 
-                if v[3] > 0 { format!("R:{:u} ", v[3]) } else { "".to_string() }, 
-                if v[4] > 0 { format!("G:{:u} ", v[4]) } else { "".to_string() }, 
-                if v[5] > 0 { format!("X:{:u} ", v[5]) } else { "".to_string() })        
+                if v[0] > 0 { format!("W:{:2u} ", v[0]) } else { "".to_string() }, 
+                if v[1] > 0 { format!("U:{:2u} ", v[1]) } else { "".to_string() }, 
+                if v[2] > 0 { format!("B:{:2u} ", v[2]) } else { "".to_string() }, 
+                if v[3] > 0 { format!("R:{:2u} ", v[3]) } else { "".to_string() }, 
+                if v[4] > 0 { format!("G:{:2u} ", v[4]) } else { "".to_string() }, 
+                if v[5] > 0 { format!("X:{:2u} ", v[5]) } else { "".to_string() })        
     }
 }
 
@@ -417,8 +543,12 @@ impl Add<Mana, Mana> for Mana {
     fn add(&self, rhs: &Mana) -> Mana {
         let Mana(a) = *self;
         let Mana(b) = *rhs;
-        Mana([a[0] + b[0], a[1] + b[1], a[2] + b[2],
-              a[3] + b[3], a[4] + b[4], a[4] + b[5]])
+        Mana([a[0] + b[0], 
+              a[1] + b[1], 
+              a[2] + b[2],
+              a[3] + b[3], 
+              a[4] + b[4], 
+              a[5] + b[5]])
     }
 }
 
@@ -426,8 +556,12 @@ impl Sub<Mana, Mana> for Mana {
     fn sub(&self, rhs: &Mana) -> Mana {
         let Mana(a) = *self;
         let Mana(b) = *rhs;
-        Mana([a[0] - b[0], a[1] - b[1], a[2] - b[2],
-              a[3] - b[3], a[4] - b[4], a[4] - b[5]])
+        Mana([a[0] - b[0], 
+              a[1] - b[1], 
+              a[2] - b[2],
+              a[3] - b[3], 
+              a[4] - b[4], 
+              a[5] - b[5]])
     }
 }
 
@@ -436,7 +570,7 @@ impl Mana {
         let Mana(a) = *self;
         let k = rhs;
         Mana([a[0] * k, a[1] * k, a[2] * k,
-              a[3] * k, a[4] * k, a[4] * k])
+              a[3] * k, a[4] * k, a[5] * k])
     }
 }
 
@@ -445,7 +579,7 @@ impl Mana {
 //  - Must quickly know how many of a particular card there is
 //
 
-pub fn test()
+pub fn test() -> uint
 {
     println!("Colors: {}", to_vec(&ColorKeys));
     println!("Duals : {}", to_vec(&DualKeys));
@@ -465,33 +599,71 @@ pub fn test()
     
     let mut ls = TreeMap::<Card, uint>::new();
 
-    ls.insert(L(Fetch(A(UB))), 3);
-    ls.insert(L(Fetch(A(BR))), 1);
-    ls.insert(L(Basic(U)), 1);
-    ls.insert(L(Basic(B)), 2);
+    ls.insert(L(ManaConfluence), 2);
+    //ls.insert(L(EvolvingWild), 2);
+    ls.insert(L(Basic(U)), 2);
+    ls.insert(L(Basic(B)), 1);
     ls.insert(L(Basic(R)), 1);
+
+    // UR:
     ls.insert(L(Pain(UR)), 4);
-
     ls.insert(L(Scry(E(UR))), 1);
-    ls.insert(L(Refu(A(UB))), 4);
+    //ls.insert(L(Refu(E(UR))), 1);
+    
+    // UB:
+    ls.insert(L(Fetch(A(UB))), 4);
     ls.insert(L(Scry(A(UB))), 4);
-    ls.insert(L(Scry(A(BR))), 3);
+    ls.insert(L(Refu(A(UB))), 2);
+    //ls.insert(L(Khan(GUB)), 1);
 
-    ls.insert(L(Gate(A(UB))), 1); // standin
+    // BR:
+    ls.insert(L(Fetch(A(BR))), 1);
+    ls.insert(L(Scry(A(BR))), 4);
+    //ls.insert(L(Refu(A(BR))), 1);
+
+    ls.insert(L(Urborg), 1);
     
     //ls.insert(S, 36);
-        
+    //ls.insert(L(Khan(URG)), 2);            
+
     let conc = |acc:String, (&card, &num): (&Card, &uint)| -> String {
         if acc == "".to_string() {
-            format!("{:2u} {:-30s} {:-5s}", num, card.show(), card.source().mul(num).src())
+            format!("{:2u} {:-30s} {:-5s}", num, card.show(), card.source().mul(num).reset(W).reset(G).src())
         } else {
-            format!("{}\n{:2u} {:-30s} {:-5s}", acc, num, card.show(), card.source().mul(num).src())
+            format!("{}\n{:2u} {:-30s} {:-5s}", acc, num, card.show(), card.source().mul(num).reset(W).reset(G).src())
         }
     };
 
     let res = ls.iter().fold("".to_string(), conc);
-    println!("Res:\n{}\n{:2u} cards, {}, {} untapped", res,
-             ls.iter().fold(0u, |acc, (_, num)| -> uint { acc + *num }),
-             ls.iter().fold(Mana::zero(), |acc, (c, n)| { acc + c.source().mul(*n) }).src(),
-             ls.iter().fold(0u, |acc, (c, num)| -> uint { acc + if c.untapped() { *num } else { 0 } }) );
+
+    let lds = ls.iter()
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+    let unt = ls.iter().filter(|&(c, _)| c.untapped())
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+    let tap = ls.iter().filter(|&(c, _)| !c.untapped())
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+
+    println!("Res:\n{}", res);
+    println!("{:2u} {:-30s} {:-5s}\n", lds.0, "Cards".to_string(), lds.1.src());
+    println!("{:2u} {:-30s} {:-5s}", unt.0, "Untapped".to_string(), unt.1.src());
+    println!("{:2u} {:-30s} {:-5s}\n", tap.0, "Tapped".to_string(), tap.1.src());
+
+    let basics = ls.iter().filter(|&(c, _)| c.land_type() == BasicLand)
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+    let fetches = ls.iter().filter(|&(c, _)| c.land_type() == FetchLand)
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+    let scrys = ls.iter().filter(|&(c, _)| c.land_type() == ScryLand)
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+    let pains = ls.iter().filter(|&(c, _)| c.land_type() == PainLand)
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+    let refus = ls.iter().filter(|&(c, _)| c.land_type() == RefuLand)
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+
+    println!("{:2u} {:-30s} {:-5s}", basics.0, "Basics".to_string(), basics.1.src());
+    println!("{:2u} {:-30s} {:-5s}", fetches.0, "Fetch-lands".to_string(), fetches.1.src());
+    println!("{:2u} {:-30s} {:-5s}", pains.0, "Pain-lands".to_string(), pains.1.src());
+    println!("{:2u} {:-30s} {:-5s}", scrys.0, "Scry-lands".to_string(), scrys.1.src());
+    println!("{:2u} {:-30s} {:-5s}", refus.0, "Refugee lands".to_string(), refus.1.src());
+
+    return lds.0;
 }
