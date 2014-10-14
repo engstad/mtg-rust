@@ -155,19 +155,21 @@ impl Keys<Dual> for DualKeys {
     }    
 }
 
+// WUBRG
+
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Shard {
-    WUB, UBR, BRG, RGW, GWU 
+    WUR, UBG, BRW, RGU, GWB
 }
 
 impl Shard {
     fn source(&self) -> Mana {
         match *self {
-            WUB => Mana::w(1) + Mana::u(1) + Mana::b(1), 
-            UBR => Mana::u(1) + Mana::b(1) + Mana::r(1), 
-            BRG => Mana::b(1) + Mana::r(1) + Mana::g(1), 
-            RGW => Mana::r(1) + Mana::g(1) + Mana::w(1),
-            GWU => Mana::g(1) + Mana::w(1) + Mana::u(1) 
+            WUR => Mana::w(1) + Mana::u(1) + Mana::r(1), 
+            UBG => Mana::u(1) + Mana::b(1) + Mana::g(1), 
+            BRW => Mana::b(1) + Mana::r(1) + Mana::w(1), 
+            RGU => Mana::r(1) + Mana::g(1) + Mana::u(1),
+            GWB => Mana::g(1) + Mana::w(1) + Mana::b(1) 
         }
     }    
 }
@@ -179,13 +181,12 @@ impl Keys<Shard> for ShardKeys {
     fn to_uint(&self, c:Shard) -> uint { c as uint }
     fn from_uint(&self, n:uint) -> Shard { 
         match n {
-            0 => Some(WUB), 1 => Some(UBR), 2 => Some(BRG), 3 => Some(RGW), 4 => Some(GWU), 
+            0 => Some(WUR), 1 => Some(UBG), 2 => Some(BRW), 3 => Some(RGU), 4 => Some(GWB), 
             _ => None
         }.unwrap()
     }    
 }
 
-// WUBRG
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Wedge {
@@ -217,12 +218,90 @@ impl Keys<Wedge> for WedgeKeys {
     }    
 }
 
+pub struct LandCardInfo {
+    pub name : &'static str,
+    pub cardtype : &'static str,
+    pub subtypes : &'static [&'static str],
+    pub landtype : LandType,
+    pub produces : &'static [Color]
+}
+
+static LANDS : &'static [LandCardInfo] = [
+    LandCardInfo { name : "Plains",              cardtype : "Basic",    subtypes : ["Plains"],    landtype : BasicLand, produces : [W] },
+    LandCardInfo { name : "Island",              cardtype : "Basic",    subtypes : ["Island"],    landtype : BasicLand, produces : [U] },
+    LandCardInfo { name : "Swamp",               cardtype : "Basic",    subtypes : ["Swamp"],     landtype : BasicLand, produces : [B] },
+    LandCardInfo { name : "Mountain",            cardtype : "Basic",    subtypes : ["Mountain"],  landtype : BasicLand, produces : [R] },
+    LandCardInfo { name : "Forest",              cardtype : "Basic",    subtypes : ["Forest"],    landtype : BasicLand, produces : [G] },
+
+    LandCardInfo { name : "Hallowed Fountain",   cardtype : "Land",     subtypes : ["Plains", "Island"],   landtype : ShockLand, produces : [W, U] },
+	LandCardInfo { name : "Watery Grave",        cardtype : "Land",     subtypes : ["Island", "Swamp"],    landtype : ShockLand, produces : [U, B] },
+	LandCardInfo { name : "Blood Crypt",         cardtype : "Land",     subtypes : ["Swamp", "Mountain"],  landtype : ShockLand, produces : [B, R] },
+	LandCardInfo { name : "Stomping Ground",     cardtype : "Land",     subtypes : ["Mountain", "Forest"], landtype : ShockLand, produces : [R, G] },
+	LandCardInfo { name : "Temple Garden",       cardtype : "Land",     subtypes : ["Forest", "Plains"],   landtype : ShockLand, produces : [G, W] },
+                                                                                                                                                    
+	LandCardInfo { name : "Godless Shrine",      cardtype : "Land",     subtypes : ["Plains", "Swamp"],    landtype : ShockLand, produces : [W, B] },
+	LandCardInfo { name : "Steam Vents",         cardtype : "Land",     subtypes : ["Island", "Mountain"], landtype : ShockLand, produces : [U, R] },
+	LandCardInfo { name : "Overgrown Tomb",      cardtype : "Land",     subtypes : ["Swamp", "Forest"],    landtype : ShockLand, produces : [B, G] },
+	LandCardInfo { name : "Sacred Foundry",      cardtype : "Land",     subtypes : ["Mountain", "Plains"], landtype : ShockLand, produces : [R, W] },
+	LandCardInfo { name : "Breeding Pool",       cardtype : "Land",     subtypes : ["Forest", "Island"],   landtype : ShockLand, produces : [G, U] },
+
+    LandCardInfo { name : "Azorius Guildgate",   cardtype : "Land",     subtypes : ["Gate"],   landtype : Gates, produces : [W, U] },
+	LandCardInfo { name : "Dimir Guildgate",     cardtype : "Land",     subtypes : ["Gate"],   landtype : Gates, produces : [U, B] },
+	LandCardInfo { name : "Rakdos Guildgate",    cardtype : "Land",     subtypes : ["Gate"],   landtype : Gates, produces : [B, R] },
+	LandCardInfo { name : "Gruul Guildgate",     cardtype : "Land",     subtypes : ["Gate"],   landtype : Gates, produces : [R, G] },
+	LandCardInfo { name : "Selesnya Guildgate",  cardtype : "Land",     subtypes : ["Gate"],   landtype : Gates, produces : [G, W] },
+                                                                                                                                                    
+	LandCardInfo { name : "Orzhov Guildgate",    cardtype : "Land",     subtypes : ["Gate"],   landtype : Gates, produces : [W, B] },
+	LandCardInfo { name : "Izzet Guildgate",     cardtype : "Land",     subtypes : ["Gate"],   landtype : Gates, produces : [U, R] },
+	LandCardInfo { name : "Golgari Guildgate",   cardtype : "Land",     subtypes : ["Gate"],   landtype : Gates, produces : [B, G] },
+	LandCardInfo { name : "Boros Guildgate",     cardtype : "Land",     subtypes : ["Gate"],   landtype : Gates, produces : [R, W] },
+	LandCardInfo { name : "Simic Guildgate",     cardtype : "Land",     subtypes : ["Gate"],   landtype : Gates, produces : [G, U] },
+
+    LandCardInfo { name : "Temple of Enlightenment", cardtype : "Land", subtypes : [],   landtype : ScryLand, produces : [W, U] },
+	LandCardInfo { name : "Temple of Deceit",        cardtype : "Land", subtypes : [],   landtype : ScryLand, produces : [U, B] },
+	LandCardInfo { name : "Temple of Malice",        cardtype : "Land", subtypes : [],   landtype : ScryLand, produces : [B, R] },
+	LandCardInfo { name : "Temple of Abandon",       cardtype : "Land", subtypes : [],   landtype : ScryLand, produces : [R, G] },
+	LandCardInfo { name : "Temple of Plenty",        cardtype : "Land", subtypes : [],   landtype : ScryLand, produces : [G, W] },
+                                                                                                                                                    
+	LandCardInfo { name : "Temple of Silence",   cardtype : "Land",     subtypes : [],   landtype : ScryLand, produces : [W, B] },
+	LandCardInfo { name : "Temple of Epiphany",  cardtype : "Land",     subtypes : [],   landtype : ScryLand, produces : [U, R] },
+	LandCardInfo { name : "Temple of Malady",    cardtype : "Land",     subtypes : [],   landtype : ScryLand, produces : [B, G] },
+	LandCardInfo { name : "Temple of Triumph",   cardtype : "Land",     subtypes : [],   landtype : ScryLand, produces : [R, W] },
+	LandCardInfo { name : "Temple of Mystery",   cardtype : "Land",     subtypes : [],   landtype : ScryLand, produces : [G, U] },
+
+    LandCardInfo { name : "Flooded Strand",      cardtype : "Land", subtypes : [],   landtype : FetchLand, produces : [W, U] },
+	LandCardInfo { name : "Polluted Delta",      cardtype : "Land", subtypes : [],   landtype : FetchLand, produces : [U, B] },
+	LandCardInfo { name : "Bloodstained Mire",  cardtype : "Land", subtypes : [],   landtype : FetchLand, produces : [B, R] },
+	LandCardInfo { name : "Wooded Foothills",    cardtype : "Land", subtypes : [],   landtype : FetchLand, produces : [R, G] },
+	LandCardInfo { name : "Windswept Heath",     cardtype : "Land", subtypes : [],   landtype : FetchLand, produces : [G, W] },
+
+	LandCardInfo { name : "Caves of Koilos",     cardtype : "Land",     subtypes : [],   landtype : PainLand, produces : [W, B] },
+	LandCardInfo { name : "Shivan Reef",         cardtype : "Land",     subtypes : [],   landtype : PainLand, produces : [U, R] },
+	LandCardInfo { name : "Llanowar Wastes",     cardtype : "Land",     subtypes : [],   landtype : PainLand, produces : [B, G] },
+	LandCardInfo { name : "Battlefield Forge",   cardtype : "Land",     subtypes : [],   landtype : PainLand, produces : [R, W] },
+	LandCardInfo { name : "Yavimaya Coast",      cardtype : "Land",     subtypes : [],   landtype : PainLand, produces : [G, U] },
+
+    LandCardInfo { name : "Nomad Outpost",       cardtype : "Land",     subtypes : [],   landtype : WedgeLand, produces : [W, B, R] },
+    LandCardInfo { name : "Frontier Bivouac",    cardtype : "Land",     subtypes : [],   landtype : WedgeLand, produces : [U, R, G] },
+    LandCardInfo { name : "Sandsteppe Citadel",  cardtype : "Land",     subtypes : [],   landtype : WedgeLand, produces : [B, G, W] },
+    LandCardInfo { name : "Mystic Monestary",    cardtype : "Land",     subtypes : [],   landtype : WedgeLand, produces : [R, W, U] },
+    LandCardInfo { name : "Opulent Palace",      cardtype : "Land",     subtypes : [],   landtype : WedgeLand, produces : [G, U, B] },
+
+    LandCardInfo { name : "Evolving Wild",       cardtype : "Land", subtypes : [], landtype : SpecialLand, produces : [W, U, B, R, G] },
+    LandCardInfo { name : "Urborg, Tomb of Yawgmoth", cardtype : "Land", subtypes : [], landtype: SpecialLand, produces : [B] },
+    LandCardInfo { name : "Mana Confluence", cardtype : "Land", subtypes : [], landtype : SpecialLand, produces : [W, U, B, R, G] },
+];
+
+#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
+pub enum SpecType {
+    EvolvingWild,
+    Urborg,
+    ManaConfluence
+}
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Land {
-    EvolvingWild,
-    Urborg,
-    ManaConfluence,
+    Special(SpecType),
     Basic(Color),
     Shock(Dual),
     Gate(Dual),
@@ -295,7 +374,7 @@ impl Land {
             Fetch(d) => match d {
                 A(WU) => "Flooded Strand",
                 A(UB) => "Polluted Delta",
-                A(BR) => "Bloodstrained Mire",
+                A(BR) => "Bloodstained Mire",
                 A(RG) => "Wooded Foothills",
                 A(GW) => "Windswept Heath",
                 
@@ -319,11 +398,11 @@ impl Land {
                 RWU => "Mystic Monestary",
                 GUB => "Opulent Palace"
             },
-            EvolvingWild =>
+            Special(EvolvingWild) =>
                 "Evolving Wild",
-            Urborg => 
+            Special(Urborg) => 
                 "Urborg, Tomb of Yawgmoth",
-            ManaConfluence =>
+            Special(ManaConfluence) =>
                 "Mana Confluence"
 
             //Frontier Bivouac
@@ -344,9 +423,9 @@ impl Land {
             Fetch(d) => d.source(),
             Pain(e) => e.source(),
             Khan(w) => w.source(),
-            EvolvingWild => Mana::w(1) + Mana::u(1) + Mana::b(1) + Mana::r(1) + Mana::g(1),
-            ManaConfluence => Mana::w(1) + Mana::u(1) + Mana::b(1) + Mana::r(1) + Mana::g(1),
-            Urborg => Mana::b(1)
+            Special(EvolvingWild) => Mana::w(1) + Mana::u(1) + Mana::b(1) + Mana::r(1) + Mana::g(1),
+            Special(ManaConfluence) => Mana::w(1) + Mana::u(1) + Mana::b(1) + Mana::r(1) + Mana::g(1),
+            Special(Urborg) => Mana::b(1)
         }
     }
 
@@ -360,13 +439,84 @@ impl Land {
             Fetch(_) => true,
             Pain(_) => true,
             Khan(_) => false,
-            EvolvingWild => false,
-            Urborg => true,
-            ManaConfluence => true
+            Special(EvolvingWild) => false,
+            Special(Urborg) => true,
+            Special(ManaConfluence) => true
 	    }	
     }
 
     fn tapped(&self) -> bool { !self.untapped() }
+
+    fn from_string(s: &str) -> Option<Land> {
+        for i in range(0u, LANDS.len()) { 
+            let lc = LANDS[i];
+            if lc.name == s {
+                return match lc.landtype {
+                    BasicLand => 
+                        Some(match lc.produces {
+                            [c] => Basic(c),
+                            _ => fail!("Uh")
+                        }),
+                    ScryLand =>
+                        Some(Scry(match lc.produces {
+                            [W, U] => A(WU),
+                            [U, B] => A(UB),
+                            [B, R] => A(BR),
+                            [R, G] => A(RG),
+                            [G, W] => A(GW),
+                            [W, B] => E(WB),
+                            [U, R] => E(UR),
+                            [B, G] => E(BG),
+                            [R, W] => E(RW),
+                            [G, U] => E(GU),
+                            _ => fail!("oops")
+                        })),
+                    FetchLand =>
+                        Some(Fetch(match lc.produces {
+                            [W, U] => A(WU),
+                            [U, B] => A(UB),
+                            [B, R] => A(BR),
+                            [R, G] => A(RG),
+                            [G, W] => A(GW),
+                            [W, B] => E(WB),
+                            [U, R] => E(UR),
+                            [B, G] => E(BG),
+                            [R, W] => E(RW),
+                            [G, U] => E(GU),
+                            _ => fail!("oops")
+                        })),
+                    PainLand => 
+                        Some(Pain(match lc.produces {
+                            [W, B] => WB,
+                            [U, R] => UR,
+                            [B, G] => BG,
+                            [R, W] => RW,
+                            [G, U] => GU,
+                            _ => fail!("oops")
+                        })),
+                    WedgeLand =>
+                        Some(Khan(match lc.produces {
+                            [W, B, R] => WBR,
+                            [U, R, G] => URG,
+                            [B, G, W] => BGW,
+                            [R, W, U] => RWU,
+                            [G, U, B] => GUB,
+                            _ => fail!("oops")
+                        })),
+
+                    SpecialLand =>
+                        match lc.name {
+                            "Urborg, Tomb of Yawgmoth" => Some(Special(Urborg)),
+                            "Evolving Wild" => Some(Special(EvolvingWild)),
+                            "Mana Confluence" => Some(Special(ManaConfluence)),
+                            _ => None
+                        },
+                    _ => None
+                }
+            }
+        }
+        return None
+    }
 }
 
 struct LandKeys;
@@ -376,9 +526,9 @@ impl Keys<Land> for LandKeys {
 
     fn to_uint(&self, l:Land) -> uint { 
         match l {
-            EvolvingWild => 0,
-            Urborg => 1,
-            ManaConfluence => 2,
+            Special(EvolvingWild) => 0,
+            Special(Urborg) => 1,
+            Special(ManaConfluence) => 2,
             Basic(c) => 3 + ColorKeys.to_uint(c),
             Shock(d) => 3 + ColorKeys.size() + DualKeys.to_uint(d),
             Gate(d)  => 3 + ColorKeys.size() + DualKeys.size() + DualKeys.to_uint(d),
@@ -391,9 +541,9 @@ impl Keys<Land> for LandKeys {
     }
 
     fn from_uint(&self, d: uint) -> Land {
-        if d == 0 { EvolvingWild }
-        else if d == 1 { Urborg }
-        else if d == 2 { ManaConfluence }
+        if d == 0 { Special(EvolvingWild) }
+        else if d == 1 { Special(Urborg) }
+        else if d == 2 { Special(ManaConfluence) }
         else if d < 3 + ColorKeys.size() { 
             Basic(ColorKeys.from_uint(d - 2))
         }
@@ -419,7 +569,7 @@ impl Keys<Land> for LandKeys {
 }
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
-enum LandType { Special, BasicLand, ShockLand, Gates, ScryLand, RefuLand, FetchLand, PainLand, WedgeLand }
+enum LandType { SpecialLand, BasicLand, ShockLand, Gates, ScryLand, RefuLand, FetchLand, PainLand, WedgeLand }
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Card {
@@ -450,7 +600,7 @@ impl Card {
             L(Fetch(_)) => FetchLand,
             L(Pain(_)) => PainLand,
             L(Khan(_)) => WedgeLand,
-            _ => Special
+            _ => SpecialLand
         }
     }
 }
@@ -575,6 +725,48 @@ impl Mana {
 }
 
 //
+//
+pub fn test_parsing() -> Vec<(Land, int)>
+{
+    //use regex::Regex;
+
+    /*
+    let lands = r#"2 Caves of Koilos               
+                   2 Flooded Strand                
+                   3 Island                        
+                   2 Plains                        
+                   2 Polluted Delta                
+                   2 Swamp                         
+                   4 Temple of Deceit              
+                   4 Temple of Enlightenment       
+                   4 Temple of Silence             
+                   1 Urborg, Tomb of Yawgmoth"#;
+    */
+    let lands = r#"4 Bloodstained Mire
+                   2 Mana Confluence
+                   3 Mountain
+                   4 Nomad Outpost
+                   1 Plains
+                   3 Swamp
+                   4 Temple of Silence
+                   4 Temple of Triumph
+                   1 Urborg, Tomb of Yawgmoth"#;
+
+
+    lands.as_slice().split('\n').map(|line| { 
+        //println!("line = '{}'", line.);
+        let caps:Vec<&str> = line.as_slice().trim().splitn(1, ' ').collect(); 
+        let n = from_str::<int>(caps[0]).unwrap();
+
+        (Land::from_string(caps[1]).unwrap(), n)
+
+        //println!("{:d} {:s}", n, match Land::from_string(caps[1]) {
+        //Some(l) => l.show(), None => format!("{}", "??")
+        //})            
+    }).collect()
+}
+
+//
 // Representing a set of cards
 //  - Must quickly know how many of a particular card there is
 //
@@ -599,49 +791,92 @@ pub fn test() -> uint
     
     let mut ls = TreeMap::<Card, uint>::new();
 
-    ls.insert(L(ManaConfluence), 2);
-    //ls.insert(L(EvolvingWild), 2);
-    ls.insert(L(Basic(U)), 2);
-    ls.insert(L(Basic(B)), 1);
-    ls.insert(L(Basic(R)), 1);
+    if false {
+        ls.insert(L(Special(ManaConfluence)), 2);
+        //ls.insert(L(EvolvingWild), 2);
+        ls.insert(L(Basic(U)), 2);
+        ls.insert(L(Basic(B)), 1);
+        ls.insert(L(Basic(R)), 1);
+        
+        // UR:
+        ls.insert(L(Pain(UR)), 4);
+        ls.insert(L(Scry(E(UR))), 1);
+        //ls.insert(L(Refu(E(UR))), 1);
+        
+        // UB:
+        ls.insert(L(Fetch(A(UB))), 4);
+        ls.insert(L(Scry(A(UB))), 4);
+        ls.insert(L(Refu(A(UB))), 2);
+        //ls.insert(L(Khan(GUB)), 1);
+        
+        // BR:
+        ls.insert(L(Fetch(A(BR))), 1);
+        ls.insert(L(Scry(A(BR))), 4);
+        //ls.insert(L(Refu(A(BR))), 1);
+        
+        ls.insert(L(Special(Urborg)), 1);
+    }
+    else if false {
+        // 26: (10, 18, 16, 10) 
 
-    // UR:
-    ls.insert(L(Pain(UR)), 4);
-    ls.insert(L(Scry(E(UR))), 1);
-    //ls.insert(L(Refu(E(UR))), 1);
-    
-    // UB:
-    ls.insert(L(Fetch(A(UB))), 4);
-    ls.insert(L(Scry(A(UB))), 4);
-    ls.insert(L(Refu(A(UB))), 2);
-    //ls.insert(L(Khan(GUB)), 1);
+        // --: ( 4,  0,  4,  4)
+        // --: ( 4,  4,  0,  4)
+        // ----------------
+        // 18: ( 2, 14, 12,  2)
+        // 12: ( 1, 12, 10,  1) 6 basics [24/12]
+        
+        // Mana Confluence = 4.0 sources per card
+        // Tri-lands = 3.0 sources per card
+        // 4 Evolving Wilds + 4 Basics = (4*4+4)/8 = 2.5 sources per card
+        // Duals = 2.0 sources per card
+        // 4 Fetchland + 4 Basics = 12/8 = 1.5 sources per card
 
-    // BR:
-    ls.insert(L(Fetch(A(BR))), 1);
-    ls.insert(L(Scry(A(BR))), 4);
-    //ls.insert(L(Refu(A(BR))), 1);
+        // Base UB, splashing white (Utter End, Narset) & red.
+        ls.insert(L(Khan(WBR)), 4);
+        ls.insert(L(Khan(RWU)), 4);
 
-    ls.insert(L(Urborg), 1);
+        ls.insert(L(Basic(W)), 1);
+        ls.insert(L(Basic(U)), 2);
+        ls.insert(L(Basic(B)), 2);
+        ls.insert(L(Special(Urborg)), 1);
+        ls.insert(L(Special(ManaConfluence)), 1);
+
+        ls.insert(L(Fetch(A(UB))), 4);
+        ls.insert(L(Fetch(A(WU))), 1);
+        ls.insert(L(Scry(A(UB))), 3);
+        ls.insert(L(Refu(A(UB))), 1);
+        ls.insert(L(Pain(UR)), 2);
+
+    }
+    else {
+        let ps = test_parsing();
+
+        for &(l, n) in ps.iter() {
+            ls.insert(L(l), n as uint);
+        }
+    }
+        
+        
     
     //ls.insert(S, 36);
     //ls.insert(L(Khan(URG)), 2);            
 
     let conc = |acc:String, (&card, &num): (&Card, &uint)| -> String {
         if acc == "".to_string() {
-            format!("{:2u} {:-30s} {:-5s}", num, card.show(), card.source().mul(num).reset(W).reset(G).src())
+            format!("{:2u} {:-30s} {:-5s}", num, card.show(), card.source().mul(num).src())
         } else {
-            format!("{}\n{:2u} {:-30s} {:-5s}", acc, num, card.show(), card.source().mul(num).reset(W).reset(G).src())
+            format!("{}\n{:2u} {:-30s} {:-5s}", acc, num, card.show(), card.source().mul(num).src())
         }
     };
 
     let res = ls.iter().fold("".to_string(), conc);
 
     let lds = ls.iter()
-        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n)) });
     let unt = ls.iter().filter(|&(c, _)| c.untapped())
-        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n)) });
     let tap = ls.iter().filter(|&(c, _)| !c.untapped())
-        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n)) });
 
     println!("Res:\n{}", res);
     println!("{:2u} {:-30s} {:-5s}\n", lds.0, "Cards".to_string(), lds.1.src());
@@ -649,15 +884,15 @@ pub fn test() -> uint
     println!("{:2u} {:-30s} {:-5s}\n", tap.0, "Tapped".to_string(), tap.1.src());
 
     let basics = ls.iter().filter(|&(c, _)| c.land_type() == BasicLand)
-        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n)) });
     let fetches = ls.iter().filter(|&(c, _)| c.land_type() == FetchLand)
-        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n)) });
     let scrys = ls.iter().filter(|&(c, _)| c.land_type() == ScryLand)
-        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n)) });
     let pains = ls.iter().filter(|&(c, _)| c.land_type() == PainLand)
-        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n)) });
     let refus = ls.iter().filter(|&(c, _)| c.land_type() == RefuLand)
-        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n).reset(W).reset(G)) });
+        .fold((0u, Mana::zero()), |(l, m), (c, n)| { (l + *n, m + c.source().mul(*n)) });
 
     println!("{:2u} {:-30s} {:-5s}", basics.0, "Basics".to_string(), basics.1.src());
     println!("{:2u} {:-30s} {:-5s}", fetches.0, "Fetch-lands".to_string(), fetches.1.src());
