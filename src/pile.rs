@@ -1,8 +1,38 @@
 use std::iter::AdditiveIterator;
 use std::fmt;
 use prob;
-use standard::Keys;
 use perm::MultiSubSetIterator;
+
+pub trait Keys<K> {
+    fn size(&self) -> uint;
+    fn to_uint(&self, K) -> uint;
+    fn from_uint(&self, n: uint) -> K;
+    fn iter<'a>(&'a self) -> KeysIterator<'a, K> {
+        KeysIterator { keys : self, idx : 0 }
+    }
+}
+
+struct KeysIterator<'a, K:'a> {
+    keys : &'a Keys<K>+'a,
+    idx : uint
+}
+
+impl<'a,K> Iterator<K> for KeysIterator<'a, K> {
+    fn next(&mut self) -> Option<K> {
+        let i = self.idx;
+        self.idx += 1;
+        if i < self.keys.size() {
+            Some(self.keys.from_uint(i))
+        }
+        else {
+            None
+        }
+    }
+}
+
+pub fn to_vec<K>(k : &Keys<K>) -> Vec<K> {
+    k.iter().collect::<Vec<K>>()
+}
 
 //
 // A Pile is like a key-value map, where the values are always uint.

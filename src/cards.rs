@@ -14,6 +14,7 @@ extern crate debug;
 extern crate collections;
 extern crate num;
 extern crate regex;
+extern crate serialize;
 
 use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use std::os;
@@ -26,6 +27,8 @@ mod standard;
 mod table;
 mod perm;
 mod interval;
+mod mana;
+mod colors;
 
 //
 // Mulligan Rule: 
