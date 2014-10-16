@@ -4,7 +4,11 @@ use colors::*;
 use serialize::json;
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord, Encodable, Decodable)]
-enum LandType { BasicLand, AlphaLand, TappedLand, UntappedLand, ShockLand, FastLand, Gates, ScryLand, RefuLand, FetchLand, PainLand, WedgeLand, CheckLand, ManLand, StorageLand, FilterLand }
+enum LandType { 
+    BasicLand, AlphaLand, TappedLand, UntappedLand, ShockLand, FastLand, 
+    Gates, ScryLand, RefuLand, FetchLand, PainLand, WedgeLand, CheckLand, 
+    ManLand, StorageLand, FilterLand, LifeLand
+}
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord, Encodable, Decodable)]
 enum ShortName {
@@ -16,6 +20,7 @@ enum ShortName {
     WUt, UBt, BRt, RGt, GWt, WBt, URt, BGt, RWt, GUt,
     WUf, UBf, BRf, RGf, GWf, WBf, URf, BGf, RWf, GUf,
     WUp, UBp, BRp, RGp, GWp, WBp, URp, BGp, RWp, GUp,
+    WUl, UBl, BRl, RGl, GWl, WBl, URl, BGl, RWl, GUl,
     WUfl, UBfl, BRfl, RGfl, GWfl, WBfl, URfl, BGfl, RWfl, GUfl,
     WUF, UBF, BRF, RGF, GWF, 
     WUm, UBm, BRm, RGm, GWm, 
@@ -87,7 +92,8 @@ impl LandCardInfo {
             UntappedLand => true,
             StorageLand => true,
             ManLand => false,
-            FilterLand => true
+            FilterLand => true,
+            LifeLand => false
 	    }	
     }    
 }
@@ -112,11 +118,11 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
     }).collect()
 }
 
-pub fn test() -> uint
+pub fn analyze(lands: &str, deck: &str) -> uint
 {
     use std::io::File;
     
-    let p = Path::new("src/lands.json");
+    let p = Path::new(lands);
     let mut f = File::open(&p).unwrap();
     let text = f.read_to_string().unwrap();
     let db:Vec<LandCardInfo> = json::decode(text.as_slice()).unwrap();
@@ -127,15 +133,30 @@ pub fn test() -> uint
         .iter().map(|&(n, s)| (db.iter().find(|&c| c.short == s).unwrap(), n)).collect();
     */
 
-    let lands = 
-        File::open(&Path::new("src/deck.txt")).unwrap().read_to_string().unwrap();
+    let deck = 
+        File::open(&Path::new(deck)).unwrap().read_to_string().unwrap();
 
-    //println!("=========================\n{}================", lands);
+    //println!("=========================\n{}================", deck);
 
-    let ls = parse_lands(lands.as_slice(), &db);    
+    let ls = parse_lands(deck.as_slice(), &db);    
 
-    for &(card, num) in ls.iter() {
-        println!("{:2u} {:-30s} {:-5s}", num, card.show(), card.source(&ls).mul(num).show())
+    {
+        use table::{Table, LStr, RStr, UInt};
+        let mut table = Table::new(1+ls.len(), 3);
+
+        {
+            table.set(0, 0, RStr("#".to_string()));
+            table.set(0, 1, LStr("Land".to_string()));
+            table.set(0, 2, LStr("( W, U, B, R, G, C)".to_string()));
+        }
+
+        for (row, &(card, num)) in ls.iter().enumerate() {
+            table.set(1 + row, 0, UInt(num));
+            table.set(1 + row, 1, LStr(card.show()));
+            table.set(1 + row, 2, LStr(card.source(&ls).mul(num).show()));
+        }
+
+        table.print("Deck");
     }
 
     let lds = ls.iter()

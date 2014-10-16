@@ -557,8 +557,8 @@ fn main() {
 
     let args = os::args();
 
-    if args.len() < 2 {
-        let lands = standard::test();
+    if args.len() == 1 {
+        let lands = standard::analyze("../src/lands.json", "../src/deck.txt");
         summary_c(lands, 60);
     }
 	else if args.len() == 2 && args[1].as_slice() == "land"	{
