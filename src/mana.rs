@@ -1,4 +1,4 @@
-use colors::*;
+use colors::{Color,W,U,B,R,G,C};
 
 pub struct Mana([uint, ..6]);
 

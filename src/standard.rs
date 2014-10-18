@@ -1,6 +1,6 @@
 //use collections::treemap::TreeMap;
 use mana::Mana;
-use colors::*;
+use colors::{Color,U,W,B,R,G,C};
 use serialize::json;
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord, Encodable, Decodable)]
