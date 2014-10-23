@@ -1,6 +1,6 @@
 //use collections::treemap::TreeMap;
 use mana::Mana;
-use colors::*;
+use colors::{Color,U,W,B,R,G,C};
 use serialize::json;
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord, Encodable, Decodable)]
@@ -21,7 +21,8 @@ enum LandType
 	CheckLand,
 	ManLand,
 	StorageLand,
-	FilterLand
+	FilterLand, 
+    LifeLand
 }
 
 #[deriving(Encodable, Decodable)]
@@ -87,7 +88,8 @@ impl LandCardInfo {
             UntappedLand => true,
             StorageLand => true,
             ManLand => false,
-            FilterLand => true
+            FilterLand => true,
+            LifeLand => false
 	    }	
     }    
 }
@@ -112,24 +114,45 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
     }).collect()
 }
 
-pub fn test() -> uint
+pub fn analyze(lands: &str, deck: &str) -> uint
 {
     use std::io::File;
     
-    let p = Path::new("src/lands.json");
+    let p = Path::new(lands);
     let mut f = File::open(&p).unwrap();
     let text = f.read_to_string().unwrap();
     let db:Vec<LandCardInfo> = json::decode(text.as_slice()).unwrap();
 
-    let lands = 
-        File::open(&Path::new("src/deck.txt")).unwrap().read_to_string().unwrap();
+    /*
+    let ls2:Vec<(&LandCardInfo, uint)> = vec![(2, WBp), (2, WUf), (3, Isl), (2, Pla), (2, UBf), 
+                                              (2, Swa), (4, UBt), (4, WUt), (4, WBt), (1, Urb)]
+        .iter().map(|&(n, s)| (db.iter().find(|&c| c.short == s).unwrap(), n)).collect();
+    */
 
-    //println!("=========================\n{}================", lands);
+    let deck = 
+        File::open(&Path::new(deck)).unwrap().read_to_string().unwrap();
 
-    let ls = parse_lands(lands.as_slice(), &db);    
+    //println!("=========================\n{}================", deck);
 
-    for &(card, num) in ls.iter() {
-        println!("{:2u} {:-30s} {:-5s}", num, card.show(), card.source(&ls).mul(num).src())
+    let ls = parse_lands(deck.as_slice(), &db);    
+
+    {
+        use table::{Table, LStr, RStr, UInt};
+        let mut table = Table::new(1+ls.len(), 3);
+
+        {
+            table.set(0, 0, RStr("#".to_string()));
+            table.set(0, 1, LStr("Land".to_string()));
+            table.set(0, 2, LStr("".to_string()));
+        }
+
+        for (row, &(card, num)) in ls.iter().enumerate() {
+            table.set(1 + row, 0, UInt(num));
+            table.set(1 + row, 1, LStr(card.show()));
+            table.set(1 + row, 2, LStr(card.source(&ls).mul(num).src()));
+        }
+
+        table.print("Deck");
     }
 
     let lds = ls.iter()

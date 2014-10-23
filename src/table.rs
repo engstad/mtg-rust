@@ -51,7 +51,7 @@ impl Table {
             }
         }
         
-        let tot_width = width.iter().fold(0, |a,&b| a + b);
+        let tot_width = width.iter().fold(0, |a,&b| a + b + 1);
         let line_width = tot_width - caption.len() - 2;
         let left = "=".repeat(line_width/2);
         let rght = "=".repeat((line_width+1)/2);
@@ -60,11 +60,11 @@ impl Table {
         for line in self.rows.iter() {
             for (c, elem) in line.iter().enumerate() {
                 match *elem {
-                    Int(i)     => print!("{:w$i}", i,           w=width[c]),
-                    UInt(u)    => print!("{:w$u}", u,           w=width[c]),
-                    Empty      => print!("{:>w$s}", "-",        w=width[c]),
-                    LStr(ref s) => print!("{:<w$s}", s.to_string(), w=width[c]),
-                    RStr(ref s) => print!("{:>w$s}", s.to_string(), w=width[c])
+                    Int(i)     => print!("{:w$i} ", i,           w=width[c]),
+                    UInt(u)    => print!("{:w$u} ", u,           w=width[c]),
+                    Empty      => print!("{:>w$s} ", "-",        w=width[c]),
+                    LStr(ref s) => print!("{:<w$s} ", s.to_string(), w=width[c]),
+                    RStr(ref s) => print!("{:>w$s} ", s.to_string(), w=width[c])
                 }
             }
             print!("\n");

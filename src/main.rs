@@ -1,16 +1,6 @@
-// compile with: rustc --opt-level 3 -Adead_code cards.rs
-
-// #![allow(dead_code)]
-// #![allow(uppercase_variables)]
-// #![allow(unused_imports)]
-// #![feature(globs)]
-// #![feature(macro_rules)]
-// #![feature(simd)]
-#![feature(globs)]
-#![feature(macro_rules)]
+#![allow(dead_code)]
 #![feature(tuple_indexing)]
 
-extern crate debug;
 extern crate collections;
 extern crate num;
 extern crate regex;
@@ -557,8 +547,8 @@ fn main() {
 
     let args = os::args();
 
-    if args.len() < 2 {
-        let lands = standard::test();
+    if args.len() == 1 {
+        let lands = standard::analyze("target/lands.json", "target/deck.txt");
         summary_c(lands, 60);
     }
 	else if args.len() == 2 && args[1].as_slice() == "land"	{
