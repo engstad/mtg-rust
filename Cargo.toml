@@ -11,3 +11,6 @@ build = "sh build.sh"
 name = "mtg-rust"
 path = "src/main.rs"
 
+[dependencies.hyper]
+
+git = "https://github.com/hyperium/hyper"
