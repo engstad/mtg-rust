@@ -6,7 +6,7 @@ SRC=$(wildcard src/*.rs)
 all: cards.exe
 
 cards.exe: $(SRC)
-	$(RUSTC) $(RUST_OPTS) src/cards.rs
+	$(RUSTC) $(RUST_OPTS) src/main.rs -o cards.exe
 
 .PHONY: clean
 clean:

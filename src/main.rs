@@ -2,7 +2,6 @@
 #![feature(tuple_indexing)]
 
 extern crate collections;
-extern crate num;
 extern crate regex;
 extern crate serialize;
 
