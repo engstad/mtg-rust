@@ -54,16 +54,27 @@ impl Mana {
                 "R".repeat(v[3] as uint),
                 "G".repeat(v[4] as uint))
     }
-    
+
     pub fn src(&self) -> String {
         let Mana(v) = *self;
-        format!("{}{}{}{}{}{}",
-                if v[0] > 0 { format!("W:{:2u} ", v[0]) } else { "".to_string() }, 
-                if v[1] > 0 { format!("U:{:2u} ", v[1]) } else { "".to_string() }, 
-                if v[2] > 0 { format!("B:{:2u} ", v[2]) } else { "".to_string() }, 
-                if v[3] > 0 { format!("R:{:2u} ", v[3]) } else { "".to_string() }, 
-                if v[4] > 0 { format!("G:{:2u} ", v[4]) } else { "".to_string() }, 
-                if v[5] > 0 { format!("X:{:2u} ", v[5]) } else { "".to_string() })        
+
+        fn f(v:uint, l:char, spc:bool) -> String {
+            if v > 0 {
+			    format!("{}{:2u}{}", if spc { " " } else { "" }, v, l)
+		    }
+		    else { 
+                (if spc {"    "} else {"   "}).to_string()
+            }
+	    }        
+
+        let w = f(v[0], 'W', false);
+        let u = f(v[1], 'U', true);
+        let b = f(v[2], 'B', true);
+        let r = f(v[3], 'R', true);
+        let g = f(v[4], 'G', true);
+        let x = f(v[5], 'X', true);
+
+        format!("{}{}{}{}{}{}", w, u, b, r, g, x)
     }
 }
 

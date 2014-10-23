@@ -4,30 +4,30 @@ use colors::*;
 use serialize::json;
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord, Encodable, Decodable)]
-enum LandType { BasicLand, AlphaLand, TappedLand, UntappedLand, ShockLand, FastLand, Gates, ScryLand, RefuLand, FetchLand, PainLand, WedgeLand, CheckLand, ManLand, StorageLand, FilterLand }
-
-#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord, Encodable, Decodable)]
-enum ShortName {
-    Pla, Isl, Swa, Mtn, For,
-    WUa, UBa, BRa, RGa, GWa, WBa, URa, BGa, RWa, GUa,
-    WUs, UBs, BRs, RGs, GWs, WBs, URs, BGs, RWs, GUs,
-    WUc, UBc, BRc, RGc, GWc, WBc, URc, BGc, RWc, GUc,
-    WUg, UBg, BRg, RGg, GWg, WBg, URg, BGg, RWg, GUg,
-    WUt, UBt, BRt, RGt, GWt, WBt, URt, BGt, RWt, GUt,
-    WUf, UBf, BRf, RGf, GWf, WBf, URf, BGf, RWf, GUf,
-    WUp, UBp, BRp, RGp, GWp, WBp, URp, BGp, RWp, GUp,
-    WUfl, UBfl, BRfl, RGfl, GWfl, WBfl, URfl, BGfl, RWfl, GUfl,
-    WUF, UBF, BRF, RGF, GWF, 
-    WUm, UBm, BRm, RGm, GWm, 
-    WUst, UBst, BRst, RGst, GWst, 
-    WBRw, URGw, BGWw, RWUw, GUBw,
-    EvW, MaC, Urb, TeE, DeL
+enum LandType
+{
+	BasicLand,
+	AlphaLand,
+	TappedLand,
+	UntappedLand,
+	ShockLand,
+	FastLand,
+	Gates,
+	ScryLand,
+	RefuLand,
+	FetchLand,
+	PainLand,
+	WedgeLand,
+	CheckLand,
+	ManLand,
+	StorageLand,
+	FilterLand
 }
 
 #[deriving(Encodable, Decodable)]
 pub struct LandCardInfo {
     pub name : String,
-    pub short : ShortName,
+    pub short : String,
     pub cardtype : String,
     pub subtypes : Vec<String>,
     pub landtype : LandType,
@@ -103,7 +103,7 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
 
         let n = from_str::<uint>(caps[0]);
         let l = db.iter().find(|&nm| nm.name.as_slice() == caps[1] ||
-                               format!("{}", nm.short).as_slice() == caps[1]);
+                                     nm.short.as_slice() == caps[1]);
         
         match (n, l) {
             (Some(n), Some(l)) => Some((l, n)), 
@@ -121,12 +121,6 @@ pub fn test() -> uint
     let text = f.read_to_string().unwrap();
     let db:Vec<LandCardInfo> = json::decode(text.as_slice()).unwrap();
 
-    /*
-    let ls2:Vec<(&LandCardInfo, uint)> = vec![(2, WBp), (2, WUf), (3, Isl), (2, Pla), (2, UBf), 
-                                              (2, Swa), (4, UBt), (4, WUt), (4, WBt), (1, Urb)]
-        .iter().map(|&(n, s)| (db.iter().find(|&c| c.short == s).unwrap(), n)).collect();
-    */
-
     let lands = 
         File::open(&Path::new("src/deck.txt")).unwrap().read_to_string().unwrap();
 
@@ -135,7 +129,7 @@ pub fn test() -> uint
     let ls = parse_lands(lands.as_slice(), &db);    
 
     for &(card, num) in ls.iter() {
-        println!("{:2u} {:-30s} {:-5s}", num, card.show(), card.source(&ls).mul(num).show())
+        println!("{:2u} {:-30s} {:-5s}", num, card.show(), card.source(&ls).mul(num).src())
     }
 
     let lds = ls.iter()
@@ -145,9 +139,9 @@ pub fn test() -> uint
     let tap = ls.iter().filter(|&&(c, _)| !c.untapped())
         .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
 
-    println!("{:2u} {:-30s} {:-5s}\n", lds.0, "Cards".to_string(), lds.1.show());
-    println!("{:2u} {:-30s} {:-5s}", unt.0, "Untapped".to_string(), unt.1.show());
-    println!("{:2u} {:-30s} {:-5s}\n", tap.0, "Tapped".to_string(), tap.1.show());
+    println!("{:2u} {:-30s} {:-5s}\n", lds.0, "Cards".to_string(), lds.1.src());
+    println!("{:2u} {:-30s} {:-5s}", unt.0, "Untapped".to_string(), unt.1.src());
+    println!("{:2u} {:-30s} {:-5s}\n", tap.0, "Tapped".to_string(), tap.1.src());
 
     let basics = ls.iter().filter(|&&(c, _)| c.landtype == BasicLand)
         .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
@@ -162,12 +156,12 @@ pub fn test() -> uint
     let specs = ls.iter().filter(|&&(c, _)| c.landtype == TappedLand || c.landtype == UntappedLand)
         .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
 
-    println!("{:2u} {:-30s} {:-5s}", basics.0, "Basics".to_string(), basics.1.show());
-    println!("{:2u} {:-30s} {:-5s}", fetches.0, "Fetch-lands".to_string(), fetches.1.show());
-    println!("{:2u} {:-30s} {:-5s}", pains.0, "Pain-lands".to_string(), pains.1.show());
-    println!("{:2u} {:-30s} {:-5s}", scrys.0, "Scry-lands".to_string(), scrys.1.show());
-    println!("{:2u} {:-30s} {:-5s}", refus.0, "Refugee lands".to_string(), refus.1.show());
-    println!("{:2u} {:-30s} {:-5s}", specs.0, "Special lands".to_string(), specs.1.show());
+    println!("{:2u} {:-30s} {:-5s}", basics.0, "Basics".to_string(), basics.1.src());
+    println!("{:2u} {:-30s} {:-5s}", fetches.0, "Fetch-lands".to_string(), fetches.1.src());
+    println!("{:2u} {:-30s} {:-5s}", pains.0, "Pain-lands".to_string(), pains.1.src());
+    println!("{:2u} {:-30s} {:-5s}", scrys.0, "Scry-lands".to_string(), scrys.1.src());
+    println!("{:2u} {:-30s} {:-5s}", refus.0, "Refugee lands".to_string(), refus.1.src());
+    println!("{:2u} {:-30s} {:-5s}", specs.0, "Special lands".to_string(), specs.1.src());
 
     return lds.0;
 }
