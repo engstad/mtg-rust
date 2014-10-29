@@ -546,11 +546,7 @@ fn main() {
 
     let args = os::args();
 
-    if args.len() == 1 {
-        let lands = standard::analyze("target/lands.json", "target/deck.txt");
-        summary_c(lands, 60);
-    }
-	else if args.len() == 2 && args[1].as_slice() == "land"	{
+    if args.len() == 2 && args[1].as_slice() == "land"	{
 		investigate()
     }
     else if args.len() == 2 && args[1].as_slice() == "duals" {
@@ -570,6 +566,10 @@ fn main() {
     }
     else if args.len() == 2 && args[1].as_slice() == "frank" {
         frank_table()
+    }
+	else if args.len() == 2 {
+        let lands = standard::analyze(args[1].as_slice());
+        summary_c(lands, 60);
     }
     else if false {
         let l = 26;

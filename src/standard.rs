@@ -114,13 +114,11 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
     }).collect()
 }
 
-pub fn analyze(lands: &str, deck: &str) -> uint
+pub fn analyze(deck: &str) -> uint
 {
     use std::io::File;
     
-    let p = Path::new(lands);
-    let mut f = File::open(&p).unwrap();
-    let text = f.read_to_string().unwrap();
+    let text = include_str!("lands.json");
     let db:Vec<LandCardInfo> = json::decode(text.as_slice()).unwrap();
 
     /*

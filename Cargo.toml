@@ -4,7 +4,6 @@ name = "mtg-rust"
 version = "0.0.1"
 authors = ["Pal-Kristian Engstad <mrengstad@gmail.com>"]
 tags = []
-build = "sh build.sh"
 
 [[bin]]
 
