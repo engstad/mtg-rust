@@ -134,5 +134,6 @@
     { "name" :"Urborg, Tomb of Yawgmoth", "short" : "Urb", "cardtype" : "Land",  "subtypes" : [],                     "landtype" : "UntappedLand", "produces" : ["B"] },
     { "name" :"Tectonic Edge",            "short" : "TeE", "cardtype" : "Land",  "subtypes" : [],                     "landtype" : "UntappedLand", "produces" : ["C"] },
     { "name" :"Desolate Lighthouse",      "short" : "DeL", "cardtype" : "Land",  "subtypes" : [],                     "landtype" : "UntappedLand", "produces" : ["C"] },
-    { "name" :"Nykthos, Shrine to Nyx",   "short" : "Nyk", "cardtype" : "Land",  "subtypes" : [],                     "landtype" : "UntappedLand", "produces" : ["C"] }
+    { "name" :"Nykthos, Shrine to Nyx",   "short" : "Nyk", "cardtype" : "Land",  "subtypes" : [],                     "landtype" : "UntappedLand", "produces" : ["C"] },
+    { "name" :"Radiant Fountain",         "short" : "RaF", "cardtype" : "Land",  "subtypes" : [],                     "landtype" : "UntappedLand", "produces" : ["C"] }
 ]

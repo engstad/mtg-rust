@@ -567,6 +567,10 @@ fn main() {
     else if args.len() == 2 && args[1].as_slice() == "frank" {
         frank_table()
     }
+	else if args.len() == 2 {
+        let lands = standard::analyze(args[1].as_slice());
+        summary_c(lands, 60);
+    }
     else if false {
         let l = 26;
         let d = 60;
