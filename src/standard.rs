@@ -16,6 +16,7 @@ enum LandType
 	ScryLand,
 	RefuLand,
 	FetchLand,
+    TappedFetchLand,
 	PainLand,
 	WedgeLand,
 	CheckLand,
@@ -48,7 +49,7 @@ impl LandCardInfo {
             }
         }
 
-        if self.landtype == FetchLand {
+        if self.landtype == FetchLand || self.landtype == TappedFetchLand {
             let colors = vec![U, W, B, R, G];
 
             colors.iter().fold(Mana::new(0, 0, 0, 0, 0, 0), |acc, &color| {
@@ -85,6 +86,7 @@ impl LandCardInfo {
             PainLand => true,
             WedgeLand => false,
             TappedLand => false,
+            TappedFetchLand => false,
             UntappedLand => true,
             StorageLand => true,
             ManLand => false,
@@ -114,23 +116,17 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
     }).collect()
 }
 
-pub fn analyze(lands: &str, deck: &str) -> uint
+pub fn analyze(deck: &str) -> uint
 {
     use std::io::File;
     
-    let p = Path::new(lands);
-    let mut f = File::open(&p).unwrap();
-    let text = f.read_to_string().unwrap();
+    let text = include_str!("lands.json");
     let db:Vec<LandCardInfo> = json::decode(text.as_slice()).unwrap();
 
-    /*
-    let ls2:Vec<(&LandCardInfo, uint)> = vec![(2, WBp), (2, WUf), (3, Isl), (2, Pla), (2, UBf), 
-                                              (2, Swa), (4, UBt), (4, WUt), (4, WBt), (1, Urb)]
-        .iter().map(|&(n, s)| (db.iter().find(|&c| c.short == s).unwrap(), n)).collect();
-    */
-
-    let deck = 
-        File::open(&Path::new(deck)).unwrap().read_to_string().unwrap();
+    let mut file = match File::open(&Path::new(deck)) {
+        Ok(f) => f, Err(e) => { println!("Error: {}", e); return 0; }
+    };
+    let deck = file.read_to_string().unwrap_or("".to_string());
 
     //println!("=========================\n{}================", deck);
 
