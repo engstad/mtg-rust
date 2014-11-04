@@ -45,7 +45,7 @@ impl<'a> Iterator<Vec<uint>> for MultiSubSetIterator<'a> {
                         
                         for i in range(s, e + 1).rev() {
                             let mut na = top.a.clone();
-                            *na.get_mut(t) = i;
+                            na[t] = i;
                             let new_top = Stack{ k:k-i, l:t, n:n-m, a:na };
                             self.stack.push(new_top);
                         }

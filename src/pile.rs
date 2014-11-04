@@ -96,7 +96,7 @@ impl Keys<uint> for GenPileKeys {
     fn size(&self) -> uint { self.num_keys }
     fn to_uint(&self, n: uint) -> uint { n }
     fn from_uint(&self, n: uint) -> uint { 
-        if n < self.num_keys { n } else { fail!("out of range") } 
+        if n < self.num_keys { n } else { panic!("out of range") } 
     }
 }
 
@@ -182,21 +182,21 @@ impl Iterator<GenPile<GenPileKeys>> for GenPile<GenPileKeys> {
         let res = GenPile { e: self.e.clone(), k : self.k };
 
         if self.e[0] > 0 {
-            *self.e.get_mut(0) -= 1;
-            *self.e.get_mut(1) += 1;
+            self.e[0] -= 1;
+            self.e[1] += 1;
             Some(res)
         } else {
             let len = self.e.len();
             for i in range(1u, len-1) {
                 if self.get(i) > 0 {
-                    *self.e.get_mut(0) = self.get(i) - 1; 
-                    *self.e.get_mut(i+1) += 1;
-                    *self.e.get_mut(i) = 0;
+                    self.e[0] = self.get(i) - 1; 
+                    self.e[i+1] += 1;
+                    self.e[i] = 0;
                     return Some(res)
                 }
             }
             if self.get(len - 1) > 0 {
-                *self.e.get_mut(len-1) = 0;
+                self.e[len-1] = 0;
                 Some(res)
             } else {
                 None
@@ -224,7 +224,7 @@ impl Keys<Colored> for ColoredKeys {
     fn size(&self) -> uint { 3 }
     fn to_uint(&self, w:Colored) -> uint { w as uint }
     fn from_uint(&self, n: uint) -> Colored {
-        match n { 0 => C, 1 => N, 2 => S, _ => fail!("out of range") }
+        match n { 0 => C, 1 => N, 2 => S, _ => panic!("out of range") }
     }
 }
 
@@ -313,7 +313,7 @@ struct DualPileKeys;
 impl Keys<uint> for DualPileKeys {
     fn size(&self) -> uint { 5 }
     fn to_uint(&self, c: uint) -> uint { c }
-    fn from_uint(&self, n: uint) -> uint { if n < 5 { n } else { fail!("out of range") } }
+    fn from_uint(&self, n: uint) -> uint { if n < 5 { n } else { panic!("out of range") } }
 }
 
 impl DualPile {
@@ -334,7 +334,7 @@ impl KvMap<uint, DualPileKeys> for DualPile {
                                                2 => self.ab, 
                                                3 => self.x,
                                                4 => self.s,
-                                               _ => fail!("out of range") } }
+                                               _ => panic!("out of range") } }
 
     fn add(&self, other : &DualPile) -> DualPile {
         DualPile::new(self.a + other.a, 
