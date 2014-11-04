@@ -1,13 +1,16 @@
 #![allow(dead_code)]
 #![feature(tuple_indexing)]
+#![feature(slicing_syntax)]
 
 extern crate collections;
 extern crate regex;
 extern crate serialize;
+extern crate hyper;
 
 use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use std::os;
 use table::{Table, LStr, RStr, Int, UInt, Empty};
+use mtgjson::test_read;
 //use interval::closed;
 
 mod prob;
@@ -18,6 +21,7 @@ mod perm;
 mod interval;
 mod mana;
 mod colors;
+mod mtgjson;
 
 //
 // Mulligan Rule: 
@@ -34,7 +38,7 @@ fn mull_rule(hand_size: uint) -> (uint, uint) {
         6 => (2u, 4u),
         5 => (1u, 4u),
         4 => (0u, 4u),
-        _ => fail!("Eh")
+        _ => panic!("Eh")
     }
 }
 
@@ -546,6 +550,9 @@ fn main() {
 
     let args = os::args();
 
+    if args.len() == 1 {
+        test_read()
+    }
     if args.len() == 2 && args[1].as_slice() == "land"	{
 		investigate()
     }

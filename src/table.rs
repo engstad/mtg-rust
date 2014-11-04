@@ -29,8 +29,7 @@ impl Table {
     }
 
     pub fn set(&mut self, r:uint, c:uint, v:TableElem) {
-        let row = self.rows.get_mut(r);
-        *row.get_mut(c) = v
+        self.rows[r][c] = v
     }
 
     pub fn get<'a>(&'a self, r:uint, c:uint) -> &'a TableElem {
