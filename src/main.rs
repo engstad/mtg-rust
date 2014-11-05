@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 #![feature(tuple_indexing)]
 #![feature(slicing_syntax)]
+#![feature(unboxed_closures)]
+#![feature(unboxed_closure_sugar)]
 
 extern crate collections;
 extern crate regex;
@@ -453,7 +455,7 @@ fn investigate()
                                                  0, 0, 0,
                                                  s1, s2, 23-s1-s2], info);
                     let p_base = gen::turn0(&deck, turn, 
-                                            |hand| { 
+                                            |hand : _| { 
                                                 hand.lands() >= turn && hand[S1] + hand[S2] > 0
                                             });
                     let p_succ = gen::turn0(&deck, turn, 
