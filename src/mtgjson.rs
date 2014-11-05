@@ -35,7 +35,7 @@ pub fn test_read() {
     match json {
         Ok(doc) => {
             let cards = doc
-                .find(&"cards".to_string()).unwrap()
+                .find("cards").unwrap()
                 .as_list().unwrap();
 
             for card in cards.iter() {
@@ -46,21 +46,21 @@ pub fn test_read() {
                     if l <= 2 { s } else { s[1..l-1] }
                 }
 
-                let name = card.find(&"name".to_string()).unwrap().to_string();
+                let name = card.find("name").unwrap().to_string();
                 
-                let typ = card.find(&"type".to_string()).unwrap().to_string();
+                let typ = card.find("type").unwrap().to_string();
 
-                let typs = card.find(&"types".to_string()).unwrap().as_list().unwrap();
+                let typs = card.find("types").unwrap().as_list().unwrap();
 
                 let empty = vec![];
-                let subtyps = match card.find(&"subtypes".to_string()) {
+                let subtyps = match card.find("subtypes") {
                     Some(t) => t.as_list().unwrap().as_slice(),
                     None => empty.as_slice()
                 };
 
-                let image = card.find(&"imageName".to_string()).unwrap().to_string();
+                let image = card.find("imageName").unwrap().to_string();
 
-                let mana_cost = match card.find(&"manaCost".to_string()) {
+                let mana_cost = match card.find("manaCost") {
                     Some(c) => c.to_string(), None => "".to_string()
                 };
 
@@ -76,7 +76,7 @@ pub fn test_read() {
 
                 println!("{}", trim(typ[]));
 
-                let text = match card.find(&"text".to_string()) {
+                let text = match card.find("text") {
                     Some(s) => s.to_string(), None => "".to_string()
                 };
 
