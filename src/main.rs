@@ -563,16 +563,16 @@ fn main() {
 
         println!("{} cards", cs.len());
         for c in cs.iter() {
-            if c.sub_types.iter().any(|s| s[] == "Warrior") &&
-                !c.colors.iter().any(|s| *s == colors::W) &&
+            if c.sub_types.iter().any(|s| s[] == "Minotaur") &&
+                // !c.colors.iter().any(|s| *s == colors::W) &&
                 // !c.colors.iter().any(|s| *s == colors::U) &&
-                !c.colors.iter().any(|s| *s == colors::B) &&
+                // !c.colors.iter().any(|s| *s == colors::B) &&
                 // !c.colors.iter().any(|s| *s == colors::G) &&
                 // !c.colors.iter().any(|s| *s == colors::R) &&                
                 true
             {
-                println!("[{}] {:30} {:10} {}", 
-                         c.expansion, c.card_name, c.mana_cost.pretty(), c.card_type);
+                println!("[{}] {:30} {:6} {:40} {}/{}", 
+                         c.expansion, c.card_name, c.mana_cost.pretty(), c.card_type, c.power, c.toughness);
                 println!("{}\n", c.card_text);
             }
         }

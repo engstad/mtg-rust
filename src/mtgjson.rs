@@ -14,8 +14,10 @@ pub struct Card {
     pub super_types : Vec<String>,
     pub card_types  : Vec<String>,
     pub sub_types   : Vec<String>,
-    pub image_name  : String,
+    pub power       : String,
+    pub toughness   : String,
     pub card_text   : String,
+    pub image_name  : String,
     pub expansion   : String,
     pub rarity      : String
 }
@@ -88,6 +90,8 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
                     let image = to_str(card.find("imageName"));
                     let text  = to_str(card.find("text"));
                     let rarity = to_str(card.find("rarity"));
+                    let power = to_str(card.find("power"));
+                    let toughness = to_str(card.find("toughness"));
                     
                     let cost = {
                         let mana_cost = match card.find("manaCost") {
@@ -114,6 +118,8 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
                         sub_types   : subtypes,
                         image_name  : image,
                         mana_cost   : cost,
+                        power       : power,
+                        toughness   : toughness,
                         card_text   : text,
                         expansion   : set.to_string(),
                         colors      : colors,
