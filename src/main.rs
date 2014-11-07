@@ -568,15 +568,21 @@ fn main() {
 			dp.set(a, 1, RStr(format !("{:6.2}%", rt * 100.0)));
 		}
 		dp.print("Duals");
-	}
-	else if args.len() == 2 && args[1].as_slice() == "table" {
+    }
+    else if args.len() >= 2 && args[1].as_slice() == "table" {
+        let l = if args.len() == 3 { from_str::<uint>(args[2].as_slice()).unwrap_or(0) } else { 0 };
+        if l == 0 {
 	    for i in closed(16, 18).iter() { summary_c(i, 40); }
 	    for i in closed(22, 28).iter() { summary_c(i, 60); }
+        }
+        else {
+            summary_c(l, 60)
+        }
     }
     else if args.len() == 2 && args[1].as_slice() == "frank" {
         frank_table()
     }
-	else if args.len() == 2 {
+    else if args.len() == 2 {
         let lands = standard::analyze(args[1].as_slice());
         summary_c(lands, 60);
     }
