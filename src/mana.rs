@@ -1,5 +1,6 @@
 use colors::{Color,W,U,B,R,G,C};
 
+#[deriving(Show, PartialEq, Eq, Clone)]
 pub struct Mana {
     pub w : uint,
     pub u : uint,
@@ -10,8 +11,8 @@ pub struct Mana {
 }
 
 impl Mana {
-    pub fn new(w:uint, u:uint, b:uint, r:uint, g:uint, x:uint) -> Mana {
-        Mana { w : w, u : u, b : b, r : r, g : g, c : x }
+    pub fn new(w:uint, u:uint, b:uint, r:uint, g:uint, c:uint) -> Mana {
+        Mana { w : w, u : u, b : b, r : r, g : g, c : c }
     }
 
     pub fn zero() -> Mana { 

@@ -14,6 +14,18 @@ impl Color {
             C => Mana::c(1u)
         }
     }    
+
+    pub fn parse(c: &str) -> Color {
+        match c {
+            "White" => W,
+            "Blue" => U,
+            "Black" => B,
+            "Red" => R,
+            "Green" => G,
+            "Colorless" => C,
+            _ => panic!("Unknown color {}", c)
+        }
+    }
 }
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]

@@ -12,7 +12,7 @@ extern crate hyper;
 use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use std::os;
 use table::{Table, LStr, RStr, Int, UInt, Empty};
-use mtgjson::test_read;
+use mtgjson::fetch_set;
 //use interval::closed;
 
 mod prob;
@@ -553,7 +553,29 @@ fn main() {
     let args = os::args();
 
     if args.len() == 1 {
-        test_read()
+        let mut cs = vec![];
+        cs.push_all(fetch_set("KTK")[]);
+        cs.push_all(fetch_set("M15")[]);
+        cs.push_all(fetch_set("JOU")[]);
+        cs.push_all(fetch_set("BNG")[]);
+        cs.push_all(fetch_set("THS")[]);
+        cs.sort_by(|a, b| a.mana_cost.cmc().cmp(&b.mana_cost.cmc()));
+
+        println!("{} cards", cs.len());
+        for c in cs.iter() {
+            if c.sub_types.iter().any(|s| s[] == "Warrior") &&
+                !c.colors.iter().any(|s| *s == colors::W) &&
+                // !c.colors.iter().any(|s| *s == colors::U) &&
+                !c.colors.iter().any(|s| *s == colors::B) &&
+                // !c.colors.iter().any(|s| *s == colors::G) &&
+                // !c.colors.iter().any(|s| *s == colors::R) &&                
+                true
+            {
+                println!("[{}] {:30} {:10} {}", 
+                         c.expansion, c.card_name, c.mana_cost.pretty(), c.card_type);
+                println!("{}\n", c.card_text);
+            }
+        }
     }
     if args.len() == 2 && args[1].as_slice() == "land"	{
 		investigate()
