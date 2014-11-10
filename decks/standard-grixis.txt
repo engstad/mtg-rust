@@ -1,8 +1,11 @@
 4 URp
+
 4 UBt
-4 BRt
+2 BRt
 4 URt
-4 UBl
-4 URl
-4 RBl
-1 Urb
+
+2 Island
+2 Swamp
+2 Mountain
+4 UBf
+2 BRf
