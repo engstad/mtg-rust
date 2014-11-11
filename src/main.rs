@@ -546,6 +546,57 @@ fn frank_table()
 	frank(7, 7).print("");
 }
 
+fn show_card_text(txt : &str, width : uint)
+{
+    let mut col = 0;
+    let mut indent = 0;
+    let mut escape = false;
+    let mut word : String = String::new();
+    for g in txt.graphemes(true) {
+        if !escape {
+            match g {
+                "\\" => escape = true,
+                " " => { 
+                    let l = word.width(false); 
+                    let brk = col + l >= width;
+                    if brk { 
+                        print!("\n"); 
+                        if indent > width / 4 { indent = 4 }
+                        print!("{}", " ".repeat(indent)); 
+                        col = indent 
+                    }
+                    col += l + 1; 
+                    print!("{} ", word); word.clear() 
+                },
+                ":" | "•" => {
+                    word.push_str(g);
+                    indent = col + word.width(false) + 1;
+                },                
+                _ => word.push_str(g)
+            }
+        } else {
+            // let chars = "①②";
+            match g {
+                "n" => { 
+                    let l = word.width(false);
+                    if col + l >= width { print!("\n{}{}\n", " ".repeat(indent), word) }
+                    else { print!("{}\n", word) };
+                    col = 0;
+                    indent = 0;
+                    word.clear(); 
+                    escape = false 
+                },
+                _ => { escape = false; word.push_str(g) }
+            }
+        } 
+    }
+    if col + word.width(false) >= width { 
+        if indent > width / 4 { indent = 4 }
+        print!("\n{}", " ".repeat(indent)) 
+    }
+    print!("{}\n", word)
+}
+
 #[main]
 fn main() {
     use interval::closed;
@@ -559,11 +610,14 @@ fn main() {
         cs.push_all(fetch_set("JOU")[]);
         cs.push_all(fetch_set("BNG")[]);
         cs.push_all(fetch_set("THS")[]);
-        cs.sort_by(|a, b| a.mana_cost.cmc().cmp(&b.mana_cost.cmc()));
+        //cs.sort_by(|a, b| a.mana_cost.cmc().cmp(&b.mana_cost.cmc()));
+        cs.sort_by(|a, b| b.card_text.len().cmp(&a.card_text.len()));
 
         println!("{} cards", cs.len());
+
+        let width = 60;
         for c in cs.iter() {
-            if c.sub_types.iter().any(|s| s[] == "Minotaur") &&
+            if // c.sub_types.iter().any(|s| s[] == "God") &&
                 // !c.colors.iter().any(|s| *s == colors::W) &&
                 // !c.colors.iter().any(|s| *s == colors::U) &&
                 // !c.colors.iter().any(|s| *s == colors::B) &&
@@ -571,9 +625,15 @@ fn main() {
                 // !c.colors.iter().any(|s| *s == colors::R) &&                
                 true
             {
-                println!("[{}] {:30} {:6} {:40} {}/{}", 
-                         c.expansion, c.card_name, c.mana_cost.pretty(), c.card_type, c.power, c.toughness);
-                println!("{}\n", c.card_text);
+                println!("{}", "=".repeat(width));
+                println!("[{}] {:40} {:6}\n      {:40} {}", 
+                         c.expansion, c.card_name, c.mana_cost.pretty(), c.card_type, 
+                         if c.power.len() > 0 { format!("{}/{}", c.power, c.toughness) } else { "".into_string() });
+                if c.card_text.len() > 0 {
+                    println!("{}", "-".repeat(width));
+                    show_card_text(c.card_text.as_slice(), width);
+                }
+                println!("{}\n", "=".repeat(width));
             }
         }
     }

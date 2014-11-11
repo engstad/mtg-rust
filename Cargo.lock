@@ -45,7 +45,7 @@ source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68
 [[package]]
 name = "hyper"
 version = "0.0.1"
-source = "git+https://github.com/hyperium/hyper#6bf0a0779246d1d16faf7e12e2ba2b294c8ebf39"
+source = "git+https://github.com/hyperium/hyper#caab60e37401d50b574e015d43090260137afa47"
 dependencies = [
  "intertwine 0.0.1 (git+https://github.com/reem/rust-intertwine)",
  "mime 0.0.1 (git+https://github.com/hyperium/mime.rs)",
@@ -74,7 +74,7 @@ source = "git+https://github.com/reem/rust-move-acceptor#25c5c33a83f605fdd0f3d37
 [[package]]
 name = "openssl"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-openssl#1e706b8ef4d4344b5297b90bcd430cc96f40fb39"
+source = "git+https://github.com/sfackler/rust-openssl#766ce4b7785c0b038bee95b74564e5b9bf7e9a4b"
 
 [[package]]
 name = "typeable"
@@ -89,7 +89,7 @@ source = "git+https://github.com/reem/rust-unsafe-any#2863af363bbd83079b6773920b
 [[package]]
 name = "url"
 version = "0.1.0"
-source = "git+https://github.com/servo/rust-url#cec3c32168ce4233e179f22ef50215b3a9c34342"
+source = "git+https://github.com/servo/rust-url#8a61b7654ab5378b488225a1d8a9cbbbcbd38894"
 dependencies = [
  "encoding 0.2.0 (git+https://github.com/lifthrasiir/rust-encoding)",
 ]
