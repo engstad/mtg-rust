@@ -1,7 +1,7 @@
-use std::num::One;
+use std::num::Int;
 
 #[deriving(Clone)]
-enum IntervalType { Open, Closed, ClosedOpen, OpenClosed }
+enum IntervalType { Open, Closed, Range, OpenClosed }
 
 #[deriving(Clone)]
 pub struct Interval<A> {
@@ -28,9 +28,9 @@ pub fn closed<A:Ord>(a: A, b: A) -> Interval<A> {
 }
 
 // [a,b)
-pub fn closed_open<A:Ord>(a: A, b: A) -> Interval<A> {
+pub fn range<A:Ord>(a: A, b: A) -> Interval<A> {
     let (min, max) = minmax(a, b);
-    Interval { start:min, end:max, rtype:ClosedOpen }
+    Interval { start:min, end:max, rtype:Range }
 }
 
 // (a,b]
@@ -39,11 +39,11 @@ pub fn open_closed<A:Ord>(a: A, b: A) -> Interval<A> {
     Interval { start:min, end:max, rtype:OpenClosed }
 }
 
-impl<A : Ord + Add<A,A> + Clone + One> Interval<A> {
+impl<A : Ord + Add<A,A> + Clone + Int> Interval<A> {
     pub fn iter<'a>(&'a self) -> IntervalIter<'a, A> {
         match self.rtype {
-            ClosedOpen | Closed => IntervalIter { state : self.start.clone(), range : self },
-            Open | OpenClosed => IntervalIter { state : self.start + One::one(), range : self }
+            Range | Closed => IntervalIter { state : self.start.clone(), range : self },
+            Open | OpenClosed => IntervalIter { state : self.start + Int::one(), range : self }
         }
     }
 }
@@ -53,13 +53,13 @@ struct IntervalIter<'a, A:'a> {
     range: &'a Interval<A>,
 }
 
-impl<'a, A : Ord + Add<A,A> + Clone + One> Iterator<A> for IntervalIter<'a,A> {
+impl<'a, A : Ord + Add<A,A> + Clone + Int> Iterator<A> for IntervalIter<'a,A> {
     fn next(&mut self) -> Option<A> {
         match self.range.rtype {
-            ClosedOpen | Open => 
+            Range | Open => 
                 if self.state < self.range.end {
                     let result = self.state.clone();
-                    self.state = self.state + One::one();
+                    self.state = self.state + Int::one();
                     Some(result)
                 } else {
                     None
@@ -67,7 +67,7 @@ impl<'a, A : Ord + Add<A,A> + Clone + One> Iterator<A> for IntervalIter<'a,A> {
             Closed | OpenClosed =>
                 if self.state <= self.range.end {
                     let result = self.state.clone();
-                    self.state = self.state + One::one();
+                    self.state = self.state + Int::one();
                     Some(result)
                 } else {
                     None
@@ -78,7 +78,7 @@ impl<'a, A : Ord + Add<A,A> + Clone + One> Iterator<A> for IntervalIter<'a,A> {
 
 pub fn test() {
     assert!(open(0i, 5).iter().collect::<Vec<int>>()        == vec![  1,2,3,4  ]);
-    assert!(closed_open(0i, 5).iter().collect::<Vec<int>>() == vec![0,1,2,3,4  ]);
+    assert!(range(0i, 5).iter().collect::<Vec<int>>()       == vec![0,1,2,3,4  ]);
     assert!(open_closed(0i, 5).iter().collect::<Vec<int>>() == vec![  1,2,3,4,5]);
     assert!(closed(0i, 5).iter().collect::<Vec<int>>()      == vec![0,1,2,3,4,5]);
 }
