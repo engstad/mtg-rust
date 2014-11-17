@@ -1,0 +1,12 @@
+4 URp
+4 URt
+4 URl
+2 U
+1 R
+2 B
+2 UBf
+3 BRf
+1 UBt
+1 BRt
+1 Urb
+

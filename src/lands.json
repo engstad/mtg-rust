@@ -1,9 +1,9 @@
 [
-    { "name" :"Plains",                   "short" : "Pla", "cardtype" : "Basic", "subtypes" : ["Plains"],             "landtype" : "BasicLand",   "produces" : ["W"] },
-    { "name" :"Island",                   "short" : "Isl", "cardtype" : "Basic", "subtypes" : ["Island"],             "landtype" : "BasicLand",   "produces" : ["U"] },
-    { "name" :"Swamp",                    "short" : "Swa", "cardtype" : "Basic", "subtypes" : ["Swamp"],              "landtype" : "BasicLand",   "produces" : ["B"] },
-    { "name" :"Mountain",                 "short" : "Mtn", "cardtype" : "Basic", "subtypes" : ["Mountain"],           "landtype" : "BasicLand",   "produces" : ["R"] },
-    { "name" :"Forest",                   "short" : "For", "cardtype" : "Basic", "subtypes" : ["Forest"],             "landtype" : "BasicLand",   "produces" : ["G"] },
+    { "name" :"Plains",                   "short" : "W", "cardtype" : "Basic", "subtypes" : ["Plains"],             "landtype" : "BasicLand",   "produces" : ["W"] },
+    { "name" :"Island",                   "short" : "U", "cardtype" : "Basic", "subtypes" : ["Island"],             "landtype" : "BasicLand",   "produces" : ["U"] },
+    { "name" :"Swamp",                    "short" : "B", "cardtype" : "Basic", "subtypes" : ["Swamp"],              "landtype" : "BasicLand",   "produces" : ["B"] },
+    { "name" :"Mountain",                 "short" : "R", "cardtype" : "Basic", "subtypes" : ["Mountain"],           "landtype" : "BasicLand",   "produces" : ["R"] },
+    { "name" :"Forest",                   "short" : "G", "cardtype" : "Basic", "subtypes" : ["Forest"],             "landtype" : "BasicLand",   "produces" : ["G"] },
 
     { "name" :"Tundra",                   "short" : "WUa", "cardtype" : "Land",  "subtypes" : ["Plains", "Island"],   "landtype" : "AlphaLand",   "produces" : ["W", "U"] },
     { "name" :"Underground Sea",          "short" : "UBa", "cardtype" : "Land",  "subtypes" : ["Island", "Swamp"],    "landtype" : "AlphaLand",   "produces" : ["U", "B"] },
