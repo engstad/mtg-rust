@@ -6,9 +6,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "cookie"
+version = "0.0.1"
+source = "git+https://github.com/alexcrichton/cookie-rs#be65e588449333b6cfee7b3720f5672cc945cc39"
+dependencies = [
+ "openssl 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
+ "time 0.0.1 (git+https://github.com/rust-lang/time)",
+ "url 0.1.0 (git+https://github.com/servo/rust-url)",
+]
+
+[[package]]
 name = "encoding"
 version = "0.2.0"
-source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68661e2ee9ca1999764a4"
+source = "git+https://github.com/lifthrasiir/rust-encoding#935939ef9203d9250c69e98eb76fd721015c650d"
 dependencies = [
  "encoding-index-japanese 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
  "encoding-index-korean 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
@@ -20,51 +30,80 @@ dependencies = [
 [[package]]
 name = "encoding-index-japanese"
 version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68661e2ee9ca1999764a4"
+source = "git+https://github.com/lifthrasiir/rust-encoding#935939ef9203d9250c69e98eb76fd721015c650d"
+dependencies = [
+ "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
+]
 
 [[package]]
 name = "encoding-index-korean"
 version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68661e2ee9ca1999764a4"
+source = "git+https://github.com/lifthrasiir/rust-encoding#935939ef9203d9250c69e98eb76fd721015c650d"
+dependencies = [
+ "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
+]
 
 [[package]]
 name = "encoding-index-simpchinese"
 version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68661e2ee9ca1999764a4"
+source = "git+https://github.com/lifthrasiir/rust-encoding#935939ef9203d9250c69e98eb76fd721015c650d"
+dependencies = [
+ "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
+]
 
 [[package]]
 name = "encoding-index-singlebyte"
 version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68661e2ee9ca1999764a4"
+source = "git+https://github.com/lifthrasiir/rust-encoding#935939ef9203d9250c69e98eb76fd721015c650d"
+dependencies = [
+ "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
+]
 
 [[package]]
 name = "encoding-index-tradchinese"
 version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68661e2ee9ca1999764a4"
+source = "git+https://github.com/lifthrasiir/rust-encoding#935939ef9203d9250c69e98eb76fd721015c650d"
+dependencies = [
+ "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
+]
+
+[[package]]
+name = "encoding_index_tests"
+version = "0.1.0"
+source = "git+https://github.com/lifthrasiir/rust-encoding#935939ef9203d9250c69e98eb76fd721015c650d"
+
+[[package]]
+name = "gcc"
+version = "0.0.1"
+source = "git+https://github.com/alexcrichton/gcc-rs#f25b3ba9c40303781189cc137fb98fffe5b56de7"
 
 [[package]]
 name = "hyper"
 version = "0.0.1"
-source = "git+https://github.com/hyperium/hyper#caab60e37401d50b574e015d43090260137afa47"
+source = "git+https://github.com/hyperium/hyper#35336c770e784ed692d1db597d92f1d5ef94515d"
 dependencies = [
- "intertwine 0.0.1 (git+https://github.com/reem/rust-intertwine)",
+ "cookie 0.0.1 (git+https://github.com/alexcrichton/cookie-rs)",
  "mime 0.0.1 (git+https://github.com/hyperium/mime.rs)",
  "move-acceptor 0.0.1 (git+https://github.com/reem/rust-move-acceptor)",
- "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl)",
+ "openssl 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
+ "time 0.0.1 (git+https://github.com/rust-lang/time)",
  "typeable 0.0.1 (git+https://github.com/reem/rust-typeable)",
  "unsafe-any 0.1.0 (git+https://github.com/reem/rust-unsafe-any)",
  "url 0.1.0 (git+https://github.com/servo/rust-url)",
 ]
 
 [[package]]
-name = "intertwine"
-version = "0.0.1"
-source = "git+https://github.com/reem/rust-intertwine#2a78205f7dd4e66eed29ed292671c996792da77b"
+name = "libressl-pnacl-sys"
+version = "2.0.0"
+source = "git+https://github.com/DiamondLovesYou/libressl-pnacl-sys.git#24b6800971587e8881215d9398b180c0a79739dc"
+dependencies = [
+ "pnacl-build-helper 0.0.1 (git+https://github.com/DiamondLovesYou/cargo-pnacl-helper.git)",
+]
 
 [[package]]
 name = "mime"
 version = "0.0.1"
-source = "git+https://github.com/hyperium/mime.rs#e2a6bcf5029a33f12a77387da9000e6106c0d2fe"
+source = "git+https://github.com/hyperium/mime.rs#6d17ec224a74fed4531f9791109786de28ddccd6"
 
 [[package]]
 name = "move-acceptor"
@@ -73,8 +112,38 @@ source = "git+https://github.com/reem/rust-move-acceptor#25c5c33a83f605fdd0f3d37
 
 [[package]]
 name = "openssl"
-version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-openssl#766ce4b7785c0b038bee95b74564e5b9bf7e9a4b"
+version = "0.0.1"
+source = "git+https://github.com/sfackler/rust-openssl#2569b398556dcec70ba2dc4369327172bedef375"
+dependencies = [
+ "libressl-pnacl-sys 2.0.0 (git+https://github.com/DiamondLovesYou/libressl-pnacl-sys.git)",
+ "openssl-sys 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
+]
+
+[[package]]
+name = "openssl-sys"
+version = "0.0.1"
+source = "git+https://github.com/sfackler/rust-openssl#2569b398556dcec70ba2dc4369327172bedef375"
+dependencies = [
+ "pkg-config 0.0.1 (git+https://github.com/alexcrichton/pkg-config-rs)",
+]
+
+[[package]]
+name = "pkg-config"
+version = "0.0.1"
+source = "git+https://github.com/alexcrichton/pkg-config-rs#d24a08d87d63df8dc9526c503944415b86719220"
+
+[[package]]
+name = "pnacl-build-helper"
+version = "0.0.1"
+source = "git+https://github.com/DiamondLovesYou/cargo-pnacl-helper.git#5402d48d242d11bdd61f801655fca364155c4511"
+
+[[package]]
+name = "time"
+version = "0.0.1"
+source = "git+https://github.com/rust-lang/time#d6219df8537e74fa87eeb7d372681c276dc5f9ff"
+dependencies = [
+ "gcc 0.0.1 (git+https://github.com/alexcrichton/gcc-rs)",
+]
 
 [[package]]
 name = "typeable"
