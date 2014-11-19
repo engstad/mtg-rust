@@ -1,5 +1,6 @@
-use hyper::Url;
-use hyper::client::Request;
+//use hyper::Url;
+//use hyper::client::Request;
+use curl::http;
 
 use serialize::json;
 use mana::Mana;
@@ -26,23 +27,28 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
     // Creating an outgoing request.
     let loc = format!("http://mtgjson.com/json/{}.json", set);
 
-    let url = match Url::parse(loc.as_slice()) {
-        Ok(url) => url,
-        Err(e) => panic!("Invalid URL: {}", e)
-    };
+    // let url = match Url::parse(loc.as_slice()) {
+    //     Ok(url) => url,
+    //     Err(e) => panic!("Invalid URL: {}", e)
+    // };
 
-    let req = match Request::get(url) {
-        Ok(req) => req,
-        Err(err) => panic!("Failed to connect: {}", err)
-    };
+    // let req = match Request::get(url) {
+    //     Ok(req) => req,
+    //     Err(err) => panic!("Failed to connect: {}", err)
+    // };
 
-    let mut res = req
-        .start().unwrap() // failure: Error writing Headers
-        .send().unwrap(); // failure: Error reading Response head.
+    // let mut res = req
+    //     .start().unwrap() // failure: Error writing Headers
+    //     .send().unwrap(); // failure: Error reading Response head.
 
-    let str = res.read_to_string().unwrap();
+    // let str = res.read_to_string().unwrap();
 
-    let json = json::from_str(str.as_slice());
+    let resp = http::handle().get(loc.as_slice()).exec().unwrap();
+    let rstr = String::from_utf8_lossy(resp.get_body());
+
+    //println!("{}", resp);
+
+    let json = json::from_str(rstr.as_slice());
 
     fn trim(s : &str) -> &str {
         let l = s.len();

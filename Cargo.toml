@@ -10,6 +10,8 @@ tags = []
 name = "mtg-rust"
 path = "src/main.rs"
 
-[dependencies.hyper]
+[dependencies.curl]
+git = "https://github.com/carllerche/curl-rust"
 
-git = "https://github.com/hyperium/hyper"
+# [dependencies.hyper]
+# git = "https://github.com/hyperium/hyper"

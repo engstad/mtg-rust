@@ -18,32 +18,32 @@ fn minmax<A:Ord>(a: A, b: A) -> (A, A) {
 // (a,b)
 pub fn open<A:Ord>(a: A, b: A) -> Interval<A> {
     let (min, max) = minmax(a, b);
-    Interval { start:min, end:max, rtype:Open }
+    Interval { start:min, end:max, rtype:IntervalType::Open }
 }
 
 // [a,b]
 pub fn closed<A:Ord>(a: A, b: A) -> Interval<A> {
     let (min, max) = minmax(a, b);
-    Interval { start:min, end:max, rtype:Closed }
+    Interval { start:min, end:max, rtype:IntervalType::Closed }
 }
 
 // [a,b)
 pub fn range<A:Ord>(a: A, b: A) -> Interval<A> {
     let (min, max) = minmax(a, b);
-    Interval { start:min, end:max, rtype:Range }
+    Interval { start:min, end:max, rtype:IntervalType::Range }
 }
 
 // (a,b]
 pub fn open_closed<A:Ord>(a: A, b: A) -> Interval<A> {
     let (min, max) = minmax(a, b);
-    Interval { start:min, end:max, rtype:OpenClosed }
+    Interval { start:min, end:max, rtype:IntervalType::OpenClosed }
 }
 
 impl<A : Ord + Add<A,A> + Clone + Int> Interval<A> {
     pub fn iter<'a>(&'a self) -> IntervalIter<'a, A> {
         match self.rtype {
-            Range | Closed => IntervalIter { state : self.start.clone(), range : self },
-            Open | OpenClosed => IntervalIter { state : self.start + Int::one(), range : self }
+            IntervalType::Range | IntervalType::Closed => IntervalIter { state : self.start.clone(), range : self },
+            IntervalType::Open | IntervalType::OpenClosed => IntervalIter { state : self.start + Int::one(), range : self }
         }
     }
 }
@@ -56,7 +56,7 @@ struct IntervalIter<'a, A:'a> {
 impl<'a, A : Ord + Add<A,A> + Clone + Int> Iterator<A> for IntervalIter<'a,A> {
     fn next(&mut self) -> Option<A> {
         match self.range.rtype {
-            Range | Open => 
+            IntervalType::Range | IntervalType::Open => 
                 if self.state < self.range.end {
                     let result = self.state.clone();
                     self.state = self.state + Int::one();
@@ -64,7 +64,7 @@ impl<'a, A : Ord + Add<A,A> + Clone + Int> Iterator<A> for IntervalIter<'a,A> {
                 } else {
                     None
                 },
-            Closed | OpenClosed =>
+            IntervalType::Closed | IntervalType::OpenClosed =>
                 if self.state <= self.range.end {
                     let result = self.state.clone();
                     self.state = self.state + Int::one();
