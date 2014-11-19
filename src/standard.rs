@@ -1,6 +1,7 @@
 //use collections::treemap::TreeMap;
 use mana::Mana;
-use colors::{Color,U,W,B,R,G,C};
+use colors::Color;
+use colors::Color::{U,W,B,R,G,C};
 use serialize::json;
 
 #[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord, Encodable, Decodable)]
@@ -49,7 +50,7 @@ impl LandCardInfo {
             }
         }
 
-        if self.landtype == FetchLand || self.landtype == TappedFetchLand {
+        if self.landtype == LandType::FetchLand || self.landtype == LandType::TappedFetchLand {
             let colors = vec![U, W, B, R, G];
 
             colors.iter().fold(Mana::new(0, 0, 0, 0, 0, 0), |acc, &color| {
@@ -74,24 +75,24 @@ impl LandCardInfo {
 
     fn untapped(&self) -> bool { 
         match self.landtype {
-            AlphaLand => true,
-            BasicLand => true,
-            ShockLand => true,
-            Gates => false,
-            ScryLand => false,
-            RefuLand => false,
-            FetchLand => true,
-            FastLand => true,
-            CheckLand => true,
-            PainLand => true,
-            WedgeLand => false,
-            TappedLand => false,
-            TappedFetchLand => false,
-            UntappedLand => true,
-            StorageLand => true,
-            ManLand => false,
-            FilterLand => true,
-            LifeLand => false
+            LandType::AlphaLand => true,
+            LandType::BasicLand => true,
+            LandType::ShockLand => true,
+            LandType::Gates => false,
+            LandType::ScryLand => false,
+            LandType::RefuLand => false,
+            LandType::FetchLand => true,
+            LandType::FastLand => true,
+            LandType::CheckLand => true,
+            LandType::PainLand => true,
+            LandType::WedgeLand => false,
+            LandType::TappedLand => false,
+            LandType::TappedFetchLand => false,
+            LandType::UntappedLand => true,
+            LandType::StorageLand => true,
+            LandType::ManLand => false,
+            LandType::FilterLand => true,
+            LandType::LifeLand => false
 	    }	
     }    
 }
@@ -133,7 +134,8 @@ pub fn analyze(deck: &str) -> uint
     let ls = parse_lands(deck.as_slice(), &db);    
 
     {
-        use table::{Table, LStr, RStr, UInt};
+        use table::Table;
+        use table::TableElem::{LStr, RStr, UInt};
         let mut table = Table::new(1+ls.len(), 3);
 
         {
@@ -162,17 +164,17 @@ pub fn analyze(deck: &str) -> uint
     println!("{:2u} {:-30s} {:-5s}", unt.0, "Untapped".to_string(), unt.1.src());
     println!("{:2u} {:-30s} {:-5s}\n", tap.0, "Tapped".to_string(), tap.1.src());
 
-    let basics = ls.iter().filter(|&&(c, _)| c.landtype == BasicLand)
+    let basics = ls.iter().filter(|&&(c, _)| c.landtype == LandType::BasicLand)
         .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
-    let fetches = ls.iter().filter(|&&(c, _)| c.landtype == FetchLand)
+    let fetches = ls.iter().filter(|&&(c, _)| c.landtype == LandType::FetchLand)
         .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
-    let scrys = ls.iter().filter(|&&(c, _)| c.landtype == ScryLand)
+    let scrys = ls.iter().filter(|&&(c, _)| c.landtype == LandType::ScryLand)
         .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
-    let pains = ls.iter().filter(|&&(c, _)| c.landtype == PainLand)
+    let pains = ls.iter().filter(|&&(c, _)| c.landtype == LandType::PainLand)
         .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
-    let refus = ls.iter().filter(|&&(c, _)| c.landtype == RefuLand)
+    let refus = ls.iter().filter(|&&(c, _)| c.landtype == LandType::RefuLand)
         .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
-    let specs = ls.iter().filter(|&&(c, _)| c.landtype == TappedLand || c.landtype == UntappedLand)
+    let specs = ls.iter().filter(|&&(c, _)| c.landtype == LandType::TappedLand || c.landtype == LandType::UntappedLand)
         .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
 
     println!("{:2u} {:-30s} {:-5s}", basics.0, "Basics".to_string(), basics.1.src());

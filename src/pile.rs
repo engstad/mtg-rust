@@ -224,7 +224,7 @@ impl Keys<Colored> for ColoredKeys {
     fn size(&self) -> uint { 3 }
     fn to_uint(&self, w:Colored) -> uint { w as uint }
     fn from_uint(&self, n: uint) -> Colored {
-        match n { 0 => C, 1 => N, 2 => S, _ => panic!("out of range") }
+        match n { 0 => Colored::C, 1 => Colored::N, 2 => Colored::S, _ => panic!("out of range") }
     }
 }
 

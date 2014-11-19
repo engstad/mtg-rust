@@ -6,23 +6,23 @@ pub enum Color { W, U, B, R, G, C }
 impl Color {
     pub fn source(&self) -> Mana {
         match *self {
-            W => Mana::w(1u), 
-            U => Mana::u(1u), 
-            B => Mana::b(1u), 
-            R => Mana::r(1u),
-            G => Mana::g(1u),
-            C => Mana::c(1u)
+            Color::W => Mana::w(1u), 
+            Color::U => Mana::u(1u), 
+            Color::B => Mana::b(1u), 
+            Color::R => Mana::r(1u),
+            Color::G => Mana::g(1u),
+            Color::C => Mana::c(1u)
         }
     }    
 
     pub fn parse(c: &str) -> Color {
         match c {
-            "White" => W,
-            "Blue" => U,
-            "Black" => B,
-            "Red" => R,
-            "Green" => G,
-            "Colorless" => C,
+            "White" => Color::W,
+            "Blue" => Color::U,
+            "Black" => Color::B,
+            "Red" => Color::R,
+            "Green" => Color::G,
+            "Colorless" => Color::C,
             _ => panic!("Unknown color {}", c)
         }
     }
@@ -36,11 +36,11 @@ pub enum Allied {
 impl Allied {
     pub fn source(&self) -> Mana {
         match *self {
-            WU => Mana::w(1) + Mana::u(1), 
-            UB => Mana::u(1) + Mana::b(1), 
-            BR => Mana::b(1) + Mana::r(1), 
-            RG => Mana::r(1) + Mana::g(1),
-            GW => Mana::g(1) + Mana::w(1) 
+            Allied::WU => Mana::w(1) + Mana::u(1), 
+            Allied::UB => Mana::u(1) + Mana::b(1), 
+            Allied::BR => Mana::b(1) + Mana::r(1), 
+            Allied::RG => Mana::r(1) + Mana::g(1),
+            Allied::GW => Mana::g(1) + Mana::w(1) 
         }
     }    
 }
@@ -53,11 +53,11 @@ pub enum Enemy {
 impl Enemy {
     pub fn source(&self) -> Mana {
         match *self {
-            WB => Mana::w(1) + Mana::b(1), 
-            UR => Mana::u(1) + Mana::r(1), 
-            BG => Mana::b(1) + Mana::g(1), 
-            RW => Mana::r(1) + Mana::w(1),
-            GU => Mana::g(1) + Mana::u(1) 
+            Enemy::WB => Mana::w(1) + Mana::b(1), 
+            Enemy::UR => Mana::u(1) + Mana::r(1), 
+            Enemy::BG => Mana::b(1) + Mana::g(1), 
+            Enemy::RW => Mana::r(1) + Mana::w(1),
+            Enemy::GU => Mana::g(1) + Mana::u(1) 
         }
     }    
 }
@@ -71,8 +71,8 @@ pub enum Dual {
 impl Dual {
     pub fn source(&self) -> Mana {
         match *self {
-            A(a) => a.source(),
-            E(e) => e.source()
+            Dual::A(a) => a.source(),
+            Dual::E(e) => e.source()
         }
     }    
 }
@@ -85,11 +85,11 @@ pub enum Shard {
 impl Shard {
     pub fn source(&self) -> Mana {
         match *self {
-            WUR => Mana::w(1) + Mana::u(1) + Mana::r(1), 
-            UBG => Mana::u(1) + Mana::b(1) + Mana::g(1), 
-            BRW => Mana::b(1) + Mana::r(1) + Mana::w(1), 
-            RGU => Mana::r(1) + Mana::g(1) + Mana::u(1),
-            GWB => Mana::g(1) + Mana::w(1) + Mana::b(1) 
+            Shard::WUR => Mana::w(1) + Mana::u(1) + Mana::r(1), 
+            Shard::UBG => Mana::u(1) + Mana::b(1) + Mana::g(1), 
+            Shard::BRW => Mana::b(1) + Mana::r(1) + Mana::w(1), 
+            Shard::RGU => Mana::r(1) + Mana::g(1) + Mana::u(1),
+            Shard::GWB => Mana::g(1) + Mana::w(1) + Mana::b(1) 
         }
     }    
 }
@@ -102,11 +102,11 @@ pub enum Wedge {
 impl Wedge {
     pub fn source(&self) -> Mana {
         match *self {
-            WBR => Mana::w(1) + Mana::b(1) + Mana::r(1), 
-            URG => Mana::u(1) + Mana::r(1) + Mana::g(1), 
-            BGW => Mana::b(1) + Mana::g(1) + Mana::w(1), 
-            RWU => Mana::r(1) + Mana::w(1) + Mana::u(1),
-            GUB => Mana::g(1) + Mana::u(1) + Mana::b(1) 
+            Wedge::WBR => Mana::w(1) + Mana::b(1) + Mana::r(1), 
+            Wedge::URG => Mana::u(1) + Mana::r(1) + Mana::g(1), 
+            Wedge::BGW => Mana::b(1) + Mana::g(1) + Mana::w(1), 
+            Wedge::RWU => Mana::r(1) + Mana::w(1) + Mana::u(1),
+            Wedge::GUB => Mana::g(1) + Mana::u(1) + Mana::b(1) 
         }
     }    
 }

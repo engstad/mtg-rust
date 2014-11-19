@@ -7,11 +7,13 @@
 extern crate collections;
 extern crate regex;
 extern crate serialize;
-extern crate hyper;
+//extern crate hyper;
+extern crate curl;
 extern crate core;
 
 use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
-use table::{Table, LStr, RStr, Int, UInt, Empty};
+use table::Table;
+use table::TableElem::{LStr, RStr, Int, UInt, Empty};
 use mtgjson::fetch_set;
 //use interval::closed;
 
@@ -619,10 +621,10 @@ fn main() {
         let width = 60;
         for c in cs.iter() {
             if // c.sub_types.iter().any(|s| s[] == "God") &&
-                !c.colors.iter().any(|s| *s == colors::W) &&
+                !c.colors.iter().any(|s| *s == colors::Color::W) &&
                 // !c.colors.iter().any(|s| *s == colors::U) &&
                 // !c.colors.iter().any(|s| *s == colors::B) &&
-                !c.colors.iter().any(|s| *s == colors::G) &&
+                !c.colors.iter().any(|s| *s == colors::Color::G) &&
                 // !c.colors.iter().any(|s| *s == colors::R) &&                
                 true
             {

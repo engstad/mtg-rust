@@ -1,4 +1,5 @@
-use colors::{Color,W,U,B,R,G,C};
+use colors::Color;
+use colors::Color::{W,U,B,R,G,C};
 
 #[deriving(Show, PartialEq, Eq, Clone)]
 pub struct Mana {
