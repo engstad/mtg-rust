@@ -2,7 +2,6 @@
 #![feature(tuple_indexing)]
 #![feature(slicing_syntax)]
 #![feature(unboxed_closures)]
-#![feature(unboxed_closure_sugar)]
 
 extern crate collections;
 extern crate regex;
@@ -14,7 +13,8 @@ extern crate core;
 use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use table::Table;
 use table::TableElem::{LStr, RStr, Int, UInt, Empty};
-use mtgjson::fetch_set;
+use mtgjson::{fetch_set, fetch_img};
+use std::io::File;
 //use interval::closed;
 
 mod prob;
@@ -629,14 +629,21 @@ fn main() {
                 true
             {
                 println!("{}", "=".repeat(width));
-                println!("[{}] {:40} {:6}\n      {:40} {}", 
-                         c.expansion, c.card_name, c.mana_cost.pretty(), c.card_type, 
-                         if c.power.len() > 0 { format!("{}/{}", c.power, c.toughness) } else { "".into_string() });
+                println!("[{:3}] {:40} {:6}\n({})   {:40} {}", 
+                         c.expansion, c.card_name, c.mana_cost.pretty(), 
+                         c.rarity.graphemes(false).next().unwrap_or("?"),
+                         c.card_type, 
+                         if c.power.len() > 0 { format!("{}/{}", c.power, c.toughness) } 
+                         else { "".into_string() });
                 if c.card_text.len() > 0 {
                     println!("{}", "-".repeat(width));
                     show_card_text(c.card_text.as_slice(), width);
                 }
                 println!("{}\n", "=".repeat(width));
+
+                let jpg = fetch_img(c.expansion.as_slice(), c.image_name.as_slice());
+                let mut f = File::create(&Path::new(format!("pics/{}-{}.jpg", c.expansion, c.image_name)));
+                f.write(jpg.as_slice());
             }
         }
     }
@@ -693,7 +700,7 @@ fn main() {
         let b:uint = from_str(args[3].as_slice()).unwrap_or(1);
         
         for n in range(a, b) {
-            println!("c({:3u}, {:2u}) = {:60.0f}", 100u, n, prob::c(100, n));
+            println!("c({:3}, {:2}) = {:60.0}", 100u, n, prob::c(100, n));
         }
     }
 }
