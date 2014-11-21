@@ -68,7 +68,7 @@ impl Mana {
     pub fn src(&self) -> String {
         fn f(v:uint, l:char, spc:bool) -> String {
             if v > 0 {
-			    format!("{}{:2u}{}", if spc { " " } else { "" }, v, l)
+			    format!("{}{:2}{}", if spc { " " } else { "" }, v, l)
 		    }
 		    else { 
                 (if spc {"    "} else {"   "}).to_string()

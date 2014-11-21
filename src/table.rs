@@ -59,11 +59,11 @@ impl Table {
         for line in self.rows.iter() {
             for (c, elem) in line.iter().enumerate() {
                 match *elem {
-                    TableElem::Int(i)     => print!("{:w$i} ", i,           w=width[c]),
-                    TableElem::UInt(u)    => print!("{:w$u} ", u,           w=width[c]),
-                    TableElem::Empty      => print!("{:>w$s} ", "-",        w=width[c]),
-                    TableElem::LStr(ref s) => print!("{:<w$s} ", s.to_string(), w=width[c]),
-                    TableElem::RStr(ref s) => print!("{:>w$s} ", s.to_string(), w=width[c])
+                    TableElem::Int(i)     => print!("{:w$} ", i,           w=width[c]),
+                    TableElem::UInt(u)    => print!("{:w$} ", u,           w=width[c]),
+                    TableElem::Empty      => print!("{:>w$} ", "-",        w=width[c]),
+                    TableElem::LStr(ref s) => print!("{:<w$} ", s.to_string(), w=width[c]),
+                    TableElem::RStr(ref s) => print!("{:>w$} ", s.to_string(), w=width[c])
                 }
             }
             print!("\n");
@@ -134,11 +134,11 @@ impl Table {
             
             for (c, elem) in line.iter().enumerate() {
                 match *elem {
-                    TableElem::Int(i)     => print!("{:w$i}", i,           w=width[c]),
-                    TableElem::UInt(u)    => print!("{:w$u}", u,           w=width[c]),
-                    TableElem::Empty      => print!("{:>w$s}", "\\cdots",        w=width[c]),
-                    TableElem::LStr(ref s) => print!("{:<w$s}", s.to_string(), w=width[c]),
-                    TableElem::RStr(ref s) => print!("{:>w$s}", s.to_string(), w=width[c])
+                    TableElem::Int(i)     => print!("{:w$}", i,           w=width[c]),
+                    TableElem::UInt(u)    => print!("{:w$}", u,           w=width[c]),
+                    TableElem::Empty      => print!("{:>w$}", "\\cdots",        w=width[c]),
+                    TableElem::LStr(ref s) => print!("{:<w$}", s.to_string(), w=width[c]),
+                    TableElem::RStr(ref s) => print!("{:>w$}", s.to_string(), w=width[c])
                 }
                 
                 if c < line.len() - 1 {

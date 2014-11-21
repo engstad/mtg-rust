@@ -106,13 +106,30 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
 
         if caps.len() != 2 { return None }
 
-        let n = from_str::<uint>(caps[0]);
+        let l0 = caps[0].len();
+        let n = if l0 > 1 && caps[0].chars().last().unwrap() == 'x' {
+            from_str::<uint>(caps[0][0..l0-1])
+        } else {
+            from_str::<uint>(caps[0])
+        };
+
         let l = db.iter().find(|&nm| nm.name.as_slice() == caps[1] ||
                                      nm.short.as_slice() == caps[1]);
         
         match (n, l) {
             (Some(n), Some(l)) => Some((l, n)), 
-            _ => None 
+            (None, Some(l)) => {
+                println!("Could not parse count on '{}': {}", l.name, caps[0]);
+                None
+            },
+            (Some(_), None) => {
+                println!("Could not find card named '{}' in database", caps[1]);
+                None
+            },
+            _ => {
+                println!("Invalid line: {} {}", caps[0], caps[1]);
+                None 
+            }
         }
     }).collect()
 }
@@ -160,9 +177,9 @@ pub fn analyze(deck: &str) -> uint
     let tap = ls.iter().filter(|&&(c, _)| !c.untapped())
         .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
 
-    println!("{:2u} {:-30s} {:-5s}\n", lds.0, "Cards".to_string(), lds.1.src());
-    println!("{:2u} {:-30s} {:-5s}", unt.0, "Untapped".to_string(), unt.1.src());
-    println!("{:2u} {:-30s} {:-5s}\n", tap.0, "Tapped".to_string(), tap.1.src());
+    println!("{:2} {:-30} {:-5}\n", lds.0, "Cards".to_string(), lds.1.src());
+    println!("{:2} {:-30} {:-5}", unt.0, "Untapped".to_string(), unt.1.src());
+    println!("{:2} {:-30} {:-5}\n", tap.0, "Tapped".to_string(), tap.1.src());
 
     let basics = ls.iter().filter(|&&(c, _)| c.landtype == LandType::BasicLand)
         .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
@@ -177,12 +194,12 @@ pub fn analyze(deck: &str) -> uint
     let specs = ls.iter().filter(|&&(c, _)| c.landtype == LandType::TappedLand || c.landtype == LandType::UntappedLand)
         .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
 
-    println!("{:2u} {:-30s} {:-5s}", basics.0, "Basics".to_string(), basics.1.src());
-    println!("{:2u} {:-30s} {:-5s}", fetches.0, "Fetch-lands".to_string(), fetches.1.src());
-    println!("{:2u} {:-30s} {:-5s}", pains.0, "Pain-lands".to_string(), pains.1.src());
-    println!("{:2u} {:-30s} {:-5s}", scrys.0, "Scry-lands".to_string(), scrys.1.src());
-    println!("{:2u} {:-30s} {:-5s}", refus.0, "Refugee lands".to_string(), refus.1.src());
-    println!("{:2u} {:-30s} {:-5s}", specs.0, "Special lands".to_string(), specs.1.src());
+    println!("{:2} {:-30} {:-5}", basics.0, "Basics".to_string(), basics.1.src());
+    println!("{:2} {:-30} {:-5}", fetches.0, "Fetch-lands".to_string(), fetches.1.src());
+    println!("{:2} {:-30} {:-5}", pains.0, "Pain-lands".to_string(), pains.1.src());
+    println!("{:2} {:-30} {:-5}", scrys.0, "Scry-lands".to_string(), scrys.1.src());
+    println!("{:2} {:-30} {:-5}", refus.0, "Refugee lands".to_string(), refus.1.src());
+    println!("{:2} {:-30} {:-5}", specs.0, "Special lands".to_string(), specs.1.src());
 
     return lds.0;
 }
