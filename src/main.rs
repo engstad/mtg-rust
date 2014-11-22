@@ -10,12 +10,20 @@ extern crate serialize;
 extern crate curl;
 extern crate core;
 
+extern crate sdl2_image;
+extern crate sdl2;
+extern crate native;
+
 use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use table::Table;
 use table::TableElem::{LStr, RStr, Int, UInt, Empty};
 use mtgjson::{fetch_set, fetch_img};
 use std::io::File;
 //use interval::closed;
+
+//use sdl2;
+//use sdl2_image;
+//use sdl2_image::LoadSurface;
 
 mod prob;
 mod pile;
@@ -600,6 +608,69 @@ fn show_card_text(txt : &str, width : uint)
     print!("{}\n", word)
 }
 
+fn sdl_main() {
+    sdl2::init(sdl2::INIT_VIDEO);
+    sdl2_image::init(sdl2_image::INIT_PNG | sdl2_image::INIT_JPG);
+
+    let window = match sdl2::video::Window::new("mrg-rust", sdl2::video::PosCentered, sdl2::video::PosCentered, 
+                                                1024, 1024, sdl2::video::OPENGL) {
+        Ok(window) => window,
+        Err(err) => panic!(format!("failed to create window: {}", err))
+    };
+
+    let renderer = match sdl2::render::Renderer::from_window(window, sdl2::render::RenderDriverIndex::Auto, sdl2::render::ACCELERATED) {
+        Ok(renderer) => renderer,
+        Err(err) => panic!(format!("failed to create renderer: {}", err))
+    };
+    let jpg = &Path::new("pics/THS-master of waves.jpg");
+    let surface = match sdl2_image::LoadSurface::from_file(jpg) {
+        Ok(surface) => surface,
+        Err(err) => panic!(format!("Failed to load png: {}", err))
+    };
+    let texture = match renderer.create_texture_from_surface(&surface) {
+        Ok(texture) => texture,
+        Err(err) => panic!(format!("Failed to create surface: {}", err))
+    };
+
+    let mut rect = surface.get_rect();
+    let mut dir = 0.01;
+    let mut x = (512 - rect.w / 2) as f32;
+    let mut y = (512 - rect.h / 2) as f32;
+    rect.w = rect.w * 1;
+    rect.h = rect.h * 1;
+    rect.x = x as i32;
+    rect.y = y as i32;
+
+    'main : loop {
+        'event : loop {
+            match sdl2::event::poll_event() {
+                sdl2::event::Quit(_) => break 'main,
+                sdl2::event::KeyDown(_, _, key, _, _, _) => {
+                    if key == sdl2::keycode::KeyCode::Escape {
+                        break 'main
+                    }
+                },
+                sdl2::event::None => break 'event,
+                _ => {}
+            }
+        }
+
+        x += dir; 
+        if x <= 0.0 { dir = -dir };
+        if x >= 1024.0 - rect.w as f32 { dir = -dir };
+
+        rect.x = x as i32;
+
+        let _ = renderer.set_draw_color(sdl2::pixels::Color::RGB(32, 32, 255));
+        let _ = renderer.clear();
+        let _ = renderer.copy(&texture, None, Some(rect));
+        renderer.present();
+    }
+
+    sdl2_image::quit();
+    sdl2::quit();    
+}
+
 #[main]
 fn main() {
     use interval::closed;
@@ -647,7 +718,10 @@ fn main() {
             }
         }
     }
-    if args.len() == 2 && args[1].as_slice() == "land"	{
+    else if args.len() == 2 && args[1].as_slice() == "sdl" {
+        sdl_main()
+    }
+    else if args.len() == 2 && args[1].as_slice() == "land"	{
 		investigate()
     }
     else if args.len() == 2 && args[1].as_slice() == "duals" {
@@ -667,7 +741,9 @@ fn main() {
 	    for i in closed(16, 18).iter() { summary_c(i, 40); }
 	    for i in closed(22, 28).iter() { summary_c(i, 60); }
         }
-        else {
+        else if l <= 19 {
+            summary_c(l, 40);
+        } else { 
             summary_c(l, 60)
         }
     }
