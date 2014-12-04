@@ -12,7 +12,7 @@ extern crate core;
 
 extern crate sdl2_image;
 extern crate sdl2;
-extern crate native;
+//extern crate native;
 
 use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use table::Table;

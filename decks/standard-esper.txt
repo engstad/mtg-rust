@@ -1,0 +1,10 @@
+2 Island
+2 Plains
+2 Swamp
+1 Caves of Koilos
+2 Flooded Strand
+4 Polluted Delta
+4 Temple of Deceit
+4 Temple of Enlightenment
+4 Temple of Silence
+1 Urborg, Tomb of Yawgmoth

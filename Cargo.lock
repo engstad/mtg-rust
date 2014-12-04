@@ -3,7 +3,7 @@ name = "mtg-rust"
 version = "0.0.1"
 dependencies = [
  "curl 0.1.0 (git+https://github.com/carllerche/curl-rust)",
- "sdl2 0.0.1-alpha.1 (git+https://github.com/AngryLawyer/rust-sdl2)",
+ "sdl2 0.0.3 (git+https://github.com/AngryLawyer/rust-sdl2)",
  "sdl2_image 0.0.1-alpha.1 (git+https://github.com/xsleonard/rust-sdl2_image)",
 ]
 
@@ -22,66 +22,9 @@ version = "0.1.0"
 source = "git+https://github.com/carllerche/curl-rust#c1b96e146f6752353a1e84cca932c628e6bf73af"
 dependencies = [
  "libz-sys 0.0.1 (git+https://github.com/alexcrichton/libz-sys)",
- "openssl-sys 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
+ "openssl-sys 0.1.1 (git+https://github.com/sfackler/rust-openssl)",
  "pkg-config 0.0.1 (git+https://github.com/alexcrichton/pkg-config-rs)",
 ]
-
-[[package]]
-name = "encoding"
-version = "0.2.3"
-source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
-dependencies = [
- "encoding-index-japanese 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
- "encoding-index-korean 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
- "encoding-index-simpchinese 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
- "encoding-index-singlebyte 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
- "encoding-index-tradchinese 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
-]
-
-[[package]]
-name = "encoding-index-japanese"
-version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
-dependencies = [
- "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
-]
-
-[[package]]
-name = "encoding-index-korean"
-version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
-dependencies = [
- "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
-]
-
-[[package]]
-name = "encoding-index-simpchinese"
-version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
-dependencies = [
- "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
-]
-
-[[package]]
-name = "encoding-index-singlebyte"
-version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
-dependencies = [
- "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
-]
-
-[[package]]
-name = "encoding-index-tradchinese"
-version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
-dependencies = [
- "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
-]
-
-[[package]]
-name = "encoding_index_tests"
-version = "0.1.0"
-source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
 
 [[package]]
 name = "libz-sys"
@@ -93,10 +36,10 @@ dependencies = [
 
 [[package]]
 name = "openssl-sys"
-version = "0.0.1"
-source = "git+https://github.com/sfackler/rust-openssl#33af6a0b7a1037945181db96cf4f6915457a3df6"
+version = "0.1.1"
+source = "git+https://github.com/sfackler/rust-openssl#5340344a5cf3783ecc7f16d0518d1b6584b4a56a"
 dependencies = [
- "pkg-config 0.0.1 (git+https://github.com/alexcrichton/pkg-config-rs)",
+ "pkg-config 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -105,23 +48,25 @@ version = "0.0.1"
 source = "git+https://github.com/alexcrichton/pkg-config-rs#d24a08d87d63df8dc9526c503944415b86719220"
 
 [[package]]
+name = "pkg-config"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "sdl2"
-version = "0.0.1-alpha.1"
-source = "git+https://github.com/AngryLawyer/rust-sdl2#02c3bdde9d3fbed0368bf6d7b8f888332ba76dce"
+version = "0.0.3"
+source = "git+https://github.com/AngryLawyer/rust-sdl2#03b6c219d05f6b3f07a47cc47d013b8ccc4c7f5b"
 
 [[package]]
 name = "sdl2_image"
 version = "0.0.1-alpha.1"
 source = "git+https://github.com/xsleonard/rust-sdl2_image#d47bcc4790cd28919c2d635c70495ae7bda6ce88"
 dependencies = [
- "sdl2 0.0.1-alpha.1 (git+https://github.com/AngryLawyer/rust-sdl2)",
+ "sdl2 0.0.3 (git+https://github.com/AngryLawyer/rust-sdl2)",
 ]
 
 [[package]]
 name = "url"
 version = "0.1.0"
-source = "git+https://github.com/servo/rust-url#5d15bee2d296b0fc3cfae84e69d1d2e865cf9335"
-dependencies = [
- "encoding 0.2.3 (git+https://github.com/lifthrasiir/rust-encoding)",
-]
+source = "git+https://github.com/servo/rust-url#ce3d3176c1b7dfa99b81f29396b68fd5fe25a755"
 

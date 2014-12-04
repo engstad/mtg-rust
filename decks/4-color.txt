@@ -1,0 +1,10 @@
+2 Forest
+3 Mountain
+1 Swamp
+2 Bloodstained Mire
+1 Llanowar Wastes
+2 Mana Confluence
+2 Nomad Outpost
+4 Sandsteppe Citadel
+4 Temple of Plenty
+4 Wooded Foothills

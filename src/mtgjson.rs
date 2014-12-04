@@ -68,7 +68,7 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
     fn to_str_list(card : &json::Json, what : &str) -> Vec<String> {
         let empty = vec![];
         let subtyps = match card.find(what) {
-            Some(t) => t.as_list().unwrap().as_slice(),
+            Some(t) => t.as_array().unwrap().as_slice(),
             None => empty.as_slice()
         };
         let subtypes = subtyps
@@ -82,7 +82,7 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
         Ok(doc) => {
             let cards = doc
                 .find("cards").unwrap()
-                .as_list().unwrap();
+                .as_array().unwrap();
 
             cards.iter()
                 .map(|card| {
@@ -108,7 +108,7 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
 
                     let colors = {
                         let cs = match card.find("colors") {
-                            Some(c) => c.as_list().unwrap().iter()
+                            Some(c) => c.as_array().unwrap().iter()
                                 .map(|s| Color::parse(trim(s.to_string()[]))).collect(),
                             None => vec![]
                         };                    
