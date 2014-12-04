@@ -13,7 +13,7 @@ pub trait Keys<K> {
 }
 
 struct KeysIterator<'a, K:'a> {
-    keys : &'a Keys<K>+'a,
+    keys : &'a (Keys<K>+'a),
     idx : uint
 }
 

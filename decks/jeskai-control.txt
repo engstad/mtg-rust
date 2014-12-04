@@ -1,9 +1,9 @@
-2 Battlefield Forge
-2 Flooded Strand
+4 Battlefield Forge
+4 Flooded Strand
 2 Island
 4 Mystic Monastery
 2 Plains
-4 Shivan Reef
-2 Temple of Enlightenment
-4 Temple of Epiphany
-4 Temple of Triumph
+3 Shivan Reef
+4 Temple of Enlightenment
+2 Temple of Epiphany
+1 Tranquil Cove
