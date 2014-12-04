@@ -3,6 +3,7 @@ name = "mtg-rust"
 version = "0.0.1"
 dependencies = [
  "curl 0.1.0 (git+https://github.com/carllerche/curl-rust)",
+ "gl 0.0.1",
  "sdl2 0.0.7 (git+https://github.com/AngryLawyer/rust-sdl2)",
  "sdl2_image 0.0.1-alpha.1 (git+https://github.com/xsleonard/rust-sdl2_image)",
 ]
@@ -25,6 +26,41 @@ dependencies = [
  "openssl-sys 0.2.2 (git+https://github.com/sfackler/rust-openssl)",
  "pkg-config 0.1.0 (git+https://github.com/alexcrichton/pkg-config-rs)",
 ]
+
+[[package]]
+name = "gl"
+version = "0.0.1"
+dependencies = [
+ "gl 0.0.1 (git+https://github.com/bjz/gl-rs)",
+]
+
+[[package]]
+name = "gl"
+version = "0.0.1"
+source = "git+https://github.com/bjz/gl-rs#d212190fa35b0c5192565a4e3ac08be16ef8d235"
+dependencies = [
+ "gl_generator 0.0.1 (git+https://github.com/bjz/gl-rs)",
+]
+
+[[package]]
+name = "gl_common"
+version = "0.0.1"
+source = "git+https://github.com/bjz/gl-rs#d212190fa35b0c5192565a4e3ac08be16ef8d235"
+
+[[package]]
+name = "gl_generator"
+version = "0.0.1"
+source = "git+https://github.com/bjz/gl-rs#d212190fa35b0c5192565a4e3ac08be16ef8d235"
+dependencies = [
+ "gl_common 0.0.1 (git+https://github.com/bjz/gl-rs)",
+ "khronos_api 0.0.2 (git+https://github.com/bjz/gl-rs)",
+ "rust-xml 0.1.2-pre (git+https://github.com/netvl/rust-xml)",
+]
+
+[[package]]
+name = "khronos_api"
+version = "0.0.2"
+source = "git+https://github.com/bjz/gl-rs#d212190fa35b0c5192565a4e3ac08be16ef8d235"
 
 [[package]]
 name = "libz-sys"
@@ -51,6 +87,11 @@ source = "git+https://github.com/alexcrichton/pkg-config-rs#9b3b44a2e1a8ccc70c3f
 name = "pkg-config"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "rust-xml"
+version = "0.1.2-pre"
+source = "git+https://github.com/netvl/rust-xml#2d9df3267aeaa4d442e1e19a4dfed733cb1397ed"
 
 [[package]]
 name = "sdl2"

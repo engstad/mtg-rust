@@ -2,6 +2,8 @@
 #![feature(tuple_indexing)]
 #![feature(slicing_syntax)]
 #![feature(unboxed_closures)]
+#![feature(phase)]
+#![feature(globs)]
 
 extern crate collections;
 extern crate regex;
@@ -13,6 +15,10 @@ extern crate core;
 extern crate sdl2_image;
 extern crate sdl2;
 //extern crate native;
+extern crate libc;
+
+#[phase(plugin, link)]
+extern crate gl;
 
 use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use table::Table;
@@ -24,6 +30,8 @@ use std::io::File;
 //use sdl2;
 //use sdl2_image;
 //use sdl2_image::LoadSurface;
+use libc::c_void;
+use gl::types::*;
 
 mod prob;
 mod pile;
@@ -612,34 +620,99 @@ fn sdl_main() {
     sdl2::init(sdl2::INIT_VIDEO);
     sdl2_image::init(sdl2_image::INIT_PNG | sdl2_image::INIT_JPG);
 
-    let window = match sdl2::video::Window::new("mrg-rust", sdl2::video::WindowPos::PosCentered, sdl2::video::WindowPos::PosCentered, 
-                                                1024, 1024, sdl2::video::OPENGL) {
+    sdl2::video::gl_set_attribute(sdl2::video::GLAttr::GLContextMajorVersion, 
+                                  gl::platform::GL_MAJOR_VERSION);
+    sdl2::video::gl_set_attribute(sdl2::video::GLAttr::GLContextMinorVersion, 
+                                  gl::platform::GL_MINOR_VERSION);   
+    sdl2::video::gl_set_attribute(sdl2::video::GLAttr::GLDepthSize, 24);
+    sdl2::video::gl_set_attribute(sdl2::video::GLAttr::GLDoubleBuffer, 1);
+    sdl2::video::gl_set_attribute(sdl2::video::GLAttr::GLContextProfileMask, 0x0001);
+    //sdl2::video::ll::SDL_GL_CONTEXT_PROFILE_CORE as int);
+
+    let window = match sdl2::video::Window::new("mtg-rust", 
+                                                sdl2::video::WindowPos::PosCentered, 
+                                                sdl2::video::WindowPos::PosCentered, 
+                                                0, 0, 
+                                                sdl2::video::OPENGL |
+                                                sdl2::video::FULLSCREEN_DESKTOP) {
         Ok(window) => window,
         Err(err) => panic!(format!("failed to create window: {}", err))
     };
 
-    let renderer = match sdl2::render::Renderer::from_window(window, sdl2::render::RenderDriverIndex::Auto, sdl2::render::ACCELERATED) {
+    let context = match window.gl_create_context() {
+        Ok(context) => context,
+        Err(err) => panic!(format!("failed to create context: {}", err))
+    };
+
+    sdl2::clear_error();
+
+    gl::load_with(|name| {
+        match sdl2::video::gl_get_proc_address(name) {
+            Some(glproc) => glproc as *const libc::c_void,
+            None => {
+                println!("missing GL function: {}", name);
+                std::ptr::null()
+            }
+        }
+    });
+
+    if !sdl2::video::gl_set_swap_interval(1) {
+        panic!(format!("failed to set swap interval: {}", sdl2::get_error()))
+    }
+
+/*
+    let renderer = match sdl2::render::Renderer::from_window(window, sdl2::render::RenderDriverIndex::Auto, sdl2::render::ACCELERATED | sdl2::render::PRESENTVSYNC) {
         Ok(renderer) => renderer,
         Err(err) => panic!(format!("failed to create renderer: {}", err))
     };
-    let jpg = &Path::new("pics/THS-master of waves.jpg");
-    let surface = match sdl2_image::LoadSurface::from_file(jpg) {
+*/
+
+    let jpg = &Path::new(
+        "pics/JOU-keranos, god of storms.jpg"
+        //"pics/THS-swamp4.jpg"
+        //"pics/KTK-sarkhan, the dragonspeaker.jpg" 
+        /*"pics/THS-master of waves.jpg"*/);
+    let mut surface = match sdl2_image::LoadSurface::from_file(jpg) {
         Ok(surface) => surface,
         Err(err) => panic!(format!("Failed to load png: {}", err))
     };
+
+    let mut texture = 0;
+    check_gl_unsafe!(gl::GenTextures(1, &mut texture));
+
+    check_gl_unsafe!(gl::BindTexture(gl::TEXTURE_2D, texture));
+    {
+        let w = surface.get_width() as GLsizei;
+        let h = surface.get_height() as GLsizei;
+        let num_mips = 8u;
+        surface.with_lock(|pixels : &mut [u8]| -> () {
+            //check_gl_unsafe!(gl::TexStorage2D(gl::TEXTURE_2D, num_mips, gl::RGBA8, w, h));
+            //check_gl_unsafe!(gl::TexSubImage2D(gl::TEXTURE_2D, 0, 0, 0, w, h, gl::BGRA, gl::UNSIGNED_BYTE, pixels.as_ptr() as *const libc::c_void));
+            //check_gl_unsafe!(gl::GenerateMipmap(gl::TEXTURE_2D));
+            check_gl_unsafe!(gl::TexImage2D(gl::TEXTURE_2D, 0, 
+                                            gl::RGBA as GLint, 
+                                            w, h,                                         
+                                            0, gl::RGB, gl::UNSIGNED_BYTE, 
+                                            pixels.as_ptr() as *const libc::c_void
+                                            ));
+            check_gl_unsafe!(gl::GenerateMipmap(gl::TEXTURE_2D));
+        });
+    }
+    check_gl_unsafe!(gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as GLint));
+    check_gl_unsafe!(gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint));
+
+/*
     let texture = match renderer.create_texture_from_surface(&surface) {
         Ok(texture) => texture,
         Err(err) => panic!(format!("Failed to create surface: {}", err))
     };
+*/
 
-    let mut rect = surface.get_rect();
-    let mut dir = 0.01;
-    let mut x = (512 - rect.w / 2) as f32;
-    let mut y = (512 - rect.h / 2) as f32;
-    rect.w = rect.w * 1;
-    rect.h = rect.h * 1;
-    rect.x = x as i32;
-    rect.y = y as i32;
+    let surf_rect = surface.get_rect();
+
+    let mut speed = -0.005f32;
+    let mut sc = 1.00f32;
+    //let mut timer = sdl2::timer::get_ticks();
 
     'main : loop {
         'event : loop {
@@ -652,19 +725,67 @@ fn sdl_main() {
                 },
                 sdl2::event::Event::None => break 'event,
                 _ => {}
-            }
+            };
+            //sdl2::timer::delay(1u)
         }
 
-        x += dir; 
-        if x <= 0.0 { dir = -dir };
-        if x >= 1024.0 - rect.w as f32 { dir = -dir };
+        sc += speed;
+        if sc > 3.0 { speed = -speed }
+        if sc < 0.0 { speed = -speed }        
 
-        rect.x = x as i32;
+        check_gl_unsafe!(gl::MatrixMode(gl::PROJECTION));
+        check_gl_unsafe!(gl::LoadIdentity());
+        check_gl_unsafe!(gl::MatrixMode(gl::MODELVIEW));
+        check_gl_unsafe!(gl::LoadIdentity());
+        check_gl_unsafe!(gl::ClearColor(0.0, 0.25, 0.25, 1.0));
+        check_gl_unsafe!(gl::Clear(gl::COLOR_BUFFER_BIT));
 
-        let _ = renderer.set_draw_color(sdl2::pixels::Color::RGB(32, 32, 255));
-        let _ = renderer.clear();
-        let _ = renderer.copy(&texture, None, Some(rect));
-        renderer.present();
+        let (ww, wh) = window.get_size();
+        let (tw, th) = (surf_rect.w, surf_rect.h);
+
+        let w = (tw as f32 / ww as f32) * sc;
+        let h = (th as f32 / wh as f32) * sc;
+
+        unsafe {
+            // 56mm x 81mm
+            let w = w * 1.025;
+            let h = h * 1.025;
+            gl::Color3f(0.0f32, 0.0f32, 0.0f32);
+
+            gl::Begin(gl::QUADS);
+            gl::Vertex3f( -w, -h, 0.0f32);
+            gl::Vertex3f(  w, -h, 0.0f32);
+            gl::Vertex3f(  w,  h, 0.0f32);
+            gl::Vertex3f( -w,  h, 0.0f32);
+            gl::End();
+        }
+
+        check_gl_unsafe!(gl::Enable(gl::TEXTURE_2D));
+
+        unsafe {
+            gl::Color3f(1.0f32, 1.0f32, 1.0f32);
+
+            gl::Begin(gl::QUADS);
+            gl::TexCoord2f(0.0f32, 1.0f32);
+            gl::Vertex3f( -w, -h, 0.0f32);
+
+            gl::TexCoord2f(1.0f32, 1.0f32);
+            gl::Vertex3f(  w, -h, 0.0f32);
+
+            gl::TexCoord2f(1.0f32, 0.0f32);
+            gl::Vertex3f(  w,  h, 0.0f32);
+
+            gl::TexCoord2f(0.0f32, 0.0f32);
+            gl::Vertex3f( -w,  h, 0.0f32);
+
+            gl::End();
+        }
+        check_gl_unsafe!(gl::Disable(gl::TEXTURE_2D));
+
+        window.gl_swap_window();
+
+        //let _ = renderer.copy(&texture, None, Some(rect));
+        //renderer.present();
     }
 
     sdl2_image::quit();
