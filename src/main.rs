@@ -612,7 +612,7 @@ fn sdl_main() {
     sdl2::init(sdl2::INIT_VIDEO);
     sdl2_image::init(sdl2_image::INIT_PNG | sdl2_image::INIT_JPG);
 
-    let window = match sdl2::video::Window::new("mrg-rust", sdl2::video::PosCentered, sdl2::video::PosCentered, 
+    let window = match sdl2::video::Window::new("mrg-rust", sdl2::video::WindowPos::PosCentered, sdl2::video::WindowPos::PosCentered, 
                                                 1024, 1024, sdl2::video::OPENGL) {
         Ok(window) => window,
         Err(err) => panic!(format!("failed to create window: {}", err))
@@ -644,13 +644,13 @@ fn sdl_main() {
     'main : loop {
         'event : loop {
             match sdl2::event::poll_event() {
-                sdl2::event::Quit(_) => break 'main,
-                sdl2::event::KeyDown(_, _, key, _, _, _) => {
+                sdl2::event::Event::Quit(_) => break 'main,
+                sdl2::event::Event::KeyDown(_, _, key, _, _, _) => {
                     if key == sdl2::keycode::KeyCode::Escape {
                         break 'main
                     }
                 },
-                sdl2::event::None => break 'event,
+                sdl2::event::Event::None => break 'event,
                 _ => {}
             }
         }
