@@ -13,5 +13,8 @@ path = "src/main.rs"
 [dependencies.curl]
 git = "https://github.com/carllerche/curl-rust"
 
+[dependencies.openssl-sys]
+git = "https://github.com/alexcrichton/openssl-sys"
+
 # [dependencies.hyper]
 # git = "https://github.com/hyperium/hyper"
