@@ -48,7 +48,7 @@ impl<A : Ord + Add<A,A> + Clone + Int> Interval<A> {
     }
 }
 
-struct IntervalIter<'a, A:'a> {
+pub struct IntervalIter<'a, A:'a> {
     state: A,
     range: &'a Interval<A>,
 }

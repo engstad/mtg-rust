@@ -1,7 +1,7 @@
 use colors::Color;
 use colors::Color::{W,U,B,R,G,C};
 
-#[deriving(Show, PartialEq, Eq, Clone)]
+#[deriving(Show, PartialEq, Eq, Copy, Clone)]
 pub struct Mana {
     pub w : uint,
     pub u : uint,

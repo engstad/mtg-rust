@@ -1,6 +1,6 @@
 use mana::Mana;
 
-#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord, Encodable, Decodable)]
+#[deriving(Copy, Clone, Show, PartialEq, Eq, PartialOrd, Ord, Encodable, Decodable)]
 pub enum Color { W, U, B, R, G, C } 
 
 impl Color {
@@ -28,7 +28,7 @@ impl Color {
     }
 }
 
-#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
+#[deriving(Copy, Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Allied { 
     WU, UB, BR, RG, GW
 }
@@ -45,7 +45,7 @@ impl Allied {
     }    
 }
 
-#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
+#[deriving(Copy, Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Enemy {
     WB, UR, BG, RW, GU 
 }
@@ -62,7 +62,7 @@ impl Enemy {
     }    
 }
 
-#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
+#[deriving(Copy, Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Dual { 
     A(Allied),
     E(Enemy)
@@ -77,7 +77,7 @@ impl Dual {
     }    
 }
 
-#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
+#[deriving(Copy, Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Shard {
     WUR, UBG, BRW, RGU, GWB
 }
@@ -94,7 +94,7 @@ impl Shard {
     }    
 }
 
-#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
+#[deriving(Copy, Clone, Show, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Wedge {
     WBR, URG, BGW, RWU, GUB
 }

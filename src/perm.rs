@@ -58,7 +58,7 @@ impl<'a> Iterator<Vec<uint>> for MultiSubSetIterator<'a> {
 
 #[test]
 pub fn test_gen() {
-    for it in MultiSubSetIterator::new(vec![2,4,1].as_slice(), 2) {
+    for it in MultiSubSetIterator::new(vec![2,4,1], 2) {
         println!("{}", it);
     }
     

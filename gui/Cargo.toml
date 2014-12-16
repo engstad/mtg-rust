@@ -1,0 +1,26 @@
+[package]
+
+name = "mtg-gui"
+version = "0.0.1"
+authors = ["Pal-Kristian Engstad <mrengstad@gmail.com>"]
+tags = []
+
+[[bin]]
+
+name = "mtg-gui"
+path = "sdl_main.rs"
+
+[dependencies.curl]
+curl = "^0"
+
+[dependencies.sdl2]
+sdl2 = "^0"
+
+# git = "https://github.com/AngryLawyer/rust-sdl2"
+
+[dependencies.sdl2_image]
+git = "https://github.com/xsleonard/rust-sdl2_image"
+
+[dependencies.gl3]
+path = "gl3"
+

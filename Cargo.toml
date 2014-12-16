@@ -1,27 +1,21 @@
 [package]
 
-name = "mtg-rust"
+name = "mtg"
 version = "0.0.1"
 authors = ["Pal-Kristian Engstad <mrengstad@gmail.com>"]
 tags = []
 
-[[bin]]
-
-name = "mtg-rust"
-path = "src/main.rs"
+[lib]
+name = "mtg"
+path = "src/lib.rs"
 
 [dependencies.curl]
-git = "https://github.com/carllerche/curl-rust"
+curl = "^0"
 
-[dependencies.sdl2]
-git = "https://github.com/AngryLawyer/rust-sdl2"
+# git = "https://github.com/engstad/curl-rust"
+# path = "../curl-rust"
+# git = "https://github.com/carllerche/curl-rust"
 
-[dependencies.sdl2_image]
-git = "https://github.com/xsleonard/rust-sdl2_image"
-
-[dependencies.gl]
-path = "src/gl"
-
-#git = "https://github.com/andelf/rust-sdl2_image"
-# [dependencies.hyper]
-# git = "https://github.com/hyperium/hyper"
+[[bin]]
+name = "mtg"
+path = "src/cmd/main.rs"

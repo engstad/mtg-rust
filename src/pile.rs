@@ -12,7 +12,7 @@ pub trait Keys<K> {
     }
 }
 
-struct KeysIterator<'a, K:'a> {
+pub struct KeysIterator<'a, K:'a> {
     keys : &'a (Keys<K>+'a),
     idx : uint
 }
@@ -81,6 +81,7 @@ pub trait LandPile {
     }
 }
 
+#[deriving(Copy)]
 pub struct GenPileKeys {
     num_keys : uint,
     is_land  : fn(uint) -> bool
@@ -216,9 +217,11 @@ impl LandPile for GenPile<GenPileKeys> {
     }
 }
 
-#[deriving(Clone, Show)]
+#[deriving(Copy, Show)]
 pub enum Colored { C, N, S }
-struct ColoredKeys;
+
+#[deriving(Copy)]
+pub struct ColoredKeys;
 
 impl Keys<Colored> for ColoredKeys {
     fn size(&self) -> uint { 3 }
@@ -228,6 +231,7 @@ impl Keys<Colored> for ColoredKeys {
     }
 }
 
+#[deriving(Copy)]
 pub struct ColoredPile {
     e:[uint, ..3]
 }
@@ -299,7 +303,7 @@ impl fmt::Show for ColoredPile {
     }
 }
 
-#[deriving(Clone)]
+#[deriving(Copy, Clone)]
 pub struct DualPile {
     pub a:  uint, 
     pub b:  uint, // non-colored lands
@@ -308,7 +312,8 @@ pub struct DualPile {
     pub s:  uint, // spells
 }
 
-struct DualPileKeys;
+#[deriving(Copy)]
+pub struct DualPileKeys;
 
 impl Keys<uint> for DualPileKeys {
     fn size(&self) -> uint { 5 }

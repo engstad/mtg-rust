@@ -1,10 +1,10 @@
 [package]
-name = "gl"
+name = "gl3"
 version = "0.0.1"
 authors = ["Pal-Kristian Engstad <mrengstad@yahoo.com>"]
 
 [lib]
-name = "gl"
+name = "gl3"
 path = "lib.rs"
 
 [dependencies.gl]

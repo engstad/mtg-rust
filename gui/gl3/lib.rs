@@ -1,8 +1,13 @@
+#![crate_name = "gl3"]
+
 #![feature(macro_rules)]
 #![feature(phase)]
+#![feature(globs)]
 
 #[phase(plugin)]
 extern crate gl_generator;
+
+use self::types::*;
 
 #[cfg(target_os = "linux")]
 generate_gl_bindings! {
@@ -66,12 +71,11 @@ pub mod check {
                            _function_call: &'static str) {}
 }
 
-
 #[macro_export]
 macro_rules! check_gl(
   ($func:expr) => ({
     let ret = $func;
-    ::gl::check::check_gl_helper(file!(), line!(), stringify!($func));
+    ::gl3::check::check_gl_helper(file!(), line!(), stringify!($func));
     ret
   });
 )
@@ -80,7 +84,7 @@ macro_rules! check_gl(
 macro_rules! check_gl_unsafe (
   ($func:expr) => ({ unsafe {
     let ret = $func;
-    ::gl::check::check_gl_helper(file!(), line!(), stringify!($func));
+    ::gl3::check::check_gl_helper(file!(), line!(), stringify!($func));
     ret
   }});
 )

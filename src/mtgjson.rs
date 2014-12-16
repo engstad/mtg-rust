@@ -43,7 +43,7 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
 
     // let str = res.read_to_string().unwrap();
 
-    let resp = http::handle().get(loc.as_slice()).exec().unwrap();
+    let resp = http::handle().get(loc).exec().unwrap();
     let rstr = String::from_utf8_lossy(resp.get_body());
 
     //println!("{}", resp);
@@ -143,7 +143,7 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
 pub fn fetch_img(set: &str, img: &str) -> Vec<u8>
 {
     let loc = format!("http://mtgimage.com/set/{}/{}.jpg", set, img);
-    let resp = http::handle().get(loc.as_slice()).exec().unwrap();
+    let resp = http::handle().get(loc).exec().unwrap();
     //let rstr = String::from_utf8_lossy(resp.get_body());    
     let mut res = Vec::new();
     res.push_all(resp.get_body());

@@ -4,8 +4,8 @@ use colors::Color;
 use colors::Color::{U,W,B,R,G,C};
 use serialize::json;
 
-#[deriving(Clone, Show, PartialEq, Eq, PartialOrd, Ord, Encodable, Decodable)]
-enum LandType
+#[deriving(Copy, Clone, Show, PartialEq, Eq, PartialOrd, Ord, Encodable, Decodable)]
+pub enum LandType
 {
 	BasicLand,
 	AlphaLand,
@@ -101,8 +101,8 @@ impl LandCardInfo {
 //
 pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db LandCardInfo, uint)>
 {
-    lands.as_slice().split('\n').filter_map(|line| { 
-        let caps:Vec<&str> = line.as_slice().trim().splitn(1, ' ').collect(); 
+    lands.split('\n').filter_map(|line| { 
+        let caps:Vec<&str> = line.trim().splitn(1, ' ').collect(); 
 
         if caps.len() != 2 { return None }
 
@@ -113,8 +113,8 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
             from_str::<uint>(caps[0])
         };
 
-        let l = db.iter().find(|&nm| nm.name.as_slice() == caps[1] ||
-                                     nm.short.as_slice() == caps[1]);
+        let l = db.iter().find(|&nm| nm.name == caps[1] ||
+                                     nm.short == caps[1]);
         
         match (n, l) {
             (Some(n), Some(l)) => Some((l, n)), 
@@ -139,7 +139,7 @@ pub fn analyze(deck: &str) -> uint
     use std::io::File;
     
     let text = include_str!("lands.json");
-    let db:Vec<LandCardInfo> = json::decode(text.as_slice()).unwrap();
+    let db:Vec<LandCardInfo> = json::decode(text).unwrap();
 
     let mut file = match File::open(&Path::new(deck)) {
         Ok(f) => f, Err(e) => { println!("Error: {}", e); return 0; }
