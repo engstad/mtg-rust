@@ -105,7 +105,7 @@ impl Mana {
                     Mana::c(v.unwrap_or(0u))
                 }
             };
-            mana = mana.add(&m)
+            mana = mana.add(m)
         }
         mana
     }
@@ -119,7 +119,7 @@ impl Mana {
 // }
 
 impl Add<Mana, Mana> for Mana {
-    fn add(&self, b: &Mana) -> Mana {
+    fn add(self, b: Mana) -> Mana {
         let a = self;
         Mana::new(a.w + b.w, a.u + b.u, a.b + b.b,
                   a.r + b.r, a.g + b.g, a.c + b.c)
@@ -127,7 +127,7 @@ impl Add<Mana, Mana> for Mana {
 }
 
 impl Sub<Mana, Mana> for Mana {
-    fn sub(&self, b: &Mana) -> Mana {
+    fn sub(self, b: Mana) -> Mana {
         let a = self;
         Mana::new(a.w - b.w, a.u - b.u, a.b - b.b,
                   a.r - b.r, a.g - b.g, a.c - b.c)
@@ -135,7 +135,7 @@ impl Sub<Mana, Mana> for Mana {
 }
 
 impl Mana {
-    pub fn mul(&self, rhs: uint) -> Mana {
+    pub fn mul(self, rhs: uint) -> Mana {
         let a = self;
         let k = rhs;
         Mana::new(a.w * k, a.u * k, a.b * k,
