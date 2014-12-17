@@ -107,21 +107,6 @@ fn main() {
     else if args.len() == 2 && args[1].as_slice() == "frank" {
         frank_table()
     }
-    else if args.len() == 2 {
-        let lands = mtg::standard::analyze(args[1].as_slice());
-        summary_c(lands, 60);
-    }
-    else if false {
-        let l = 26;
-        let d = 60;
-        for u in closed(0u, 4u).iter() {
-            mtg::logic::summary(l, d, u)
-        }
-    }
-    else if args.len() == 2 {
-        let lands = mtg::standard::analyze(args[1].as_slice());
-        summary_c(lands, 60);
-    }
     else if args.len() == 3 && args[1].as_slice() == "pow" {
         let a = from_str(args[2].as_slice()).unwrap_or(0);
         for k in closed(0i, 10).iter() {
@@ -132,8 +117,50 @@ fn main() {
         let a:uint = from_str(args[2].as_slice()).unwrap_or(0);
         let b:uint = from_str(args[3].as_slice()).unwrap_or(1);
         
-        for n in mtg::interval::range(a, b).iter() {
-            println!("c({:3}, {:2}) = {:60.0}", 100u, n, mtg::prob::c(100, n));
+        println!("c({:3}, {:2}) = {:60.0}", a, b, mtg::prob::c(a, b));
+    }
+    else if args.len() == 2 && args[1].as_slice() == "dice" {
+        println!("{:3} {:6}  {:6}  {:6}  {:6}  {:6}  {:6}   | {:6}  {:6}  {:6}  {:6}  {:6}",
+                 "#D", 0u, 1u, 2u, 3u, 4u, 5u, "  >= 1", "  >= 2", "  >= 3", "  >= 4", "  >= 5");
+        for n in closed(2u, 10u).iter() {
+            let mut count = [0i, 0, 0, 0, 0, 0];
+            
+            let num_diff = mtg::prob::pow(6, n as int, 1) as uint;
+            
+            for p in range(0u, num_diff).iter() {
+                let res = Vec::from_fn(n, |i| (p / mtg::prob::pow(6, i as int, 1) as uint) % 6); // 0-5
+                let mut freq = [0u, 0, 0, 0, 0, 0];
+                for r in res.iter() { freq[*r] += 1 };
+                if freq[4] >= 2 { count[5] += 1 }
+                else if freq[3] >= 2 { count[4] += 1 }
+                else if freq[2] >= 2 { count[3] += 1 }
+                else if freq[1] >= 2 { count[2] += 1 }
+                else if freq[0] >= 2 { count[1] += 1 }
+                else { count[0] += 1 }
+            }
+
+            print!("{:3} ", n);
+            for i in closed(0u, 5).iter() {
+                let r = (count[i] as f64) / (num_diff as f64);
+                print!("{:6.1}% ", r * 100.0)
+            }
+            print!(" | ");
+            for i in closed(1u, 5).iter() {
+                let r = count[i..6u].iter().fold(0.0, |acc, c| acc + (*c as f64) / (num_diff as f64));
+                print!("{:6.1}% ", r * 100.0)
+            }            
+            println!("")
+        }
+    }
+    else if args.len() == 2 {
+        let lands = mtg::standard::analyze(args[1].as_slice());
+        summary_c(lands, 60);
+    }
+    else if false {
+        let l = 26;
+        let d = 60;
+        for u in closed(0u, 4u).iter() {
+            mtg::logic::summary(l, d, u)
         }
     }
 }
