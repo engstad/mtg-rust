@@ -14,7 +14,7 @@ use mtg::logic::{show_card_text, investigate, frank_table, summary, summary_c, d
 
 use mtg::pile::{DualPile};
 use mtg::table::Table;
-use mtg::table::TableElem::{LStr, RStr /*, Int, UInt, Empty */};
+use mtg::table::TableElem::{LStr, RStr, UInt /*, Int, Empty */};
 use mtg::mtgjson::{fetch_set, fetch_img};
 use mtg::interval::*;
 use std::io::File;
@@ -120,8 +120,11 @@ fn main() {
         println!("c({:3}, {:2}) = {:60.0}", a, b, mtg::prob::c(a, b));
     }
     else if args.len() == 2 && args[1].as_slice() == "dice" {
-        println!("{:3} {:6}  {:6}  {:6}  {:6}  {:6}  {:6}   | {:6}  {:6}  {:6}  {:6}  {:6}",
-                 "#D", 0u, 1u, 2u, 3u, 4u, 5u, "  >= 1", "  >= 2", "  >= 3", "  >= 4", "  >= 5");
+        let mut dt = Table::new(10, 12);
+        dt.set(0, 0, LStr("Dice".into_string()));
+        for i in closed(0u, 5u).iter() { dt.set(0, i+1, RStr(format!("{}  ", i))) }
+        for i in closed(1u, 5u).iter() { dt.set(0, 6+i, RStr(format!(">= {}  ", i))) }
+        
         for n in closed(2u, 10u).iter() {
             let mut count = [0i, 0, 0, 0, 0, 0];
             
@@ -139,18 +142,17 @@ fn main() {
                 else { count[0] += 1 }
             }
 
-            print!("{:3} ", n);
+            dt.set(n - 1, 0, UInt(n));
             for i in closed(0u, 5).iter() {
                 let r = (count[i] as f64) / (num_diff as f64);
-                print!("{:6.1}% ", r * 100.0)
+                dt.set(n - 1, 1 + i, LStr(format!("{:6.1}% ", r * 100.0)));
             }
-            print!(" | ");
             for i in closed(1u, 5).iter() {
                 let r = count[i..6u].iter().fold(0.0, |acc, c| acc + (*c as f64) / (num_diff as f64));
-                print!("{:6.1}% ", r * 100.0)
+                dt.set(n - 1, 6 + i, LStr(format!("{:6.1}% ", r * 100.0)));
             }            
-            println!("")
         }
+        dt.print("Action Dice")
     }
     else if args.len() == 2 {
         let lands = mtg::standard::analyze(args[1].as_slice());
