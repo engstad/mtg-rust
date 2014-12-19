@@ -120,6 +120,7 @@ fn main() {
         println!("c({:3}, {:2}) = {:60.0}", a, b, mtg::prob::c(a, b));
     }
     else if args.len() == 2 && args[1].as_slice() == "dice" {
+        /*
         println!("{:3} {:6}  {:6}  {:6}  {:6}  {:6}  {:6}   | {:6}  {:6}  {:6}  {:6}  {:6}",
                  "#D", 0u, 1u, 2u, 3u, 4u, 5u, "  >= 1", "  >= 2", "  >= 3", "  >= 4", "  >= 5");
         for n in closed(2u, 10u).iter() {
@@ -147,6 +148,80 @@ fn main() {
             print!(" | ");
             for i in closed(1u, 5).iter() {
                 let r = count[i..6u].iter().fold(0.0, |acc, c| acc + (*c as f64) / (num_diff as f64));
+                print!("{:6.1}% ", r * 100.0)
+            }            
+            println!("")
+        }
+        */
+        
+        // 
+        // 5's are easy: 2 : 1/36
+        //               3 : (C(3,2) * 5 + 1)/6^3 [55x, 5x5, x55]
+        //               
+        // 4: 55xx, 5x5x, 5xx5, x5x5, xx55, where x!=5, i.e.: C(4,2)*5^2 = 150
+        //    Also, 555x, 55x5, 5x55, x555, where x!=5, i.e.: C(4,3)*5   = 20
+        //    Also, 5555                                i.e.: C(4,4)     = 1
+        //
+        // -- 
+        //
+        // 4's is harder, must also account for non 5's.
+        //
+        // 44xxx, 4x4xx, .., xxx44 : C(5,2) * 5^3 = 10 * 5^3 = 1,250
+        // x's: 55x, 5x5, x55, C(3, 1) * 4        = 10 * 13  =   130 
+        //      555            C(3, 0) 
+        // 444xx, 44x4x, .., xx444 : C(5,3) * 5^2 = 10 * 5^2 =   250
+        // x's: 55                                = 10 * 1   =    10
+        // 4444x, 444x4, .., x4444 : C(5,4) * 5^1 =  5 * 5   =    25
+        // 44444                   : C(5,5) * 5^0 =  1 * 1   =     1
+        // 
+
+
+        // Counting the number of ways to get doubles of `d`, where we
+        // thrown `n` dice and we assume that there are `b` x's.
+        fn doubles(d: uint, n: uint, b: uint) -> uint {            
+            //println!("d({},{},{})=?", d, n, b);
+            let r = if n == 0 { 0 } 
+            else if d == 0 {
+                mtg::prob::pow(6, n as int, 1) as uint - 
+                    closed(1u, 5).iter().fold(0u, |acc, od| {
+                        acc + doubles(od, n, b)
+                    })
+            }
+            else {
+                closed(2u, n).iter().fold(0u, |acc, k| {
+                    let c = mtg::prob::ch(n, k);
+                    let p = mtg::prob::pow(b as int, (n-k) as int, 1) as uint;
+                    //println!("k: {} -- (c, p) = ({}, {})", k, c, p);
+                    let q = if n >= k + 2 && d < 5 && b > 1 {
+                        closed(d+1, 5).iter().fold(0u, |acc, s| {
+                            acc + doubles(s, n - k, b-1)
+                        })
+                    } 
+                    else { 
+                        0 
+                    };
+                    //println!(" : C({},{}) = {} : {} * ({} - {}) = {}", n, k, c, c, p, q, c * (p - q));
+                    acc + c * (p - q)                     
+                })
+            };
+            //println!("d({},{},{})={}", d, n, b, r);
+            r
+        }
+
+        //println!("res={}", doubles(4, 5, 5));
+
+        println!("{:3} {:6}  {:6}  {:6}  {:6}  {:6}  {:6}   | {:6}  {:6}  {:6}  {:6}  {:6}",
+                 "#D", 0u, 1u, 2u, 3u, 4u, 5u, "  >= 1", "  >= 2", "  >= 3", "  >= 4", "  >= 5");
+        for n in closed(2u, 10u).iter() {
+
+            print!("{:3} ", n);
+            for i in closed(0u, 5).iter() {
+                let r = doubles(i, n, 5) as f64 / mtg::prob::pow(6, n as int, 1) as f64;
+                print!("{:6.1}% ", r * 100.0)
+            }
+            print!(" | ");
+            for i in closed(1u, 5).iter() {
+                let r = closed(i, 5u).iter().fold(0.0, |acc, c| acc + doubles(c, n, 5) as f64 / mtg::prob::pow(6, n as int, 1) as f64);
                 print!("{:6.1}% ", r * 100.0)
             }            
             println!("")
