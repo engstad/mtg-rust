@@ -20,6 +20,7 @@ extern crate gl3;
 
 use libc::c_void;
 use gl3::types::*;
+//use std::num::FloatMath;
 
 fn sdl_main(file_name : &str) {
     sdl2::init(sdl2::INIT_VIDEO);
@@ -116,9 +117,10 @@ fn sdl_main(file_name : &str) {
 
     let surf_rect = surface.get_rect();
 
-    let mut speed = -0.005f32;
-    let mut sc = 1.00f32;
+    let mut speed = -0.1f32;
+    let mut sc = 1.0f32;
     //let mut timer = sdl2::timer::get_ticks();
+
 
     'main : loop {
         'event : loop {
@@ -136,58 +138,58 @@ fn sdl_main(file_name : &str) {
         }
 
         sc += speed;
-        if sc > 3.0 { speed = -speed }
-        if sc < 0.0 { speed = -speed }        
+        //if sc > 6.28 { speed = -speed }
+        //if sc < 0.0 { speed = -speed }        
+        
+        let a = sc;
 
+        // println!("({},{})", ww, wh);
+        let (ww, wh) = window.get_size();
+        let aspect = (ww as f64) / (wh as f64);
+        check_gl_unsafe!(gl3::Viewport(0, 0, ww as i32, wh as i32));
         check_gl_unsafe!(gl3::MatrixMode(gl3::PROJECTION));
         check_gl_unsafe!(gl3::LoadIdentity());
+        check_gl_unsafe!(gl3::Ortho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0));        
+
         check_gl_unsafe!(gl3::MatrixMode(gl3::MODELVIEW));
         check_gl_unsafe!(gl3::LoadIdentity());
+        check_gl_unsafe!(gl3::Rotatef(a, 0.0, 0.0, 1.0));
+
         check_gl_unsafe!(gl3::ClearColor(0.0, 0.25, 0.25, 1.0));
         check_gl_unsafe!(gl3::Clear(gl3::COLOR_BUFFER_BIT));
 
-        let (ww, wh) = window.get_size();
         let (tw, th) = (surf_rect.w, surf_rect.h);
 
-        let w = (tw as f32 / ww as f32) * sc;
-        let h = (th as f32 / wh as f32) * sc;
-
-        
-        unsafe {
-            // 56mm x 81mm
-            let w = w * 1.025;
-            let h = h * 1.025;
-            gl3::Color3f(0.0f32, 0.0f32, 0.0f32);
-
-            gl3::Begin(gl3::QUADS);
-            gl3::Vertex3f( -w, -h, 0.0f32);
-            gl3::Vertex3f(  w, -h, 0.0f32);
-            gl3::Vertex3f(  w,  h, 0.0f32);
-            gl3::Vertex3f( -w,  h, 0.0f32);
-            gl3::End();
-        }
-        
+        let w = tw as f32 / wh as f32;
+        let h = th as f32 / wh as f32;
 
         check_gl_unsafe!(gl3::Enable(gl3::TEXTURE_2D));
 
-        unsafe {
-            gl3::Color3f(1.0f32, 1.0f32, 1.0f32);
+        for i in range(0i, 7) {               
 
-            gl3::Begin(gl3::QUADS);
-            gl3::TexCoord2f(0.0f32, 1.0f32);
-            gl3::Vertex3f( -w, -h, 0.0f32);
-
-            gl3::TexCoord2f(1.0f32, 1.0f32);
-            gl3::Vertex3f(  w, -h, 0.0f32);
-
-            gl3::TexCoord2f(1.0f32, 0.0f32);
-            gl3::Vertex3f(  w,  h, 0.0f32);
-
-            gl3::TexCoord2f(0.0f32, 0.0f32);
-            gl3::Vertex3f( -w,  h, 0.0f32);
-
-            gl3::End();
+            let x = w * ((i as f32) - 3.5f32);
+            let y = -1.0f32;
+            
+            unsafe {
+                gl3::Color3f(1.0f32, 1.0f32, 1.0f32);
+                
+                gl3::Begin(gl3::QUADS);
+                gl3::TexCoord2f(0.0f32, 1.0f32);
+                gl3::Vertex3f( x, y, 0.0f32);
+                
+                gl3::TexCoord2f(1.0f32, 1.0f32);
+                gl3::Vertex3f( x+w, y, 0.0f32);
+                
+                gl3::TexCoord2f(1.0f32, 0.0f32);
+                gl3::Vertex3f( x+w, y+h, 0.0f32);
+                
+                gl3::TexCoord2f(0.0f32, 0.0f32);
+                gl3::Vertex3f( x, y+h, 0.0f32);
+                
+                gl3::End();
+            }
         }
+
         check_gl_unsafe!(gl3::Disable(gl3::TEXTURE_2D));
 
         window.gl_swap_window();
