@@ -49,6 +49,31 @@ pub fn c(n:uint, k:uint) -> f64 {
   	}
 }
 
+
+pub fn ch(n:uint, k:uint) -> uint {
+	if /*k < 0 ||*/ k > n { 
+        return 0;
+    }
+	else if k == 0 || k == n {
+		return 1;
+    }
+	else {
+		let k:uint = if k + k > n { n - k } else { k };
+
+		let mut res = 1u;
+
+		for j in range(0u, k)
+		{
+			let num = n - j;
+			let den = j + 1;
+			res = (res * num) / den;
+		}
+
+		return res;
+  	}
+}
+
+
 //
 // Given n0 red balls and n1 white balls, the chance of drawing k0 red balls and k1 white balls.
 //
