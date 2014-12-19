@@ -193,9 +193,7 @@ fn main() {
                     let p = mtg::prob::pow(b as int, (n-k) as int, 1) as uint;
                     //println!("k: {} -- (c, p) = ({}, {})", k, c, p);
                     let q = if n >= k + 2 && d < 5 && b > 1 {
-                        closed(d+1, 5).iter().fold(0u, |acc, s| {
-                            acc + doubles(s, n - k, b-1)
-                        })
+                        closed(d+1, 5).iter().fold(0u, |acc, s| acc + doubles(s, n - k, b - 1))
                     } 
                     else { 
                         0 
@@ -204,28 +202,28 @@ fn main() {
                     acc + c * (p - q)                     
                 })
             };
-            //println!("d({},{},{})={}", d, n, b, r);
-            dt.print("Action Dice")
+            r
         }
 
         //println!("res={}", doubles(4, 5, 5));
 
-        let mut dt = Table::new(10, 12);
+        let mut dt = Table::new(10, 13);
         dt.set(0, 0, LStr("Dice".into_string()));
         for i in closed(0u, 5u).iter() { dt.set(0, i+1, RStr(format!("{}  ", i))) }
-        for i in closed(1u, 5u).iter() { dt.set(0, 6+i, RStr(format!(">= {}  ", i))) }
+        for n in closed(0u, 9u).iter() { dt.set(n, 7, RStr("|".into_string())) }
+        for i in closed(1u, 5u).iter() { dt.set(0, 7+i, RStr(format!(">= {}  ", i))) }
         for n in closed(2u, 10u).iter() {
             dt.set(n - 1, 0, UInt(n));
             for i in closed(0u, 5).iter() {
-                let r = (count[i] as f64) / (num_diff as f64);doubles(i, n, 5) as f64 / mtg::prob::pow(6, n as int, 1) as f64;
+                let r = doubles(i, n, 5) as f64 / mtg::prob::pow(6, n as int, 1) as f64;
                 dt.set(n - 1, 1 + i, LStr(format!("{:6.1}% ", r * 100.0)));
             }
             for i in closed(1u, 5).iter() {
                 let r = closed(i, 5u).iter().fold(0.0, |acc, c| acc + doubles(c, n, 5) as f64 / mtg::prob::pow(6, n as int, 1) as f64);
-                dt.set(n - 1, 6 + i, LStr(format!("{:6.1}% ", r * 100.0)));
+                dt.set(n - 1, 7 + i, LStr(format!("{:6.1}% ", r * 100.0)));
             }            
         }
-        dt.print
+        dt.print("Action Dice")
     }
     else if args.len() == 2 {
         let lands = mtg::standard::analyze(args[1].as_slice());
