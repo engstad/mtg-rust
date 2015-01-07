@@ -1,3 +1,4 @@
+use std::iter::repeat;
 use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use table::Table;
 use table::TableElem::{LStr, RStr, Int, UInt, Empty};
@@ -22,13 +23,14 @@ fn mull_rule(hand_size: uint) -> (uint, uint) {
 }
 
 mod single {
-    use pile::{KvMap, LandPile, ColoredPile};
+    use pile::{Pile, LandPile, ColoredPile};
     use std::iter::{range_inclusive, AdditiveIterator};
     use prob;
     use interval::closed;
 
-    fn draw(hand: &ColoredPile, draws: uint, deck: &ColoredPile, 
-            goal: |&ColoredPile|->bool) -> f64 
+    fn draw<G>(hand: &ColoredPile, draws: uint, deck: &ColoredPile, 
+            goal: G) -> f64
+        where G : Fn(&ColoredPile)->bool
     {
         if draws > 0 {
             ColoredPile::iter(draws)
@@ -40,9 +42,11 @@ mod single {
         }
     }        
 
-    fn intern(hand_size: uint, 
-              deck: &ColoredPile, draws: uint, goal: |&ColoredPile|->bool)
-              -> (f64, f64) {
+    fn intern<G>(hand_size: uint, 
+              deck: &ColoredPile, draws: uint, goal: G)
+              -> (f64, f64) 
+        where G : Fn(&ColoredPile)->bool
+    {
         let (lands_min, lands_max) = super::mull_rule(hand_size);
         
         // Probability of keeping 
@@ -62,7 +66,9 @@ mod single {
         (keep, cast)
     }
 
-    pub fn turn0(deck: &ColoredPile, draws: uint, goal: |&ColoredPile|->bool) -> f64 {
+    pub fn turn0<G>(deck: &ColoredPile, draws: uint, goal: G) -> f64 
+        where G : Fn(&ColoredPile)->bool
+    {
         let mut mull = 1.0; // the chance we mulled before
         let mut succ = 0.0;
         
@@ -75,9 +81,9 @@ mod single {
         succ
     }
     
-    pub fn cards(lands: uint, deck: uint, draws: uint, perc: f64, 
-                 goal: |&ColoredPile|->bool) -> 
-        int 
+    pub fn cards<G>(lands: uint, deck: uint, draws: uint, perc: f64, 
+                 goal: G) -> int 
+        where G : Fn(&ColoredPile)->bool
     {
         let deck1 = ColoredPile::new(lands, 0, deck-lands);
         let r1 = turn0(&deck1, draws, |g| goal(g));
@@ -96,14 +102,14 @@ mod single {
 // ================================================================================
 
 pub mod dual {
-    use pile::{KvMap, LandPile, DualPile};
+    use pile::{Pile, LandPile, DualPile};
     use std::iter::{range_inclusive, AdditiveIterator};
     use std::num::Float;
     use prob;
     use interval::closed;
 
-    fn draw(hand: &DualPile, draws: uint, deck: &DualPile, 
-            goal: |&DualPile|->bool) -> f64 
+    fn draw<G>(hand: &DualPile, draws: uint, deck: &DualPile, goal: G) -> f64 
+        where G : Fn(&DualPile)->bool
     {
         if draws > 0 {
             DualPile::iter(draws)
@@ -115,7 +121,9 @@ pub mod dual {
         }
     }        
 
-    pub fn turn0(deck: &DualPile, draws: uint, goal: |&DualPile|->bool) -> f64 {
+    pub fn turn0<G>(deck: &DualPile, draws: uint, goal: G) -> f64 
+        where G: Fn(&DualPile)->bool
+    {
         let mut mull = 1.0;
         let mut succ = 0.0;
         //let mut tally = 0.0;
@@ -143,8 +151,10 @@ pub mod dual {
         succ
     }
     
-    pub fn cards(lands: uint, deck: uint, uncolored: uint,
-                 a_rate: f64, draws: uint, perc: f64, goal: |&DualPile|->bool) -> int {
+    pub fn cards<G>(lands: uint, deck: uint, uncolored: uint,
+                    a_rate: f64, draws: uint, perc: f64, goal: G) -> int 
+        where G : Fn(&DualPile)->bool
+    {
         
         let deck0 = DualPile::new(0, 0, lands, 0, deck-lands);
         let deck1 = DualPile::new(0, 0, lands-uncolored, uncolored, deck-lands);
@@ -176,13 +186,13 @@ pub mod dual {
 // ================================================================================
 
 mod gen {
-    use pile::{KvMap, GenPileKeys, LandPile, GenPile};
+    use pile::{Pile, LandPile, GenPile};
     use std::iter::{range_inclusive, AdditiveIterator};
     use prob;
 
-    fn draw(hand: &GenPile<GenPileKeys>, draws: uint, 
-            deck: &GenPile<GenPileKeys>, 
-            goal: |&GenPile<GenPileKeys>|->bool) -> f64 
+    fn draw<G>(hand: &GenPile, draws: uint, deck: &GenPile, 
+               goal: G) -> f64 
+        where G : Fn(&GenPile)->bool
     {
         if draws > 0 {
             deck.subsets(draws).iter()
@@ -194,8 +204,9 @@ mod gen {
         }
     }        
 
-    pub fn turn0(deck: &GenPile<GenPileKeys>, draws: uint, 
-                 goal: |&GenPile<GenPileKeys>|->bool) -> f64 {
+    pub fn turn0<G>(deck: &GenPile, draws: uint, goal: G) -> f64 
+        where G : Fn(&GenPile)->bool 
+    {
         let mut mull = 1.0;
         let mut succ = 0.0;
         
@@ -243,8 +254,8 @@ pub fn b_minc(bh: &mut BenchHarness) {
 
 fn pm2(a:uint, b:uint, c:uint) -> String {
     let mut res = if c > 0 { c.to_string() } else { "".to_string() };
-    res.push_str("A".repeat(a).as_slice());
-    res.push_str("B".repeat(b).as_slice());
+    res.push_str(&*repeat('A').take(a).collect::<String>());
+    res.push_str(&*repeat('B').take(b).collect::<String>());
     res
 }
 
@@ -274,7 +285,7 @@ pub fn summary(lands: uint, deck: uint, uncolored_lands: uint) {
                 let arate = (amana as f64) / (amana + bmana) as f64;
                 let cmc = cmana + cless;
                 let draws = cmc - 1;
-                let goal = |hand: &DualPile| { 
+                let goal = |&: hand: &DualPile| { 
                     
                     let a_left = if amana > hand.a { amana - hand.a } else { 0 };
                     let b_left = if bmana > hand.b { bmana - hand.b } else { 0 };
@@ -304,7 +315,7 @@ pub fn summary(lands: uint, deck: uint, uncolored_lands: uint) {
 fn pm(colored_mana:uint, cmc:uint) -> String {
     let nc = cmc - colored_mana;
     let mut res = if nc > 0 { nc.to_string() } else { "".to_string() };
-    res.push_str("C".repeat(colored_mana).as_slice());
+    res.push_str(&*repeat('C').take(colored_mana).collect::<String>());
     res
 }  
 
@@ -329,7 +340,7 @@ pub fn summary_c(lands: uint, deck: uint) {
         for cless in closed(0u, 7).iter() {                     
             let cmc = cmana + cless;
             let draws = cmc - 1;
-            let goal = |hand: &ColoredPile| { 
+            let goal = |&: hand: &ColoredPile| { 
                 let ok = hand.colored() >= cmana // colors okay
                     && hand.lands() >= cmc; // enough lands for cmc
                 
@@ -412,7 +423,7 @@ pub fn investigate()
 
         let info = GenPileKeys::new(9, is_land);
         
-        fn cc(hand: &GenPile<GenPileKeys>, a: uint, b: uint, x: uint) -> bool {
+        fn cc(hand: &GenPile, a: uint, b: uint, x: uint) -> bool {
             can_cast(hand[A] + hand[AC], hand[B] + hand[BC], hand[AB], hand[C],
                      a, b, x)
         }
@@ -485,7 +496,7 @@ pub fn frank(colored_mana: uint, cmc: uint) -> Table {
         
         for turn in closed(1u, 7u).iter() {
             let draws = turn - 1u + e;
-            let goal = |hand: &ColoredPile| { 
+            let goal = |&: hand: &ColoredPile| { 
                 hand.colored() >= colored_mana // colors okay
                     && hand.lands() >= cmc // enough lands for cmc
                     && turn >= cmc // one land per turn
@@ -540,7 +551,7 @@ pub fn show_card_text(txt : &str, width : uint)
                     if brk { 
                         print!("\n"); 
                         if indent > width / 4 { indent = 4 }
-                        print!("{}", " ".repeat(indent)); 
+                        print!("{}", repeat(' ').take(indent).collect::<String>());
                         col = indent 
                     }
                     col += l + 1; 
@@ -557,8 +568,13 @@ pub fn show_card_text(txt : &str, width : uint)
             match g {
                 "n" => { 
                     let l = word.width(false);
-                    if col + l >= width { print!("\n{}{}\n", " ".repeat(indent), word) }
-                    else { print!("{}\n", word) };
+                    if col + l >= width { 
+                        print!("\n{}{}\n", 
+                               repeat(' ').take(indent).collect::<String>(), word) 
+                    }
+                    else { 
+                        print!("{}\n", word) 
+                    };
                     col = 0;
                     indent = 0;
                     word.clear(); 
@@ -570,7 +586,7 @@ pub fn show_card_text(txt : &str, width : uint)
     }
     if col + word.width(false) >= width { 
         if indent > width / 4 { indent = 4 }
-        print!("\n{}", " ".repeat(indent)) 
+        print!("\n{}", repeat(' ').take(indent).collect::<String>()) 
     }
     print!("{}\n", word)
 }

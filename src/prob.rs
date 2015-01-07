@@ -1,10 +1,12 @@
+use core::num::*;
+
 //
 // First probabilities
 //
 
 pub fn perc(x:f64) -> f64 { 100.0 * x }
 
-pub fn pow(x:int, n:int, acc:i64) -> i64
+pub fn pow_acc(x:int, n:int, acc:i64) -> i64
 {
     if n == 0 {
 	    return acc;
@@ -26,7 +28,7 @@ pub fn pow(x:int, n:int, acc:i64) -> i64
 // E.g.: c(3, 2) = 3, c(4, 2) = 6.
 //
 
-pub fn c(n:uint, k:uint) -> f64 {
+pub fn c(n: u64, k: u64) -> f64 {
 	if /*k < 0 ||*/ k > n { 
         return 0.0;
     }
@@ -34,12 +36,11 @@ pub fn c(n:uint, k:uint) -> f64 {
 		return 1.0;
     }
 	else {
-		let k:uint = if k + k > n { n - k } else { k };
+		let k: u64 = if k + k > n { n - k } else { k };
 
 		let mut res:f64 = 1.0;
 
-		for j in range(0u, k)
-		{
+		for j in range(0, k) {
 			let num:f64 = (n - j).to_f64().unwrap();
 			let den:f64 = (j + 1).to_f64().unwrap();
 			res = (res * num) / den;
@@ -50,7 +51,7 @@ pub fn c(n:uint, k:uint) -> f64 {
 }
 
 
-pub fn ch(n:uint, k:uint) -> uint {
+pub fn ch(n: u64, k: u64) -> u64 {
 	if /*k < 0 ||*/ k > n { 
         return 0;
     }
@@ -58,11 +59,11 @@ pub fn ch(n:uint, k:uint) -> uint {
 		return 1;
     }
 	else {
-		let k:uint = if k + k > n { n - k } else { k };
+		let k: u64 = if k + k > n { n - k } else { k };
 
-		let mut res = 1u;
+		let mut res = 1u64;
 
-		for j in range(0u, k)
+		for j in range(0, k)
 		{
 			let num = n - j;
 			let den = j + 1;
@@ -77,7 +78,7 @@ pub fn ch(n:uint, k:uint) -> uint {
 //
 // Given n0 red balls and n1 white balls, the chance of drawing k0 red balls and k1 white balls.
 //
-pub fn h(n0 : uint, k0 : uint, n1 : uint, k1 : uint) -> f64
+pub fn h(n0 : u64, k0 : u64, n1 : u64, k1 : u64) -> f64
 {
 	//                      c(n0, k0) * c(n1, k1)
 	// h(n0, k0, n1, k2) = -----------------------
@@ -90,7 +91,7 @@ pub fn h(n0 : uint, k0 : uint, n1 : uint, k1 : uint) -> f64
 	return c(n0, k0) * c(n1, k1) / c(n0 + n1, k0 + k1);
 }
 
-fn h3(num: [uint, ..3], den: [uint, ..3]) -> f64
+fn h3(num: [u64; 3], den: [u64; 3]) -> f64
 {
     let n_t = num[0] + num[1] + num[2];
     let k_t = den[0] + den[1] + den[2];
@@ -98,7 +99,9 @@ fn h3(num: [uint, ..3], den: [uint, ..3]) -> f64
     c_t / c(n_t, k_t)
 }
 
-pub fn when(cond: bool, what: || -> f64) -> f64 {
+pub fn when<F>(cond: bool, what: F) -> f64 
+    where F : Fn() -> f64
+{
     if cond { 
         what()
     } else {

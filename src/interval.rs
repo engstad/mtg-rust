@@ -1,9 +1,9 @@
 use std::num::Int;
 
-#[deriving(Clone)]
+#[derive(Clone)]
 enum IntervalType { Open, Closed, Range, OpenClosed }
 
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct Interval<A> {
     start : A,
     end   : A,
@@ -39,7 +39,7 @@ pub fn open_closed<A:Ord>(a: A, b: A) -> Interval<A> {
     Interval { start:min, end:max, rtype:IntervalType::OpenClosed }
 }
 
-impl<A : Ord + Add<A,A> + Clone + Int> Interval<A> {
+impl<A : Ord + Clone + Int> Interval<A> {
     pub fn iter<'a>(&'a self) -> IntervalIter<'a, A> {
         match self.rtype {
             IntervalType::Range | IntervalType::Closed => IntervalIter { state : self.start.clone(), range : self },
@@ -53,7 +53,9 @@ pub struct IntervalIter<'a, A:'a> {
     range: &'a Interval<A>,
 }
 
-impl<'a, A : Ord + Add<A,A> + Clone + Int> Iterator<A> for IntervalIter<'a,A> {
+impl<'a, A : Ord + Clone + Int> Iterator for IntervalIter<'a,A> {
+    type Item = A;
+
     fn next(&mut self) -> Option<A> {
         match self.range.rtype {
             IntervalType::Range | IntervalType::Open => 

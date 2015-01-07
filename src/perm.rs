@@ -1,10 +1,12 @@
-#[deriving(Show)]
+use std::iter::repeat;
+
+#[derive(Show)]
 pub struct MultiSubSetIterator<'a> {
     ns : &'a [uint],
     stack : Vec<Stack>
 }
 
-#[deriving(Clone, Show)]
+#[derive(Clone, Show)]
 struct Stack { 
     k : uint,       // how many left to add
     n : uint,       // how many left to chose from
@@ -16,15 +18,17 @@ impl<'a> MultiSubSetIterator<'a> {
     pub fn new(ns: &'a [uint], k: uint) -> MultiSubSetIterator<'a> {
         let l = ns.len();
         let n = ns.iter().fold(0, |a,&b| a+b);
-        let a = Vec::from_elem(ns.len(), 0u);
+        let a = repeat(0u).take(ns.len()).collect::<_>();
         MultiSubSetIterator { 
             ns : ns.clone(), 
-            stack : Vec::from_elem(1, Stack{k:k, l:l, n:n, a:a})               
+            stack : vec![Stack{k:k, l:l, n:n, a:a}]
         }
     }
 }
 
-impl<'a> Iterator<Vec<uint>> for MultiSubSetIterator<'a> {
+impl<'a> Iterator for MultiSubSetIterator<'a> {
+    type Item = Vec<uint>;
+
     fn next(&mut self) -> Option<Vec<uint>> {
         loop {
             match self.stack.pop() {

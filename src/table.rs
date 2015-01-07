@@ -1,4 +1,6 @@
-#[deriving(Clone, PartialEq, Eq, PartialOrd, Ord)]
+use std::iter::repeat;
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TableElem {
     Empty,
     LStr(String),
@@ -19,13 +21,25 @@ impl TableElem {
     }
 }
 
+pub fn left(v: &str) -> TableElem { 
+    TableElem::LStr(v.to_string())
+}
+
+pub fn right(v: &str) -> TableElem { 
+    TableElem::RStr(v.to_string())
+}
+
+
 pub struct Table {
     rows : Vec<Vec<TableElem>>
 }
 
 impl Table {
     pub fn new(rows:uint, cols:uint) -> Table {
-        Table { rows : Vec::from_fn(rows, |_| { Vec::from_fn(cols, |_| TableElem::Empty) }) }
+        Table { 
+            rows : repeat(repeat(TableElem::Empty).take(cols).collect::<_>())
+                .take(rows).collect::<_>()
+        }
     }
 
     pub fn set(&mut self, r:uint, c:uint, v:TableElem) {
@@ -40,7 +54,8 @@ impl Table {
         if self.rows.len() == 0 { return }
         
         let min_width = 4u; 
-        let mut width_tbl = Vec::from_elem(self.rows[0].len(), min_width);
+        let mut width_tbl : Vec<uint> = 
+            repeat(min_width).take(self.rows[0].len()).collect();
         let width = width_tbl.as_mut_slice();
         
         for row in self.rows.iter() {
@@ -52,8 +67,8 @@ impl Table {
         
         let tot_width = width.iter().fold(0, |a,&b| a + b + 1);
         let line_width = tot_width - caption.len() - 2;
-        let left = "=".repeat(line_width/2);
-        let rght = "=".repeat((line_width+1)/2);
+        let left : String = repeat("=").take(line_width as uint/2).collect();
+        let rght : String = repeat("=").take((line_width+1) as uint/2).collect();
         println!("{} {} {}", left, caption, rght);
                 
         for line in self.rows.iter() {
@@ -68,7 +83,7 @@ impl Table {
             }
             print!("\n");
         }
-        println!("{}", "=".repeat(tot_width));
+        println!("{}", repeat("=").take(tot_width).collect::<String>());
         print!("\n");
     }
 
@@ -76,7 +91,8 @@ impl Table {
         if self.rows.len() == 0 { return }
         
         let min_width = 0u; 
-        let mut width_tbl = Vec::from_elem(self.rows[0].len(), min_width);
+        let mut width_tbl = 
+            repeat(min_width).take(self.rows[0].len()).collect::<Vec<uint>>();
         let width = width_tbl.as_mut_slice();
         
         for row in self.rows.iter() {
@@ -90,7 +106,7 @@ impl Table {
 
         impl TeX { 
             fn indent(&mut self) {
-                print!("{}", " ".repeat(self.ind));
+                print!("{}", repeat(' ').take(self.ind).collect::<String>());
             }
 
             fn cmd(&mut self, what: &str) {
@@ -124,7 +140,7 @@ impl Table {
 
         tex.begin("figure");
         tex.begin("center");
-        tex.begin_opt("tabular", "c".repeat(self.rows[0].len()).as_slice());
+        tex.begin_opt("tabular", repeat("c").take(self.rows[0].len()).collect::<String>().as_slice());
         
         for (r, line) in self.rows.iter().enumerate() {
             if r == 0 { tex.cmd("toprule") }

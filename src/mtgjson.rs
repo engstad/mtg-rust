@@ -2,11 +2,11 @@
 //use hyper::client::Request;
 use curl::http;
 
-use serialize::json;
+use rustc_serialize::json;
 use mana::Mana;
 use colors::Color;
 
-#[deriving(Show, PartialEq, Eq, Clone)]
+#[derive(Show, PartialEq, Eq, Clone)]
 pub struct Card {
     pub card_name   : String,
     pub mana_cost   : Mana,

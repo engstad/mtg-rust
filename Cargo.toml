@@ -12,6 +12,9 @@ path = "src/lib.rs"
 [dependencies.curl]
 curl = "^0"
 
+[dependencies]
+rustc-serialize = "^0"
+
 # git = "https://github.com/engstad/curl-rust"
 # path = "../curl-rust"
 # git = "https://github.com/carllerche/curl-rust"

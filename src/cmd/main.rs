@@ -10,14 +10,14 @@ extern crate libc;
 extern crate mtg;
 
 //use mtg::logic::*;
-use mtg::logic::{show_card_text, investigate, frank_table, summary, summary_c, dual};
+use mtg::logic::{investigate, frank_table, summary, summary_c, dual};
 
 use mtg::pile::{DualPile};
 use mtg::table::Table;
 use mtg::table::TableElem::{LStr, RStr, UInt /*, Int, Empty */};
-use mtg::mtgjson::{fetch_set, fetch_img};
+//use mtg::mtgjson::{fetch_set, fetch_img};
 use mtg::interval::*;
-use std::io::File;
+//use std::io::File;
 
 #[main]
 fn main() {
@@ -25,6 +25,7 @@ fn main() {
 
     let args = std::os::args();
 
+    /*
     if args.len() == 1 || (args.len() == 2 && (args[1] == "dump" || args[1] == "fetch")) {
         let mut cs = vec![];
         cs.push_all(fetch_set("KTK")[]);
@@ -46,9 +47,12 @@ fn main() {
                 // !c.colors.iter().any(|s| *s == mtg::colors::B) &&
                 !c.colors.iter().any(|s| *s == mtg::colors::Color::G) &&
                 // !c.colors.iter().any(|s| *s == mtg::colors::R) &&                
+                c.colors.iter().any(|s| (*s == mtg::colors::Color::R ||
+                                         *s == mtg::colors::Color::B ||
+                                         *s == mtg::colors::Color::U)) &&
                 true
             {
-                println!("{}", "=".repeat(width));
+                for _ in range(0, width).iter() { print!("=") } println!("");
                 println!("[{:3}] {:40} {:6}\n({})   {:40} {}", 
                          c.expansion, c.card_name, c.mana_cost.pretty(), 
                          c.rarity.graphemes(false).next().unwrap_or("?"),
@@ -75,25 +79,27 @@ fn main() {
             }
         }
     }
+    */
     //else if args.len() == 3 && args[1].as_slice() == "pic" {
     //    sdl_main(args[2].as_slice())
     //}
-    else if args.len() == 2 && args[1].as_slice() == "land"	{
+    //else 
+    if args.len() == 2 && args[1].as_slice() == "land"	{
 		investigate()
     }
     else if args.len() == 2 && args[1].as_slice() == "duals" {
 		let mut dp = Table::new (18, 2);
 		for a in closed(0u, 17).iter() {
-			let goal = | hand : &DualPile | {(hand.a >= 1) || hand.ab >= 1 };
+			let goal = |&:&hand: &DualPile | {(hand.a >= 1) || hand.ab >= 1 };
 			let td = DualPile::new (a, 17 - a, 0, 0, 23);
-			let rt = dual::turn0(&td, 1, | g | goal(g));
+			let rt = dual::turn0(&td, 1, goal);
 			dp.set(a, 0, LStr(format !("{}", td)));
 			dp.set(a, 1, RStr(format !("{:6.2}%", rt * 100.0)));
 		}
 		dp.print("Duals");
     }
     else if args.len() >= 2 && args[1].as_slice() == "table" {
-        let l = if args.len() == 3 { from_str::<uint>(args[2].as_slice()).unwrap_or(0) } else { 0 };
+        let l = if args.len() == 3 { args[2].parse::<uint>().unwrap_or(0) } else { 0 };
         if l == 0 {
 	    for i in closed(16, 18).iter() { summary_c(i, 40); }
 	    for i in closed(22, 28).iter() { summary_c(i, 60); }
@@ -108,14 +114,14 @@ fn main() {
         frank_table()
     }
     else if args.len() == 3 && args[1].as_slice() == "pow" {
-        let a = from_str(args[2].as_slice()).unwrap_or(0);
+        let a = args[2].parse::<int>().unwrap_or(0);
         for k in closed(0i, 10).iter() {
-            println!("{}^{} = {}", a, k, mtg::prob::pow(a, k, 1));
+            println!("{}^{} = {}", a, k, mtg::prob::pow_acc(a, k, 1));
         }
     }
     else if args.len() == 4 && args[1].as_slice() == "C" {
-        let a:uint = from_str(args[2].as_slice()).unwrap_or(0);
-        let b:uint = from_str(args[3].as_slice()).unwrap_or(1);
+        let a:u64 = args[2].parse().unwrap_or(0);
+        let b:u64 = args[3].parse().unwrap_or(1);
         
         println!("c({:3}, {:2}) = {:60.0}", a, b, mtg::prob::c(a, b));
     }
@@ -178,28 +184,29 @@ fn main() {
 
         // Counting the number of ways to get doubles of `d`, where we
         // thrown `n` dice and we assume that there are `b` x's.
-        fn doubles(d: uint, n: uint, b: uint) -> uint {            
+        fn doubles(d: u64, n: u64, b: u64) -> u64 {            
             //println!("d({},{},{})=?", d, n, b);
             let r = if n == 0 { 0 } 
             else if d == 0 {
-                mtg::prob::pow(6, n as int, 1) as uint - 
-                    closed(1u, 5).iter().fold(0u, |acc, od| {
+                mtg::prob::pow_acc(6, n as int, 1) as u64 - 
+                    closed(1u64, 5).iter().fold(0u64, |acc, od| {
                         acc + doubles(od, n, b)
                     })
             }
             else {
-                closed(2u, n).iter().fold(0u, |acc, k| {
-                    let c = mtg::prob::ch(n, k);
-                    let p = mtg::prob::pow(b as int, (n-k) as int, 1) as uint;
+                closed(2u64, n).iter().fold(0u64, |acc, k| {
+                    let c:u64 = mtg::prob::ch(n, k);
+                    let p:u64 = mtg::prob::pow_acc(b as int, (n-k) as int, 1) as u64;
                     //println!("k: {} -- (c, p) = ({}, {})", k, c, p);
-                    let q = if n >= k + 2 && d < 5 && b > 1 {
-                        closed(d+1, 5).iter().fold(0u, |acc, s| acc + doubles(s, n - k, b - 1))
+                    let q:u64 = if n >= k + 2 && d < 5 && b > 1 {
+                        closed(d+1, 5).iter()
+                            .fold(0u64, |acc, s| acc + doubles(s, n - k, b - 1)) as u64
                     } 
                     else { 
                         0 
                     };
                     //println!(" : C({},{}) = {} : {} * ({} - {}) = {}", n, k, c, c, p, q, c * (p - q));
-                    acc + c * (p - q)                     
+                    acc + c * (p - q)
                 })
             };
             r
@@ -208,19 +215,19 @@ fn main() {
         //println!("res={}", doubles(4, 5, 5));
 
         let mut dt = Table::new(10, 13);
-        dt.set(0, 0, LStr("Dice".into_string()));
+        dt.set(0, 0, LStr("Dice".to_string()));
         for i in closed(0u, 5u).iter() { dt.set(0, i+1, RStr(format!("{}  ", i))) }
-        for n in closed(0u, 9u).iter() { dt.set(n, 7, RStr("|".into_string())) }
+        for n in closed(0u, 9u).iter() { dt.set(n, 7, RStr("|".to_string())) }
         for i in closed(1u, 5u).iter() { dt.set(0, 7+i, RStr(format!(">= {}  ", i))) }
-        for n in closed(2u, 10u).iter() {
+        for n in closed(2u, 10).iter() {
             dt.set(n - 1, 0, UInt(n));
             for i in closed(0u, 5).iter() {
-                let r = doubles(i, n, 5) as f64 / mtg::prob::pow(6, n as int, 1) as f64;
-                dt.set(n - 1, 1 + i, LStr(format!("{:6.1}% ", r * 100.0)));
+                let r = doubles(i as u64, n as u64, 5) as f64 / mtg::prob::pow_acc(6, n as int, 1) as f64;
+                dt.set(n - 1, 1 + i, LStr(format!("{:4.0}% ", r * 100.0)));
             }
             for i in closed(1u, 5).iter() {
-                let r = closed(i, 5u).iter().fold(0.0, |acc, c| acc + doubles(c, n, 5) as f64 / mtg::prob::pow(6, n as int, 1) as f64);
-                dt.set(n - 1, 7 + i, LStr(format!("{:6.1}% ", r * 100.0)));
+                let r = closed(i, 5u).iter().fold(0.0, |acc, c| acc + doubles(c as u64, n as u64, 5) as f64 / mtg::prob::pow_acc(6, n as int, 1) as f64);
+                dt.set(n - 1, 7 + i, LStr(format!("{:4.0}% ", r * 100.0)));
             }            
         }
         dt.print("Action Dice")

@@ -1,68 +1,39 @@
-use std::iter::AdditiveIterator;
+use std::ops::Index;
+use std::iter::{AdditiveIterator};
 use std::fmt;
 use prob;
 use perm::MultiSubSetIterator;
 
-pub trait Keys<K> {
-    fn size(&self) -> uint;
-    fn to_uint(&self, K) -> uint;
-    fn from_uint(&self, n: uint) -> K;
-    fn iter<'a>(&'a self) -> KeysIterator<'a, K> {
-        KeysIterator { keys : self, idx : 0 }
-    }
-}
-
-pub struct KeysIterator<'a, K:'a> {
-    keys : &'a (Keys<K>+'a),
-    idx : uint
-}
-
-impl<'a,K> Iterator<K> for KeysIterator<'a, K> {
-    fn next(&mut self) -> Option<K> {
-        let i = self.idx;
-        self.idx += 1;
-        if i < self.keys.size() {
-            Some(self.keys.from_uint(i))
-        }
-        else {
-            None
-        }
-    }
-}
-
-pub fn to_vec<K>(k : &Keys<K>) -> Vec<K> {
-    k.iter().collect::<Vec<K>>()
-}
-
 //
 // A Pile is like a key-value map, where the values are always uint.
 //
-pub trait KvMap<K : Copy, Ks : Copy + Keys<K>> {
-    fn keys(&self) -> Ks;
-    fn get<'a>(&'a self, K) -> uint;
+pub trait Pile {
+    type Key : Copy;
+
+    fn all<'a>(&'a self) -> Vec<Self::Key>;
+    fn get<'a>(&'a self, Self::Key) -> uint;
+    fn num_keys(&self) -> uint;
 
     fn prob_draw(&self, draw: &Self) -> f64 {
         let (n, k, c) =
-            self.keys().iter()
-            .map(|k| (self.get(k), draw.get(k)))
+            self.all().iter()
+            .map(|k| (self.get(*k), draw.get(*k)))
             .fold((0, 0, 1.0), 
                   |(n, k, c), (n_i, k_i)| 
-                  (n + n_i, k + k_i, c * prob::c(n_i, k_i)));
+                  (n + n_i, k + k_i, c * prob::c(n_i as u64, k_i as u64)));
 
-        c / prob::c(n, k)
+        c / prob::c(n as u64, k as u64)
     }    
 
     fn total(&self) -> uint {
-        let ks = self.keys();
-        ks.iter().map(|k| self.get(k)).sum()
+        self.all()
+            .iter()
+            .map(|&k| self.get(k)).sum()
     }
 
-    fn num_keys(&self) -> uint { self.keys().size() }
-    
     fn has(&self, other: &Self) -> bool {
-        self.keys()
-            .iter()
-            .map(|k| (self.get(k), other.get(k)))
+        self.all().iter()
+            .map(|&k| (self.get(k), other.get(k)))
             .all(|(v0, v1)| v0 >= v1)
     }
 
@@ -77,11 +48,11 @@ pub trait LandPile {
     fn prob_land(&self, l:uint, s:uint) -> f64 {
         let ls = self.lands();
         let ss = self.spells();
-        prob::h(ls, l, ss, s)
+        prob::h(ls as u64, l as u64, ss as u64, s as u64)
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct GenPileKeys {
     num_keys : uint,
     is_land  : fn(uint) -> bool
@@ -93,14 +64,6 @@ impl GenPileKeys {
     }
 }
 
-impl Keys<uint> for GenPileKeys {
-    fn size(&self) -> uint { self.num_keys }
-    fn to_uint(&self, n: uint) -> uint { n }
-    fn from_uint(&self, n: uint) -> uint { 
-        if n < self.num_keys { n } else { panic!("out of range") } 
-    }
-}
-
 impl PartialEq for GenPileKeys {
     fn eq(&self, b : &GenPileKeys) -> bool {
         self.num_keys == b.num_keys &&
@@ -108,47 +71,27 @@ impl PartialEq for GenPileKeys {
     }
 }
 
-pub struct GenPile<Keys> {
+pub struct GenPile {
     e: Vec<uint>,
-    k: Keys
+    k: GenPileKeys
 }
 
-impl<Ks : Keys<uint> + Copy> GenPile<Ks> {
-    pub fn new(l : Vec<uint>, ks : Ks) -> GenPile<Ks> {
-        GenPile { e : l, k : ks }
-    }
+impl Pile for GenPile {
+    type Key = uint;
 
-    pub fn iter(n : uint, ks : Ks) -> GenPile<Ks> {
-        let sz = ks.size();
-        let l = Vec::from_fn(sz, |idx| if idx == 0 { n } else { 0 });
-        GenPile { e : l, k : ks }
-    }
-
-    pub fn subsets(&self, n : uint) -> Vec<GenPile<Ks>> {
-        MultiSubSetIterator::new(self.e.as_slice(), n)
-            .map(|e| GenPile { e:e, k:self.k })
-            .collect()
-    }
-}
-
-impl KvMap<uint, GenPileKeys> for GenPile<GenPileKeys> {
-    fn keys(&self) -> GenPileKeys { self.k }
-
+    fn num_keys(&self) -> uint { self.k.num_keys }
+    fn all<'a>(&'a self) -> Vec<uint> { range(0, self.num_keys()).collect() }
     fn get(&self, k: uint) -> uint { 
         self.e[k]
     }
 
-    fn has(&self, other: &GenPile<GenPileKeys>) -> bool {
-        self.e.iter().zip(other.e.iter()).all(|(&i0, &i1)| i0 >= i1)
-    }
-
-    fn add(&self, other : &GenPile<GenPileKeys>) -> GenPile<GenPileKeys> {
+    fn add(&self, other: &Self) -> Self {
         assert!(self.k == other.k);
         GenPile::new(self.e.iter().zip(other.e.iter()).map(|(&i0, &i1)| i0+i1).collect(),
                      self.k)
     }
 
-    fn sub(&self, other : &GenPile<GenPileKeys>) -> GenPile<GenPileKeys> {
+    fn sub(&self, other : &Self) -> Self {
         assert!(self.k == other.k);
         assert!(self.has(other));
         GenPile::new(self.e.iter().zip(other.e.iter()).map(|(&i0, &i1)| i0-i1).collect(),
@@ -156,7 +99,31 @@ impl KvMap<uint, GenPileKeys> for GenPile<GenPileKeys> {
     }        
 }
 
-impl Index<uint,uint> for GenPile<GenPileKeys> {
+impl GenPile {
+    pub fn new(l : Vec<uint>, ks : GenPileKeys) -> GenPile {
+        GenPile { e : l, k : ks }
+    }
+
+    pub fn iter(&self, n : uint, ks : GenPileKeys) -> GenPile {
+        let sz = self.num_keys();
+        let l = range(0, sz).map(|idx| if idx == 0 { n } else { 0 }).collect();
+        GenPile { e : l, k : ks }
+    }
+
+    pub fn subsets(&self, n : uint) -> Vec<GenPile> {
+        MultiSubSetIterator::new(self.e.as_slice(), n)
+            .map(|e| GenPile { e:e, k:self.k })
+            .collect()
+    }
+
+    fn has(&self, other: &Self) -> bool {
+        self.e.iter().zip(other.e.iter()).all(|(&i0, &i1)| i0 >= i1)
+    }
+}
+
+impl Index<uint> for GenPile {
+    type Output = uint;
+
     #[inline]
     fn index<'a>(&'a self, i: &uint) -> &'a uint {
         &self.e[*i]
@@ -164,7 +131,7 @@ impl Index<uint,uint> for GenPile<GenPileKeys> {
 }
 
 
-impl fmt::Show for GenPile<GenPileKeys> {
+impl fmt::Show for GenPile {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {        
         try!(write!(fmt, "("));
         for (i,v) in self.e.iter().enumerate() {
@@ -177,9 +144,10 @@ impl fmt::Show for GenPile<GenPileKeys> {
     }
 }
 
-impl Iterator<GenPile<GenPileKeys>> for GenPile<GenPileKeys> {
+impl Iterator for GenPile {
+    type Item = GenPile;
 
-    fn next(&mut self) -> Option<GenPile<GenPileKeys>> {
+    fn next(&mut self) -> Option<GenPile> {
         let res = GenPile { e: self.e.clone(), k : self.k };
 
         if self.e[0] > 0 {
@@ -206,7 +174,7 @@ impl Iterator<GenPile<GenPileKeys>> for GenPile<GenPileKeys> {
     }
 }
 
-impl LandPile for GenPile<GenPileKeys> {
+impl LandPile for GenPile {
     fn lands(&self) -> uint { 
         self.e.iter().enumerate()
             .map(|(i, v)| if (self.k.is_land)(i) { *v } else { 0 }).sum()
@@ -217,23 +185,12 @@ impl LandPile for GenPile<GenPileKeys> {
     }
 }
 
-#[deriving(Copy, Show)]
+#[derive(Copy, Show)]
 pub enum Colored { C, N, S }
 
-#[deriving(Copy)]
-pub struct ColoredKeys;
-
-impl Keys<Colored> for ColoredKeys {
-    fn size(&self) -> uint { 3 }
-    fn to_uint(&self, w:Colored) -> uint { w as uint }
-    fn from_uint(&self, n: uint) -> Colored {
-        match n { 0 => Colored::C, 1 => Colored::N, 2 => Colored::S, _ => panic!("out of range") }
-    }
-}
-
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct ColoredPile {
-    e:[uint, ..3]
+    e: [uint; 3]
 }
 
 impl ColoredPile {
@@ -246,13 +203,25 @@ impl ColoredPile {
     }
 
     pub fn colored(&self) -> uint { self.e[0] }
+
+    fn to_uint(w:Colored) -> uint { w as uint }
+
+    fn from_uint(n: uint) -> Option<Colored> {
+        match n { 0 => Some(Colored::C), 
+                  1 => Some(Colored::N), 
+                  2 => Some(Colored::S), 
+                  _ => None }
+    }
 }
 
-impl KvMap<Colored, ColoredKeys> for ColoredPile {
-    fn keys(&self) -> ColoredKeys { ColoredKeys }
-    
+impl Pile for ColoredPile {
+    type Key = Colored;
+
+    fn all(&self) -> Vec<Colored> { vec![Colored::C, Colored::N, Colored::S] }
+    fn num_keys(&self) -> uint { 3 }
+
     fn get(&self, k: Colored) -> uint { 
-        self.e[ColoredKeys.to_uint(k)]
+        self.e[ColoredPile::to_uint(k)]
     }
 
     fn add(&self, other : &ColoredPile) -> ColoredPile {
@@ -275,7 +244,9 @@ impl LandPile for ColoredPile {
     fn spells(&self) -> uint { self.total() - self.lands() }
 }
 
-impl Iterator<ColoredPile> for ColoredPile {
+impl Iterator for ColoredPile {
+    type Item = ColoredPile;
+
     fn next(&mut self) -> Option<ColoredPile> {
         let res = ColoredPile { e: self.e };
         if self.e[0] > 0 {
@@ -303,7 +274,7 @@ impl fmt::Show for ColoredPile {
     }
 }
 
-#[deriving(Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct DualPile {
     pub a:  uint, 
     pub b:  uint, // non-colored lands
@@ -312,14 +283,8 @@ pub struct DualPile {
     pub s:  uint, // spells
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct DualPileKeys;
-
-impl Keys<uint> for DualPileKeys {
-    fn size(&self) -> uint { 5 }
-    fn to_uint(&self, c: uint) -> uint { c }
-    fn from_uint(&self, n: uint) -> uint { if n < 5 { n } else { panic!("out of range") } }
-}
 
 impl DualPile {
     pub fn new(a: uint, b: uint, ab: uint, x: uint, s: uint) -> DualPile {
@@ -329,10 +294,17 @@ impl DualPile {
     pub fn iter(d: uint) -> DualPile {
         DualPile { a:d, b:0, ab:0, x:0, s:0 }
     }
+
+    fn to_uint(&self, c: uint) -> uint { c }
+    fn from_uint(&self, n: uint) -> uint { if n < 5 { n } else { panic!("out of range") } }
 }
 
-impl KvMap<uint, DualPileKeys> for DualPile {
-    fn keys(&self) -> DualPileKeys { DualPileKeys }
+impl Pile for DualPile {
+    type Key = uint;
+
+    fn num_keys(&self) -> uint { 5 }
+
+    fn all<'a>(&'a self) -> Vec<uint> { range(0, self.num_keys()).collect() }
 
     fn get(&self, k: uint) -> uint { match k { 0 => self.a,
                                                1 => self.b,
@@ -363,7 +335,8 @@ impl LandPile for DualPile {
     fn lands(&self) -> uint { self.s }
 }
 
-impl Iterator<DualPile> for DualPile {
+impl Iterator for DualPile {
+    type Item = DualPile;
 
     fn next(&mut self) -> Option<DualPile> {
         let res = DualPile::new(self.a, self.b, self.ab, self.x, self.s);

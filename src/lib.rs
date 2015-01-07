@@ -5,13 +5,15 @@
 #![feature(unboxed_closures)]
 #![feature(phase)]
 #![feature(globs)]
+#![feature(associated_types)] 
 
 extern crate collections;
 extern crate regex;
-extern crate serialize;
 extern crate curl;
 extern crate core;
 extern crate libc;
+//extern crate serialize;
+extern crate "rustc-serialize" as rustc_serialize;
 
 pub mod prob;
 pub mod pile;
@@ -21,6 +23,6 @@ pub mod perm;
 pub mod interval;
 pub mod mana;
 pub mod colors;
-pub mod mtgjson;
+//pub mod mtgjson;
 pub mod logic;
 

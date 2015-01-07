@@ -1,10 +1,9 @@
 //use collections::treemap::TreeMap;
 use mana::Mana;
-use colors::Color;
-use colors::Color::{U,W,B,R,G,C};
-use serialize::json;
+use colors::Color::{self, U,W,B,R,G,C};
+use rustc_serialize::json;
 
-#[deriving(Copy, Clone, Show, PartialEq, Eq, PartialOrd, Ord, Encodable, Decodable)]
+#[derive(Copy, Clone, Show, PartialEq, Eq, PartialOrd, Ord, RustcDecodable)]
 pub enum LandType
 {
 	BasicLand,
@@ -27,7 +26,7 @@ pub enum LandType
     LifeLand
 }
 
-#[deriving(Encodable, Decodable)]
+#[derive(RustcDecodable)]
 pub struct LandCardInfo {
     pub name : String,
     pub short : String,
@@ -108,9 +107,9 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
 
         let l0 = caps[0].len();
         let n = if l0 > 1 && caps[0].chars().last().unwrap() == 'x' {
-            from_str::<uint>(caps[0][0..l0-1])
+            caps[0][0..l0-1].parse::<uint>()
         } else {
-            from_str::<uint>(caps[0])
+            caps[0].parse::<uint>()
         };
 
         let l = db.iter().find(|&nm| nm.name == caps[1] ||
@@ -151,14 +150,14 @@ pub fn analyze(deck: &str) -> uint
     let ls = parse_lands(deck.as_slice(), &db);    
 
     {
-        use table::Table;
-        use table::TableElem::{LStr, RStr, UInt};
+        use table::{Table, left, right};
+        use table::TableElem::{LStr, UInt};
         let mut table = Table::new(1+ls.len(), 3);
 
         {
-            table.set(0, 0, RStr("#".to_string()));
-            table.set(0, 1, LStr("Land".to_string()));
-            table.set(0, 2, LStr("".to_string()));
+            table.set(0, 0, right("#"));
+            table.set(0, 1, left("Land"));
+            table.set(0, 2, left(""));
         }
 
         for (row, &(card, num)) in ls.iter().enumerate() {

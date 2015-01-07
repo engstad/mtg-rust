@@ -1,7 +1,9 @@
 use colors::Color;
 use colors::Color::{W,U,B,R,G,C};
+use std::ops::{Add, Sub};
+use std::iter::repeat;
 
-#[deriving(Show, PartialEq, Eq, Copy, Clone)]
+#[derive(Show, PartialEq, Eq, Copy, Clone)]
 pub struct Mana {
     pub w : uint,
     pub u : uint,
@@ -58,11 +60,11 @@ impl Mana {
         let ns = if self.c > 0 { self.c.to_string() } else { "".to_string() };
         format!("{}{}{}{}{}{}",
                 ns, 
-                "W".repeat(self.w as uint),
-                "U".repeat(self.u as uint),
-                "B".repeat(self.b as uint),
-                "R".repeat(self.r as uint),
-                "G".repeat(self.g as uint))
+                repeat('W').take(self.w).collect::<String>(),
+                repeat('U').take(self.w).collect::<String>(),
+                repeat('B').take(self.w).collect::<String>(),
+                repeat('R').take(self.w).collect::<String>(),
+                repeat('G').take(self.w).collect::<String>())
     }
 
     pub fn src(&self) -> String {
@@ -95,15 +97,16 @@ impl Mana {
         let mut mana = Mana::zero();
         for cap in re.captures_iter(s) {
             let m = match cap.at(1) {
-                "W" => Mana::w(1),
-                "U" => Mana::u(1),
-                "B" => Mana::b(1),
-                "R" => Mana::r(1),
-                "G" => Mana::g(1),
-                n => {
-                    let v = from_str::<uint>(n);
+                Some("W") => Mana::w(1),
+                Some("U") => Mana::u(1),
+                Some("B") => Mana::b(1),
+                Some("R") => Mana::r(1),
+                Some("G") => Mana::g(1),
+                Some(n) => {
+                    let v = n.parse::<uint>();
                     Mana::c(v.unwrap_or(0u))
-                }
+                },
+                None => Mana::c(0)
             };
             mana = mana.add(m)
         }
@@ -118,7 +121,9 @@ impl Mana {
 //     }
 // }
 
-impl Add<Mana, Mana> for Mana {
+impl Add for Mana {
+    type Output = Mana;
+
     fn add(self, b: Mana) -> Mana {
         let a = self;
         Mana::new(a.w + b.w, a.u + b.u, a.b + b.b,
@@ -126,7 +131,9 @@ impl Add<Mana, Mana> for Mana {
     }
 }
 
-impl Sub<Mana, Mana> for Mana {
+impl Sub for Mana {
+    type Output = Mana;
+
     fn sub(self, b: Mana) -> Mana {
         let a = self;
         Mana::new(a.w - b.w, a.u - b.u, a.b - b.b,
