@@ -163,35 +163,35 @@ pub fn analyze(deck: &str) -> uint
         for (row, &(card, num)) in ls.iter().enumerate() {
             table.set(1 + row, 0, UInt(num));
             table.set(1 + row, 1, LStr(card.show()));
-            table.set(1 + row, 2, LStr(card.source(&ls).mul(num).src()));
+            table.set(1 + row, 2, LStr((card.source(&ls) * num).src()));
         }
 
         table.print("Deck");
     }
 
     let lds = ls.iter()
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
+        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let unt = ls.iter().filter(|&&(c, _)| c.untapped())
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
+        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let tap = ls.iter().filter(|&&(c, _)| !c.untapped())
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
+        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
 
     println!("{:2} {:-30} {:-5}\n", lds.0, "Cards".to_string(), lds.1.src());
     println!("{:2} {:-30} {:-5}", unt.0, "Untapped".to_string(), unt.1.src());
     println!("{:2} {:-30} {:-5}\n", tap.0, "Tapped".to_string(), tap.1.src());
 
     let basics = ls.iter().filter(|&&(c, _)| c.landtype == LandType::BasicLand)
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
+        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let fetches = ls.iter().filter(|&&(c, _)| c.landtype == LandType::FetchLand)
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
+        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let scrys = ls.iter().filter(|&&(c, _)| c.landtype == LandType::ScryLand)
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
+        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let pains = ls.iter().filter(|&&(c, _)| c.landtype == LandType::PainLand)
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
+        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let refus = ls.iter().filter(|&&(c, _)| c.landtype == LandType::RefuLand)
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
+        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let specs = ls.iter().filter(|&&(c, _)| c.landtype == LandType::TappedLand || c.landtype == LandType::UntappedLand)
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls).mul(n)) });
+        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
 
     println!("{:2} {:-30} {:-5}", basics.0, "Basics".to_string(), basics.1.src());
     println!("{:2} {:-30} {:-5}", fetches.0, "Fetch-lands".to_string(), fetches.1.src());

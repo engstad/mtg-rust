@@ -10,14 +10,15 @@ extern crate libc;
 extern crate mtg;
 
 //use mtg::logic::*;
-use mtg::logic::{investigate, frank_table, summary, summary_c, dual};
+use mtg::logic::{show_card_text, investigate, frank_table, summary, summary_c, dual};
 
 use mtg::pile::{DualPile};
 use mtg::table::Table;
 use mtg::table::TableElem::{LStr, RStr, UInt /*, Int, Empty */};
-//use mtg::mtgjson::{fetch_set, fetch_img};
+use mtg::mtgjson::{fetch_set, fetch_img};
 use mtg::interval::*;
-//use std::io::File;
+use std::io::File;
+use std::iter::repeat;
 
 #[main]
 fn main() {
@@ -25,7 +26,6 @@ fn main() {
 
     let args = std::os::args();
 
-    /*
     if args.len() == 1 || (args.len() == 2 && (args[1] == "dump" || args[1] == "fetch")) {
         let mut cs = vec![];
         cs.push_all(fetch_set("KTK")[]);
@@ -58,12 +58,12 @@ fn main() {
                          c.rarity.graphemes(false).next().unwrap_or("?"),
                          c.card_type, 
                          if c.power.len() > 0 { format!("{}/{}", c.power, c.toughness) } 
-                         else { "".into_string() });
+                         else { "".to_string() });
                 if c.card_text.len() > 0 {
-                    println!("{}", "-".repeat(width));
+                    println!("{}", repeat('-').take(width).collect::<String>());
                     show_card_text(c.card_text.as_slice(), width);
                 }
-                println!("{}\n", "=".repeat(width));
+                println!("{}\n", repeat('=').take(width).collect::<String>());
 
                 if fetch_images {
                     let jpg = fetch_img(c.expansion.as_slice(), 
@@ -79,20 +79,19 @@ fn main() {
             }
         }
     }
-    */
     //else if args.len() == 3 && args[1].as_slice() == "pic" {
     //    sdl_main(args[2].as_slice())
     //}
     //else 
-    if args.len() == 2 && args[1].as_slice() == "land"	{
+    else if args.len() == 2 && args[1].as_slice() == "land"	{
 		investigate()
     }
     else if args.len() == 2 && args[1].as_slice() == "duals" {
 		let mut dp = Table::new (18, 2);
 		for a in closed(0u, 17).iter() {
-			let goal = |&:&hand: &DualPile | {(hand.a >= 1) || hand.ab >= 1 };
+			let goal = |&:hand: DualPile | {(hand.a >= 1) || hand.ab >= 1 };
 			let td = DualPile::new (a, 17 - a, 0, 0, 23);
-			let rt = dual::turn0(&td, 1, goal);
+			let rt = dual::turn0(td, 1, goal);
 			dp.set(a, 0, LStr(format !("{}", td)));
 			dp.set(a, 1, RStr(format !("{:6.2}%", rt * 100.0)));
 		}
@@ -101,8 +100,8 @@ fn main() {
     else if args.len() >= 2 && args[1].as_slice() == "table" {
         let l = if args.len() == 3 { args[2].parse::<uint>().unwrap_or(0) } else { 0 };
         if l == 0 {
-	    for i in closed(16, 18).iter() { summary_c(i, 40); }
-	    for i in closed(22, 28).iter() { summary_c(i, 60); }
+	        for i in closed(16, 18).iter() { summary_c(i, 40); }
+	        for i in closed(22, 28).iter() { summary_c(i, 60); }
         }
         else if l <= 19 {
             summary_c(l, 40);

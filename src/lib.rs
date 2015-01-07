@@ -6,6 +6,7 @@
 #![feature(phase)]
 #![feature(globs)]
 #![feature(associated_types)] 
+#![feature(default_type_params)]
 
 extern crate collections;
 extern crate regex;
@@ -23,6 +24,6 @@ pub mod perm;
 pub mod interval;
 pub mod mana;
 pub mod colors;
-//pub mod mtgjson;
+pub mod mtgjson;
 pub mod logic;
 

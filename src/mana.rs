@@ -1,6 +1,6 @@
 use colors::Color;
 use colors::Color::{W,U,B,R,G,C};
-use std::ops::{Add, Sub};
+use std::ops::{Add, Sub, Mul};
 use std::iter::repeat;
 
 #[derive(Show, PartialEq, Eq, Copy, Clone)]
@@ -114,13 +114,6 @@ impl Mana {
     }
 }
 
-// impl Zero<Mana> for Mana {
-//     fn zero() -> Self { Mana([0, 0, 0, 0, 0, 0]) }
-//     fn is_zero(&self) -> bool { 
-//         match *self { Mana([0, 0, 0, 0, 0, 0]) => true, _ => false }
-//     }
-// }
-
 impl Add for Mana {
     type Output = Mana;
 
@@ -141,8 +134,10 @@ impl Sub for Mana {
     }
 }
 
-impl Mana {
-    pub fn mul(self, rhs: uint) -> Mana {
+impl Mul<uint> for Mana {
+    type Output = Mana;
+
+    fn mul(self, rhs: uint) -> Mana {
         let a = self;
         let k = rhs;
         Mana::new(a.w * k, a.u * k, a.b * k,

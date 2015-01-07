@@ -28,13 +28,13 @@ mod single {
     use prob;
     use interval::closed;
 
-    fn draw<G>(hand: &ColoredPile, draws: uint, deck: &ColoredPile, 
+    fn draw<G>(hand: ColoredPile, draws: uint, deck: ColoredPile, 
             goal: G) -> f64
-        where G : Fn(&ColoredPile)->bool
+        where G : Fn(ColoredPile)->bool
     {
         if draws > 0 {
             ColoredPile::iter(draws)
-                .filter(|draw| deck.has(draw) && goal(&(hand.add(draw))))
+                .filter(|draw| deck.has(draw) && goal(hand + *draw))
                 .map(|draw| deck.prob_draw(&draw))
                 .sum()
         } else {
@@ -43,9 +43,9 @@ mod single {
     }        
 
     fn intern<G>(hand_size: uint, 
-              deck: &ColoredPile, draws: uint, goal: G)
+              deck: ColoredPile, draws: uint, goal: G)
               -> (f64, f64) 
-        where G : Fn(&ColoredPile)->bool
+        where G : Fn(ColoredPile)->bool
     {
         let (lands_min, lands_max) = super::mull_rule(hand_size);
         
@@ -59,15 +59,15 @@ mod single {
             .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
             .filter(|hand| deck.has(hand))
             .map(|hand| (deck.prob_draw(&hand) * 
-                         draw(&hand, draws, &deck.sub(&hand), |g| goal(g))))
+                         draw(hand, draws, deck - hand, |g| goal(g))))
             .sum();
 
         // So cast * keep = chance of reaching goals, *given* no mulligan.
         (keep, cast)
     }
 
-    pub fn turn0<G>(deck: &ColoredPile, draws: uint, goal: G) -> f64 
-        where G : Fn(&ColoredPile)->bool
+    pub fn turn0<G>(deck: ColoredPile, draws: uint, goal: G) -> f64 
+        where G : Fn(ColoredPile)->bool
     {
         let mut mull = 1.0; // the chance we mulled before
         let mut succ = 0.0;
@@ -83,14 +83,14 @@ mod single {
     
     pub fn cards<G>(lands: uint, deck: uint, draws: uint, perc: f64, 
                  goal: G) -> int 
-        where G : Fn(&ColoredPile)->bool
+        where G : Fn(ColoredPile)->bool
     {
         let deck1 = ColoredPile::new(lands, 0, deck-lands);
-        let r1 = turn0(&deck1, draws, |g| goal(g));
+        let r1 = turn0(deck1, draws, |g| goal(g));
         
         for k in closed(0, lands).iter() {
             let deck0 = ColoredPile::new(k, lands-k, deck-lands);
-            let r0 = turn0(&deck0, draws, |g| goal(g));
+            let r0 = turn0(deck0, draws, |g| goal(g));
             if r0 >= perc * r1 {
                 return k as int
             }
@@ -108,12 +108,12 @@ pub mod dual {
     use prob;
     use interval::closed;
 
-    fn draw<G>(hand: &DualPile, draws: uint, deck: &DualPile, goal: G) -> f64 
-        where G : Fn(&DualPile)->bool
+    fn draw<G>(hand: DualPile, draws: uint, deck: DualPile, goal: G) -> f64 
+        where G : Fn(DualPile)->bool
     {
         if draws > 0 {
             DualPile::iter(draws)
-                .filter(|draw| deck.has(draw) && goal(&hand.add(draw)))
+                .filter(|draw| deck.has(draw) && goal(hand + *draw))
                 .map(|draw| deck.prob_draw(&draw))
                 .sum()
         } else {
@@ -121,8 +121,8 @@ pub mod dual {
         }
     }        
 
-    pub fn turn0<G>(deck: &DualPile, draws: uint, goal: G) -> f64 
-        where G: Fn(&DualPile)->bool
+    pub fn turn0<G>(deck: DualPile, draws: uint, goal: G) -> f64 
+        where G: Fn(DualPile)->bool
     {
         let mut mull = 1.0;
         let mut succ = 0.0;
@@ -140,7 +140,7 @@ pub mod dual {
             let cast = DualPile::iter(hand_size)
                 .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
                 .filter(|hand| deck.has(hand))
-                .map(|hand| deck.prob_draw(&hand) * draw(&hand, draws, &deck.sub(&hand), 
+                .map(|hand| deck.prob_draw(&hand) * draw(hand, draws, deck - hand, 
                                                  |g| goal(g)))
                 .sum();
 
@@ -153,14 +153,14 @@ pub mod dual {
     
     pub fn cards<G>(lands: uint, deck: uint, uncolored: uint,
                     a_rate: f64, draws: uint, perc: f64, goal: G) -> int 
-        where G : Fn(&DualPile)->bool
+        where G : Fn(DualPile)->bool
     {
         
         let deck0 = DualPile::new(0, 0, lands, 0, deck-lands);
         let deck1 = DualPile::new(0, 0, lands-uncolored, uncolored, deck-lands);
         
-        let r0 = turn0(&deck0, draws, |g| goal(g));
-        let r1 = turn0(&deck1, draws, |g| goal(g));
+        let r0 = turn0(deck0, draws, |g| goal(g));
+        let r1 = turn0(deck1, draws, |g| goal(g));
         
         if r1 < perc * r0 {
             return -1
@@ -174,7 +174,7 @@ pub mod dual {
             assert!(a+b+ab+uncolored+(deck-lands) == deck);
             
             let deck0 = DualPile::new(a, b, ab, uncolored, deck-lands);
-            let r = turn0(&deck0, draws, |g| goal(g));
+            let r = turn0(deck0, draws, |g| goal(g));
             if r >= perc * r0 {
                 return ab as int
             }
@@ -190,22 +190,22 @@ mod gen {
     use std::iter::{range_inclusive, AdditiveIterator};
     use prob;
 
-    fn draw<G>(hand: &GenPile, draws: uint, deck: &GenPile, 
+    fn draw<G>(hand: GenPile, draws: uint, deck: GenPile, 
                goal: G) -> f64 
-        where G : Fn(&GenPile)->bool
+        where G : Fn(GenPile)->bool
     {
         if draws > 0 {
             deck.subsets(draws).iter()
-                .filter(|&draw| goal(&hand.add(draw)))
-                .map(|draw| deck.prob_draw(draw))
+                .filter(|&:&draw| goal(hand.clone() + draw.clone()))
+                .map(|&:draw| deck.prob_draw(draw))
                 .sum()
         } else {
             prob::cond(goal(hand)) 
         }
     }        
 
-    pub fn turn0<G>(deck: &GenPile, draws: uint, goal: G) -> f64 
-        where G : Fn(&GenPile)->bool 
+    pub fn turn0<G>(deck: GenPile, draws: uint, goal: G) -> f64 
+        where G : Fn(GenPile)->bool 
     {
         let mut mull = 1.0;
         let mut succ = 0.0;
@@ -224,8 +224,8 @@ mod gen {
                 .map(|hand| {
                     let d0 = deck.prob_draw(hand);
                     let p0 = {
-                        let r = deck.sub(hand);
-                        draw(hand, draws, &r, |g| goal(g))
+                        let r = deck.clone() - hand.clone();
+                        draw(hand.clone(), draws, r, |g| goal(g))
                     };
                     d0 * p0
                 })
@@ -246,7 +246,7 @@ pub fn b_minc(bh: &mut BenchHarness) {
     let draws = 3;
     let pc = 0.9;
     
-    let goal = |hand: &ColoredPile| { 
+    let goal = |hand: ColoredPile| { 
         hand.colored >= 3 && hand.lands() >= 3 /*&& hand.turn >= 3*/
     };
     bh.iter(|| single::cards(l, d, draws, pc, |h| goal(h)))
@@ -285,7 +285,7 @@ pub fn summary(lands: uint, deck: uint, uncolored_lands: uint) {
                 let arate = (amana as f64) / (amana + bmana) as f64;
                 let cmc = cmana + cless;
                 let draws = cmc - 1;
-                let goal = |&: hand: &DualPile| { 
+                let goal = |&: hand: DualPile| { 
                     
                     let a_left = if amana > hand.a { amana - hand.a } else { 0 };
                     let b_left = if bmana > hand.b { bmana - hand.b } else { 0 };
@@ -340,7 +340,7 @@ pub fn summary_c(lands: uint, deck: uint) {
         for cless in closed(0u, 7).iter() {                     
             let cmc = cmana + cless;
             let draws = cmc - 1;
-            let goal = |&: hand: &ColoredPile| { 
+            let goal = |&: hand: ColoredPile| { 
                 let ok = hand.colored() >= cmana // colors okay
                     && hand.lands() >= cmc; // enough lands for cmc
                 
@@ -423,7 +423,7 @@ pub fn investigate()
 
         let info = GenPileKeys::new(9, is_land);
         
-        fn cc(hand: &GenPile, a: uint, b: uint, x: uint) -> bool {
+        fn cc(hand: GenPile, a: uint, b: uint, x: uint) -> bool {
             can_cast(hand[A] + hand[AC], hand[B] + hand[BC], hand[AB], hand[C],
                      a, b, x)
         }
@@ -443,14 +443,14 @@ pub fn investigate()
                     let deck = GenPile::new(vec![a, b, 0,
                                                  0, 0, 0,
                                                  s1, s2, 23-s1-s2], info);
-                    let p_base = gen::turn0(&deck, turn, 
+                    let p_base = gen::turn0(deck.clone(), turn, 
                                             |hand : _| { 
                                                 hand.lands() >= turn && hand[S1] + hand[S2] > 0
                                             });
-                    let p_succ = gen::turn0(&deck, turn, 
+                    let p_succ = gen::turn0(deck, turn, 
                                             |hand| { 
-                                                (cc(hand, 2, 0, turn-2) && hand[S1] > 0) ||
-                                                    (cc(hand, 0, 2, turn-2) && hand[S2] > 0)
+                                                (cc(hand.clone(), 2, 0, turn-2) && hand.clone()[S1] > 0) ||
+                                                (cc(hand.clone(), 0, 2, turn-2) && hand[S2] > 0)
                                             });
                     
                     let p_rel = p_succ / p_base;
@@ -496,7 +496,7 @@ pub fn frank(colored_mana: uint, cmc: uint) -> Table {
         
         for turn in closed(1u, 7u).iter() {
             let draws = turn - 1u + e;
-            let goal = |&: hand: &ColoredPile| { 
+            let goal = |&: hand: ColoredPile| { 
                 hand.colored() >= colored_mana // colors okay
                     && hand.lands() >= cmc // enough lands for cmc
                     && turn >= cmc // one land per turn

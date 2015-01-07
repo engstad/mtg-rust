@@ -48,7 +48,7 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
 
     //println!("{}", resp);
 
-    let json = json::from_str(rstr.as_slice());
+    let json = json::Json::from_str(rstr.as_slice());
 
     fn trim(s : &str) -> &str {
         let l = s.len();

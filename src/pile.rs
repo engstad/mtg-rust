@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::ops::{Index, Add, Sub};
 use std::iter::{AdditiveIterator};
 use std::fmt;
 use prob;
@@ -7,7 +7,7 @@ use perm::MultiSubSetIterator;
 //
 // A Pile is like a key-value map, where the values are always uint.
 //
-pub trait Pile {
+pub trait Pile : Add + Sub {
     type Key : Copy;
 
     fn all<'a>(&'a self) -> Vec<Self::Key>;
@@ -36,9 +36,6 @@ pub trait Pile {
             .map(|&k| (self.get(k), other.get(k)))
             .all(|(v0, v1)| v0 >= v1)
     }
-
-    fn add(&self, &Self) -> Self;
-    fn sub(&self, &Self) -> Self;    
 }
 
 pub trait LandPile {
@@ -52,7 +49,7 @@ pub trait LandPile {
     }
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct GenPileKeys {
     num_keys : uint,
     is_land  : fn(uint) -> bool
@@ -71,6 +68,7 @@ impl PartialEq for GenPileKeys {
     }
 }
 
+#[derive(Clone)]
 pub struct GenPile {
     e: Vec<uint>,
     k: GenPileKeys
@@ -84,16 +82,24 @@ impl Pile for GenPile {
     fn get(&self, k: uint) -> uint { 
         self.e[k]
     }
+}
 
-    fn add(&self, other: &Self) -> Self {
+impl Add for GenPile {
+    type Output = GenPile;
+
+    fn add(self, other: Self) -> Self {
         assert!(self.k == other.k);
         GenPile::new(self.e.iter().zip(other.e.iter()).map(|(&i0, &i1)| i0+i1).collect(),
                      self.k)
     }
+}
 
-    fn sub(&self, other : &Self) -> Self {
+impl Sub for GenPile {
+    type Output = GenPile;
+
+    fn sub(self, other: Self) -> Self {
         assert!(self.k == other.k);
-        assert!(self.has(other));
+        assert!(self.has(&other));
         GenPile::new(self.e.iter().zip(other.e.iter()).map(|(&i0, &i1)| i0-i1).collect(),
                      self.k)
     }        
@@ -223,15 +229,23 @@ impl Pile for ColoredPile {
     fn get(&self, k: Colored) -> uint { 
         self.e[ColoredPile::to_uint(k)]
     }
+}
 
-    fn add(&self, other : &ColoredPile) -> ColoredPile {
+impl Add for ColoredPile {
+    type Output = ColoredPile;
+
+    fn add(self, other: ColoredPile) -> ColoredPile {
         ColoredPile::new(self.e[0] + other.e[0], 
                          self.e[1] + other.e[1], 
                          self.e[2] + other.e[2])
     }
+}
 
-    fn sub(&self, other : &ColoredPile) -> ColoredPile {
-        assert!(self.has(other));
+impl Sub for ColoredPile {
+    type Output = ColoredPile;
+
+    fn sub(self, other: ColoredPile) -> ColoredPile {
+        assert!(self.has(&other));
 
         ColoredPile::new(self.e[0] - other.e[0], 
                          self.e[1] - other.e[1], 
@@ -283,9 +297,6 @@ pub struct DualPile {
     pub s:  uint, // spells
 }
 
-#[derive(Copy)]
-pub struct DualPileKeys;
-
 impl DualPile {
     pub fn new(a: uint, b: uint, ab: uint, x: uint, s: uint) -> DualPile {
         DualPile { a:a, b:b, ab:ab, x:x, s:s }
@@ -312,16 +323,24 @@ impl Pile for DualPile {
                                                3 => self.x,
                                                4 => self.s,
                                                _ => panic!("out of range") } }
+}
 
-    fn add(&self, other : &DualPile) -> DualPile {
+impl Add for DualPile {
+    type Output = DualPile;
+
+    fn add(self, other: DualPile) -> DualPile {
         DualPile::new(self.a + other.a, 
                       self.b + other.b, 
                       self.ab + other.ab,
                       self.x + other.x,
                       self.s + other.s)
     }
+}
 
-    fn sub(&self, other : &DualPile) -> DualPile {
+impl Sub for DualPile {
+    type Output = DualPile;
+
+    fn sub(self, other: DualPile) -> DualPile {
         DualPile::new(self.a - other.a, 
                       self.b - other.b, 
                       self.ab - other.ab,
