@@ -43,23 +43,26 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
 
     // let str = res.read_to_string().unwrap();
 
-    let resp = http::handle().get(loc).exec().unwrap();
-    let rstr = String::from_utf8_lossy(resp.get_body());
+    let resp = match http::handle().get(loc).exec() {
+        Ok(r) => r, Err(_) => return vec![]
+    };
 
-    //println!("{}", resp);
+    if resp.get_code() != 200 { return vec![] }
+
+    let rstr = String::from_utf8_lossy(resp.get_body());
 
     let json = json::Json::from_str(rstr.as_slice());
 
     fn trim(s : &str) -> &str {
         let l = s.len();
-        if l <= 2 { s } else { s[1..l-1] }
+        if l <= 2 { s } else { &s[1..l-1] }
     }
 
     fn to_str(c : Option<&json::Json>) -> String {
         match c {
             Some(j) => {
                 let n = j.to_string();
-                trim(n[]).to_string()
+                trim(&n[]).to_string()
             },
             None => "".to_string()
         }
@@ -103,13 +106,13 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
                         let mana_cost = match card.find("manaCost") {
                             Some(c) => c.to_string(), None => "".to_string()
                         };                    
-                        Mana::parse(trim(mana_cost[]))
+                        Mana::parse(trim(&mana_cost[]))
                     };
 
                     let colors = {
                         let cs = match card.find("colors") {
                             Some(c) => c.as_array().unwrap().iter()
-                                .map(|s| Color::parse(trim(s.to_string()[]))).collect(),
+                                .map(|s| Color::parse(trim(s.to_string().as_slice()))).collect(),
                             None => vec![]
                         };                    
                         cs
@@ -136,7 +139,7 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
                 })
                 .collect::<Vec<Card>>()                     
         },
-        Err(err) => panic!("Error: {}", err)
+        Err(err) => panic!("Error: {:?}", err)
     }
 }
 

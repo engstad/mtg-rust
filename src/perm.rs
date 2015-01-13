@@ -2,23 +2,23 @@ use std::iter::repeat;
 
 #[derive(Show)]
 pub struct MultiSubSetIterator<'a> {
-    ns : &'a [uint],
+    ns : &'a [usize],
     stack : Vec<Stack>
 }
 
 #[derive(Clone, Show)]
 struct Stack { 
-    k : uint,       // how many left to add
-    n : uint,       // how many left to chose from
-    l : uint,       // where we are next
-    a : Vec<uint>
+    k : usize,       // how many left to add
+    n : usize,       // how many left to chose from
+    l : usize,       // where we are next
+    a : Vec<usize>
 }
 
 impl<'a> MultiSubSetIterator<'a> {
-    pub fn new(ns: &'a [uint], k: uint) -> MultiSubSetIterator<'a> {
+    pub fn new(ns: &'a [usize], k: usize) -> MultiSubSetIterator<'a> {
         let l = ns.len();
         let n = ns.iter().fold(0, |a,&b| a+b);
-        let a = repeat(0u).take(ns.len()).collect::<_>();
+        let a = repeat(0).take(ns.len()).collect::<_>();
         MultiSubSetIterator { 
             ns : ns.clone(), 
             stack : vec![Stack{k:k, l:l, n:n, a:a}]
@@ -27,9 +27,9 @@ impl<'a> MultiSubSetIterator<'a> {
 }
 
 impl<'a> Iterator for MultiSubSetIterator<'a> {
-    type Item = Vec<uint>;
+    type Item = Vec<usize>;
 
-    fn next(&mut self) -> Option<Vec<uint>> {
+    fn next(&mut self) -> Option<Vec<usize>> {
         loop {
             match self.stack.pop() {
                 None => return None,

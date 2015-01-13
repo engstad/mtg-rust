@@ -5,15 +5,15 @@ pub enum TableElem {
     Empty,
     LStr(String),
     RStr(String),
-    Int(int),
-    UInt(uint)
+    I32(i32),
+    U32(u32)
 }
 
 impl TableElem {
     fn to_string(&self) -> String {
         match *self {
-            TableElem::Int(i) => i.to_string(),
-            TableElem::UInt(u) => u.to_string(),
+            TableElem::I32(i) => i.to_string(),
+            TableElem::U32(u) => u.to_string(),
             TableElem::Empty => "".to_string(),
             TableElem::LStr(ref s) => s.to_string(),
             TableElem::RStr(ref s) => s.to_string()
@@ -35,26 +35,26 @@ pub struct Table {
 }
 
 impl Table {
-    pub fn new(rows:uint, cols:uint) -> Table {
+    pub fn new(rows :usize, cols :usize) -> Table {
         Table { 
             rows : repeat(repeat(TableElem::Empty).take(cols).collect::<_>())
                 .take(rows).collect::<_>()
         }
     }
 
-    pub fn set(&mut self, r:uint, c:uint, v:TableElem) {
+    pub fn set(&mut self, r :usize, c :usize, v:TableElem) {
         self.rows[r][c] = v
     }
 
-    pub fn get<'a>(&'a self, r:uint, c:uint) -> &'a TableElem {
+    pub fn get<'a>(&'a self, r :usize, c :usize) -> &'a TableElem {
         &self.rows[r][c]
     }
 
     pub fn print(&self, caption: &str) {
         if self.rows.len() == 0 { return }
         
-        let min_width = 4u; 
-        let mut width_tbl : Vec<uint> = 
+        let min_width = 4; 
+        let mut width_tbl : Vec<usize> = 
             repeat(min_width).take(self.rows[0].len()).collect();
         let width = width_tbl.as_mut_slice();
         
@@ -67,15 +67,15 @@ impl Table {
         
         let tot_width = width.iter().fold(0, |a,&b| a + b + 1);
         let line_width = tot_width - caption.len() - 2;
-        let left : String = repeat("=").take(line_width as uint/2).collect();
-        let rght : String = repeat("=").take((line_width+1) as uint/2).collect();
+        let left : String = repeat("=").take(line_width/2).collect();
+        let rght : String = repeat("=").take((line_width+1)/2).collect();
         println!("{} {} {}", left, caption, rght);
                 
         for line in self.rows.iter() {
             for (c, elem) in line.iter().enumerate() {
                 match *elem {
-                    TableElem::Int(i)     => print!("{:w$} ", i,           w=width[c]),
-                    TableElem::UInt(u)    => print!("{:w$} ", u,           w=width[c]),
+                    TableElem::I32(i)     => print!("{:w$} ", i,           w=width[c]),
+                    TableElem::U32(u)    => print!("{:w$} ", u,           w=width[c]),
                     TableElem::Empty      => print!("{:>w$} ", "-",        w=width[c]),
                     TableElem::LStr(ref s) => print!("{:<w$} ", s.to_string(), w=width[c]),
                     TableElem::RStr(ref s) => print!("{:>w$} ", s.to_string(), w=width[c])
@@ -90,9 +90,9 @@ impl Table {
     pub fn print_tex(&self, caption: &str) {
         if self.rows.len() == 0 { return }
         
-        let min_width = 0u; 
+        let min_width = 0; 
         let mut width_tbl = 
-            repeat(min_width).take(self.rows[0].len()).collect::<Vec<uint>>();
+            repeat(min_width).take(self.rows[0].len()).collect::<Vec<usize>>();
         let width = width_tbl.as_mut_slice();
         
         for row in self.rows.iter() {
@@ -102,7 +102,7 @@ impl Table {
             }
         }
 
-        struct TeX { ind: uint };
+        struct TeX { ind: usize };
 
         impl TeX { 
             fn indent(&mut self) {
@@ -150,8 +150,8 @@ impl Table {
             
             for (c, elem) in line.iter().enumerate() {
                 match *elem {
-                    TableElem::Int(i)     => print!("{:w$}", i,           w=width[c]),
-                    TableElem::UInt(u)    => print!("{:w$}", u,           w=width[c]),
+                    TableElem::I32(i)     => print!("{:w$}", i,           w=width[c]),
+                    TableElem::U32(u)    => print!("{:w$}", u,           w=width[c]),
                     TableElem::Empty      => print!("{:>w$}", "\\cdots",        w=width[c]),
                     TableElem::LStr(ref s) => print!("{:<w$}", s.to_string(), w=width[c]),
                     TableElem::RStr(ref s) => print!("{:>w$}", s.to_string(), w=width[c])

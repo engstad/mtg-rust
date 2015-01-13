@@ -5,14 +5,14 @@ use prob;
 use perm::MultiSubSetIterator;
 
 //
-// A Pile is like a key-value map, where the values are always uint.
+// A Pile is like a key-value map
 //
 pub trait Pile : Add + Sub {
     type Key : Copy;
 
     fn all<'a>(&'a self) -> Vec<Self::Key>;
-    fn get<'a>(&'a self, Self::Key) -> uint;
-    fn num_keys(&self) -> uint;
+    fn get<'a>(&'a self, Self::Key) -> usize;
+    fn num_keys(&self) -> usize;
 
     fn prob_draw(&self, draw: &Self) -> f64 {
         let (n, k, c) =
@@ -25,7 +25,7 @@ pub trait Pile : Add + Sub {
         c / prob::c(n as u64, k as u64)
     }    
 
-    fn total(&self) -> uint {
+    fn total(&self) -> usize {
         self.all()
             .iter()
             .map(|&k| self.get(k)).sum()
@@ -39,10 +39,10 @@ pub trait Pile : Add + Sub {
 }
 
 pub trait LandPile {
-    fn spells(&self) -> uint;
-    fn lands(&self) -> uint;
+    fn spells(&self) -> usize;
+    fn lands(&self) -> usize;
 
-    fn prob_land(&self, l:uint, s:uint) -> f64 {
+    fn prob_land(&self, l:usize, s:usize) -> f64 {
         let ls = self.lands();
         let ss = self.spells();
         prob::h(ls as u64, l as u64, ss as u64, s as u64)
@@ -51,12 +51,12 @@ pub trait LandPile {
 
 #[derive(Copy, Clone)]
 pub struct GenPileKeys {
-    num_keys : uint,
-    is_land  : fn(uint) -> bool
+    num_keys : usize,
+    is_land  : fn(usize) -> bool
 }
 
 impl GenPileKeys {
-    pub fn new(keys: uint, lands: fn(uint)->bool) -> GenPileKeys {
+    pub fn new(keys: usize, lands: fn(usize)->bool) -> GenPileKeys {
         GenPileKeys { num_keys : keys, is_land : lands }
     }
 }
@@ -70,16 +70,16 @@ impl PartialEq for GenPileKeys {
 
 #[derive(Clone)]
 pub struct GenPile {
-    e: Vec<uint>,
+    e: Vec<usize>,
     k: GenPileKeys
 }
 
 impl Pile for GenPile {
-    type Key = uint;
+    type Key = usize;
 
-    fn num_keys(&self) -> uint { self.k.num_keys }
-    fn all<'a>(&'a self) -> Vec<uint> { range(0, self.num_keys()).collect() }
-    fn get(&self, k: uint) -> uint { 
+    fn num_keys(&self) -> usize { self.k.num_keys }
+    fn all<'a>(&'a self) -> Vec<usize> { range(0, self.num_keys()).collect() }
+    fn get(&self, k: usize) -> usize { 
         self.e[k]
     }
 }
@@ -106,17 +106,17 @@ impl Sub for GenPile {
 }
 
 impl GenPile {
-    pub fn new(l : Vec<uint>, ks : GenPileKeys) -> GenPile {
+    pub fn new(l : Vec<usize>, ks : GenPileKeys) -> GenPile {
         GenPile { e : l, k : ks }
     }
 
-    pub fn iter(&self, n : uint, ks : GenPileKeys) -> GenPile {
+    pub fn iter(&self, n : usize, ks : GenPileKeys) -> GenPile {
         let sz = self.num_keys();
         let l = range(0, sz).map(|idx| if idx == 0 { n } else { 0 }).collect();
         GenPile { e : l, k : ks }
     }
 
-    pub fn subsets(&self, n : uint) -> Vec<GenPile> {
+    pub fn subsets(&self, n : usize) -> Vec<GenPile> {
         MultiSubSetIterator::new(self.e.as_slice(), n)
             .map(|e| GenPile { e:e, k:self.k })
             .collect()
@@ -127,11 +127,11 @@ impl GenPile {
     }
 }
 
-impl Index<uint> for GenPile {
-    type Output = uint;
+impl Index<usize> for GenPile {
+    type Output = usize;
 
     #[inline]
-    fn index<'a>(&'a self, i: &uint) -> &'a uint {
+    fn index<'a>(&'a self, i: &usize) -> &'a usize {
         &self.e[*i]
     }
 }
@@ -162,7 +162,7 @@ impl Iterator for GenPile {
             Some(res)
         } else {
             let len = self.e.len();
-            for i in range(1u, len-1) {
+            for i in range(1, len-1) {
                 if self.get(i) > 0 {
                     self.e[0] = self.get(i) - 1; 
                     self.e[i+1] += 1;
@@ -181,12 +181,12 @@ impl Iterator for GenPile {
 }
 
 impl LandPile for GenPile {
-    fn lands(&self) -> uint { 
+    fn lands(&self) -> usize { 
         self.e.iter().enumerate()
             .map(|(i, v)| if (self.k.is_land)(i) { *v } else { 0 }).sum()
     }
 
-    fn spells(&self) -> uint { 
+    fn spells(&self) -> usize { 
         self.total() - self.lands() 
     }
 }
@@ -196,23 +196,23 @@ pub enum Colored { C, N, S }
 
 #[derive(Copy)]
 pub struct ColoredPile {
-    e: [uint; 3]
+    e: [usize; 3]
 }
 
 impl ColoredPile {
-    pub fn new(c: uint, n: uint, s: uint) -> ColoredPile {
+    pub fn new(c: usize, n: usize, s: usize) -> ColoredPile {
         ColoredPile{ e:[c, n, s] }
     }
 
-    pub fn iter(n: uint) -> ColoredPile {
+    pub fn iter(n: usize) -> ColoredPile {
         ColoredPile{ e:[n, 0, 0] }
     }
 
-    pub fn colored(&self) -> uint { self.e[0] }
+    pub fn colored(&self) -> usize { self.e[0] }
 
-    fn to_uint(w:Colored) -> uint { w as uint }
+    fn to_usize(w:Colored) -> usize { w as usize }
 
-    fn from_uint(n: uint) -> Option<Colored> {
+    fn from_usize(n: usize) -> Option<Colored> {
         match n { 0 => Some(Colored::C), 
                   1 => Some(Colored::N), 
                   2 => Some(Colored::S), 
@@ -224,10 +224,10 @@ impl Pile for ColoredPile {
     type Key = Colored;
 
     fn all(&self) -> Vec<Colored> { vec![Colored::C, Colored::N, Colored::S] }
-    fn num_keys(&self) -> uint { 3 }
+    fn num_keys(&self) -> usize { 3 }
 
-    fn get(&self, k: Colored) -> uint { 
-        self.e[ColoredPile::to_uint(k)]
+    fn get(&self, k: Colored) -> usize { 
+        self.e[ColoredPile::to_usize(k)]
     }
 }
 
@@ -254,8 +254,8 @@ impl Sub for ColoredPile {
 }
 
 impl LandPile for ColoredPile {
-    fn lands(&self) -> uint { self.e[0] + self.e[1] }
-    fn spells(&self) -> uint { self.total() - self.lands() }
+    fn lands(&self) -> usize { self.e[0] + self.e[1] }
+    fn spells(&self) -> usize { self.total() - self.lands() }
 }
 
 impl Iterator for ColoredPile {
@@ -290,34 +290,34 @@ impl fmt::Show for ColoredPile {
 
 #[derive(Copy, Clone)]
 pub struct DualPile {
-    pub a:  uint, 
-    pub b:  uint, // non-colored lands
-    pub ab: uint,
-    pub x:  uint,
-    pub s:  uint, // spells
+    pub a:  usize, 
+    pub b:  usize, // non-colored lands
+    pub ab: usize,
+    pub x:  usize,
+    pub s:  usize, // spells
 }
 
 impl DualPile {
-    pub fn new(a: uint, b: uint, ab: uint, x: uint, s: uint) -> DualPile {
+    pub fn new(a: usize, b: usize, ab: usize, x: usize, s: usize) -> DualPile {
         DualPile { a:a, b:b, ab:ab, x:x, s:s }
     }
 
-    pub fn iter(d: uint) -> DualPile {
+    pub fn iter(d: usize) -> DualPile {
         DualPile { a:d, b:0, ab:0, x:0, s:0 }
     }
 
-    fn to_uint(&self, c: uint) -> uint { c }
-    fn from_uint(&self, n: uint) -> uint { if n < 5 { n } else { panic!("out of range") } }
+    fn to_usize(&self, c: usize) -> usize { c }
+    fn from_usize(&self, n: usize) -> usize { if n < 5 { n } else { panic!("out of range") } }
 }
 
 impl Pile for DualPile {
-    type Key = uint;
+    type Key = usize;
 
-    fn num_keys(&self) -> uint { 5 }
+    fn num_keys(&self) -> usize { 5 }
 
-    fn all<'a>(&'a self) -> Vec<uint> { range(0, self.num_keys()).collect() }
+    fn all<'a>(&'a self) -> Vec<usize> { range(0, self.num_keys()).collect() }
 
-    fn get(&self, k: uint) -> uint { match k { 0 => self.a,
+    fn get(&self, k: usize) -> usize { match k { 0 => self.a,
                                                1 => self.b,
                                                2 => self.ab, 
                                                3 => self.x,
@@ -350,8 +350,8 @@ impl Sub for DualPile {
 }
 
 impl LandPile for DualPile {
-    fn spells(&self) -> uint { self.total() - self.s }
-    fn lands(&self) -> uint { self.s }
+    fn spells(&self) -> usize { self.total() - self.s }
+    fn lands(&self) -> usize { self.s }
 }
 
 impl Iterator for DualPile {
@@ -399,7 +399,7 @@ impl fmt::Show for DualPile {
 
 // mset = [0,1,2,2,2,3,3]
 // nums = [0,1,2,2]
-pub fn mc_next(mset: &[uint], nums: &mut[uint]) -> bool {
+pub fn mc_next(mset: &[usize], nums: &mut[usize]) -> bool {
     let n = mset.len();
     let k = nums.len();
     let mut finished = false;

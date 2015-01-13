@@ -5,46 +5,49 @@ use std::iter::repeat;
 
 #[derive(Show, PartialEq, Eq, Copy, Clone)]
 pub struct Mana {
-    pub w : uint,
-    pub u : uint,
-    pub b : uint,
-    pub r : uint,
-    pub g : uint,
-    pub c : uint
+    pub w : u32,
+    pub u : u32,
+    pub b : u32,
+    pub r : u32,
+    pub g : u32,
+    pub c : u32,
+    pub x : u32
 }
 
 impl Mana {
-    pub fn new(w:uint, u:uint, b:uint, r:uint, g:uint, c:uint) -> Mana {
-        Mana { w : w, u : u, b : b, r : r, g : g, c : c }
+    pub fn new(w:u32, u:u32, b:u32, r:u32, g:u32, c:u32, x: u32) -> Mana {
+        Mana { w : w, u : u, b : b, r : r, g : g, c : c, x : x }
     }
 
     pub fn zero() -> Mana { 
-        Mana::new(0, 0, 0, 0, 0, 0) 
+        Mana::new(0, 0, 0, 0, 0, 0, 0) 
     }
 
-    pub fn w(n : uint) -> Mana { Mana::new(n, 0, 0, 0, 0, 0) }
-    pub fn u(n : uint) -> Mana { Mana::new(0, n, 0, 0, 0, 0) }
-    pub fn b(n : uint) -> Mana { Mana::new(0, 0, n, 0, 0, 0) }
-    pub fn r(n : uint) -> Mana { Mana::new(0, 0, 0, n, 0, 0) }
-    pub fn g(n : uint) -> Mana { Mana::new(0, 0, 0, 0, n, 0) }
-    pub fn c(n : uint) -> Mana { Mana::new(0, 0, 0, 0, 0, n) }
+    pub fn w(n : u32) -> Mana { Mana::new(n, 0, 0, 0, 0, 0, 0) }
+    pub fn u(n : u32) -> Mana { Mana::new(0, n, 0, 0, 0, 0, 0) }
+    pub fn b(n : u32) -> Mana { Mana::new(0, 0, n, 0, 0, 0, 0) }
+    pub fn r(n : u32) -> Mana { Mana::new(0, 0, 0, n, 0, 0, 0) }
+    pub fn g(n : u32) -> Mana { Mana::new(0, 0, 0, 0, n, 0, 0) }
+    pub fn c(n : u32) -> Mana { Mana::new(0, 0, 0, 0, 0, n, 0) }
+    pub fn x(n : u32) -> Mana { Mana::new(0, 0, 0, 0, 0, 0, n) }
 
     pub fn reset(&self, color: Color) -> Mana {
         match color { 
-            W => Mana::new(0, self.u, self.b, self.r, self.g, self.c),
-            U => Mana::new(self.w, 0, self.b, self.r, self.g, self.c),
-            B => Mana::new(self.w, self.u, 0, self.r, self.g, self.c),
-            R => Mana::new(self.w, self.u, self.b, 0, self.g, self.c),
-            G => Mana::new(self.w, self.u, self.b, self.r, 0, self.c),
-            C => Mana::new(self.w, self.u, self.b, self.r, self.g, 0),
+            W => Mana::new(0, self.u, self.b, self.r, self.g, self.c, self.x),
+            U => Mana::new(self.w, 0, self.b, self.r, self.g, self.c, self.x),
+            B => Mana::new(self.w, self.u, 0, self.r, self.g, self.c, self.x),
+            R => Mana::new(self.w, self.u, self.b, 0, self.g, self.c, self.x),
+            G => Mana::new(self.w, self.u, self.b, self.r, 0, self.c, self.x),
+            C => Mana::new(self.w, self.u, self.b, self.r, self.g, 0, self.x),
+            //X => Mana::new(self.w, self.u, self.b, self.r, self.g, self.c, 0),
         }
     }
 
-    pub fn as_vec(&self) -> Vec<uint> {
+    pub fn as_vec(&self) -> Vec<u32> {
         vec![self.w, self.u, self.b, self.r, self.g, self.c]
     }
     
-    pub fn cmc(&self) -> uint { 
+    pub fn cmc(&self) -> u32 { 
         use std::iter::AdditiveIterator;
 
         let v = self.as_vec();
@@ -58,17 +61,18 @@ impl Mana {
     
     pub fn pretty(&self) -> String {
         let ns = if self.c > 0 { self.c.to_string() } else { "".to_string() };
-        format!("{}{}{}{}{}{}",
+        format!("{}{}{}{}{}{}{}",
                 ns, 
-                repeat('W').take(self.w).collect::<String>(),
-                repeat('U').take(self.w).collect::<String>(),
-                repeat('B').take(self.w).collect::<String>(),
-                repeat('R').take(self.w).collect::<String>(),
-                repeat('G').take(self.w).collect::<String>())
+                repeat('X').take(self.x as usize).collect::<String>(),
+                repeat('W').take(self.w as usize).collect::<String>(),
+                repeat('U').take(self.u as usize).collect::<String>(),
+                repeat('B').take(self.b as usize).collect::<String>(),
+                repeat('R').take(self.r as usize).collect::<String>(),
+                repeat('G').take(self.g as usize).collect::<String>())
     }
 
     pub fn src(&self) -> String {
-        fn f(v:uint, l:char, spc:bool) -> String {
+        fn f(v:u32, l:char, spc:bool) -> String {
             if v > 0 {
 			    format!("{}{:2}{}", if spc { " " } else { "" }, v, l)
 		    }
@@ -82,17 +86,17 @@ impl Mana {
         let b = f(self.b, 'B', true);
         let r = f(self.r, 'R', true);
         let g = f(self.g, 'G', true);
-        let x = f(self.c, 'X', true);
+        let c = f(self.c, 'C', true);
 
-        format!("{}{}{}{}{}{}", w, u, b, r, g, x)
+        format!("{}{}{}{}{}{}", w, u, b, r, g, c)
     }
 
     pub fn parse(s: &str) -> Mana {
         use regex::Regex;
         
-        let re = match Regex::new(r"\{([0-9]+|W|U|B|R|G)\}") {
+        let re = match Regex::new(r"\{([0-9]+|X|W|U|B|R|G)\}") {
             Ok(r) => r,
-            Err(e) => panic!("{}", e)
+            Err(e) => panic!("{:?}", e)
         };
         let mut mana = Mana::zero();
         for cap in re.captures_iter(s) {
@@ -102,9 +106,10 @@ impl Mana {
                 Some("B") => Mana::b(1),
                 Some("R") => Mana::r(1),
                 Some("G") => Mana::g(1),
+                Some("X") => Mana::x(1),
                 Some(n) => {
-                    let v = n.parse::<uint>();
-                    Mana::c(v.unwrap_or(0u))
+                    let v = n.parse::<u32>();
+                    Mana::c(v.unwrap_or(0))
                 },
                 None => Mana::c(0)
             };
@@ -120,7 +125,8 @@ impl Add for Mana {
     fn add(self, b: Mana) -> Mana {
         let a = self;
         Mana::new(a.w + b.w, a.u + b.u, a.b + b.b,
-                  a.r + b.r, a.g + b.g, a.c + b.c)
+                  a.r + b.r, a.g + b.g, a.c + b.c,
+                  a.x + b.x)
     }
 }
 
@@ -130,17 +136,19 @@ impl Sub for Mana {
     fn sub(self, b: Mana) -> Mana {
         let a = self;
         Mana::new(a.w - b.w, a.u - b.u, a.b - b.b,
-                  a.r - b.r, a.g - b.g, a.c - b.c)
+                  a.r - b.r, a.g - b.g, a.c - b.c,
+                  a.x - b.x)
     }
 }
 
-impl Mul<uint> for Mana {
+impl Mul<u32> for Mana {
     type Output = Mana;
 
-    fn mul(self, rhs: uint) -> Mana {
+    fn mul(self, rhs: u32) -> Mana {
         let a = self;
         let k = rhs;
         Mana::new(a.w * k, a.u * k, a.b * k,
-                  a.r * k, a.g * k, a.c * k)
+                  a.r * k, a.g * k, a.c * k,
+                  a.x * k)
     }
 }

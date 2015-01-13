@@ -79,8 +79,8 @@ impl<'a, A : Ord + Clone + Int> Iterator for IntervalIter<'a,A> {
 }
 
 pub fn test() {
-    assert!(open(0i, 5).iter().collect::<Vec<int>>()        == vec![  1,2,3,4  ]);
-    assert!(range(0i, 5).iter().collect::<Vec<int>>()       == vec![0,1,2,3,4  ]);
-    assert!(open_closed(0i, 5).iter().collect::<Vec<int>>() == vec![  1,2,3,4,5]);
-    assert!(closed(0i, 5).iter().collect::<Vec<int>>()      == vec![0,1,2,3,4,5]);
+    assert!(open(0, 5).iter().collect::<Vec<i32>>()        == vec![  1,2,3,4  ]);
+    assert!(range(0, 5).iter().collect::<Vec<i32>>()       == vec![0,1,2,3,4  ]);
+    assert!(open_closed(0, 5).iter().collect::<Vec<i32>>() == vec![  1,2,3,4,5]);
+    assert!(closed(0, 5).iter().collect::<Vec<i32>>()      == vec![0,1,2,3,4,5]);
 }

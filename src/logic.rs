@@ -1,7 +1,7 @@
 use std::iter::repeat;
 use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use table::Table;
-use table::TableElem::{LStr, RStr, Int, UInt, Empty};
+use table::TableElem::{LStr, RStr, I32, U32, Empty};
 
 //
 // Mulligan Rule: 
@@ -12,12 +12,12 @@ use table::TableElem::{LStr, RStr, Int, UInt, Empty};
 //  - 4 cards: Always kept
 //
 
-fn mull_rule(hand_size: uint) -> (uint, uint) {
+fn mull_rule(hand_size: usize) -> (usize, usize) {
     match hand_size {
-        7 => (2u, 5u),
-        6 => (2u, 4u),
-        5 => (1u, 4u),
-        4 => (0u, 4u),
+        7 => (2, 5),
+        6 => (2, 4),
+        5 => (1, 4),
+        4 => (0, 4),
         _ => panic!("Eh")
     }
 }
@@ -28,7 +28,7 @@ mod single {
     use prob;
     use interval::closed;
 
-    fn draw<G>(hand: ColoredPile, draws: uint, deck: ColoredPile, 
+    fn draw<G>(hand: ColoredPile, draws: usize, deck: ColoredPile, 
             goal: G) -> f64
         where G : Fn(ColoredPile)->bool
     {
@@ -42,9 +42,9 @@ mod single {
         }
     }        
 
-    fn intern<G>(hand_size: uint, 
-              deck: ColoredPile, draws: uint, goal: G)
-              -> (f64, f64) 
+    fn intern<G>(hand_size: usize, 
+                 deck: ColoredPile, draws: usize, goal: G)
+                 -> (f64, f64) 
         where G : Fn(ColoredPile)->bool
     {
         let (lands_min, lands_max) = super::mull_rule(hand_size);
@@ -66,13 +66,13 @@ mod single {
         (keep, cast)
     }
 
-    pub fn turn0<G>(deck: ColoredPile, draws: uint, goal: G) -> f64 
+    pub fn turn0<G>(deck: ColoredPile, draws: usize, goal: G) -> f64 
         where G : Fn(ColoredPile)->bool
     {
         let mut mull = 1.0; // the chance we mulled before
         let mut succ = 0.0;
         
-        for hand_size in range_inclusive(4u, 7u).rev() {
+        for hand_size in range_inclusive(4, 7).rev() {
             let (keep, cast) = intern(hand_size, deck, draws, |g| goal(g));
             succ += mull * (cast * keep); 
             mull *= 1.0 - keep;
@@ -81,8 +81,8 @@ mod single {
         succ
     }
     
-    pub fn cards<G>(lands: uint, deck: uint, draws: uint, perc: f64, 
-                 goal: G) -> int 
+    pub fn cards<G>(lands: usize, deck: usize, draws: usize, perc: f64, 
+                 goal: G) -> i32
         where G : Fn(ColoredPile)->bool
     {
         let deck1 = ColoredPile::new(lands, 0, deck-lands);
@@ -92,7 +92,7 @@ mod single {
             let deck0 = ColoredPile::new(k, lands-k, deck-lands);
             let r0 = turn0(deck0, draws, |g| goal(g));
             if r0 >= perc * r1 {
-                return k as int
+                return k as i32
             }
         }
         return 0
@@ -108,7 +108,7 @@ pub mod dual {
     use prob;
     use interval::closed;
 
-    fn draw<G>(hand: DualPile, draws: uint, deck: DualPile, goal: G) -> f64 
+    fn draw<G>(hand: DualPile, draws: usize, deck: DualPile, goal: G) -> f64 
         where G : Fn(DualPile)->bool
     {
         if draws > 0 {
@@ -121,14 +121,14 @@ pub mod dual {
         }
     }        
 
-    pub fn turn0<G>(deck: DualPile, draws: uint, goal: G) -> f64 
+    pub fn turn0<G>(deck: DualPile, draws: usize, goal: G) -> f64 
         where G: Fn(DualPile)->bool
     {
         let mut mull = 1.0;
         let mut succ = 0.0;
         //let mut tally = 0.0;
 
-        for hand_size in range_inclusive(4u, 7u).rev() {
+        for hand_size in range_inclusive(4, 7).rev() {
             let (lands_min, lands_max) = super::mull_rule(hand_size);
             
             // Probability of keeping 
@@ -151,8 +151,8 @@ pub mod dual {
         succ
     }
     
-    pub fn cards<G>(lands: uint, deck: uint, uncolored: uint,
-                    a_rate: f64, draws: uint, perc: f64, goal: G) -> int 
+    pub fn cards<G>(lands: usize, deck: usize, uncolored: usize,
+                    a_rate: f64, draws: usize, perc: f64, goal: G) -> i32 
         where G : Fn(DualPile)->bool
     {
         
@@ -166,9 +166,9 @@ pub mod dual {
             return -1
         }
         
-        for ab in closed(0u, lands).iter() {
+        for ab in closed(0, lands).iter() {
             let mono = lands - ab - uncolored;
-            let a = ((mono as f64) * a_rate + 0.5).round() as uint;
+            let a = ((mono as f64) * a_rate + 0.5).round() as usize;
             let b = mono - a;
             
             assert!(a+b+ab+uncolored+(deck-lands) == deck);
@@ -176,7 +176,7 @@ pub mod dual {
             let deck0 = DualPile::new(a, b, ab, uncolored, deck-lands);
             let r = turn0(deck0, draws, |g| goal(g));
             if r >= perc * r0 {
-                return ab as int
+                return ab as i32
             }
         }
         return -1
@@ -190,8 +190,7 @@ mod gen {
     use std::iter::{range_inclusive, AdditiveIterator};
     use prob;
 
-    fn draw<G>(hand: GenPile, draws: uint, deck: GenPile, 
-               goal: G) -> f64 
+    fn draw<G>(hand: GenPile, draws: usize, deck: GenPile, goal: G) -> f64 
         where G : Fn(GenPile)->bool
     {
         if draws > 0 {
@@ -204,13 +203,13 @@ mod gen {
         }
     }        
 
-    pub fn turn0<G>(deck: GenPile, draws: uint, goal: G) -> f64 
+    pub fn turn0<G>(deck: GenPile, draws: usize, goal: G) -> f64 
         where G : Fn(GenPile)->bool 
     {
         let mut mull = 1.0;
         let mut succ = 0.0;
         
-        for hand_size in range_inclusive(4u, 7u).rev() {
+        for hand_size in range_inclusive(4, 7).rev() {
             let (lands_min, lands_max) = super::mull_rule(hand_size);
             
             // Probability of keeping 
@@ -252,7 +251,7 @@ pub fn b_minc(bh: &mut BenchHarness) {
     bh.iter(|| single::cards(l, d, draws, pc, |h| goal(h)))
 }
 
-fn pm2(a:uint, b:uint, c:uint) -> String {
+fn pm2(a:usize, b:usize, c:usize) -> String {
     let mut res = if c > 0 { c.to_string() } else { "".to_string() };
     res.push_str(&*repeat('A').take(a).collect::<String>());
     res.push_str(&*repeat('B').take(b).collect::<String>());
@@ -260,7 +259,7 @@ fn pm2(a:uint, b:uint, c:uint) -> String {
 }
 
 // Summary of [lands] lands in a [D] card deck
-pub fn summary(lands: uint, deck: uint, uncolored_lands: uint) {
+pub fn summary(lands: usize, deck: usize, uncolored_lands: usize) {
     use interval::closed;
     
     let mut table = Table::new(5, 9);
@@ -268,19 +267,19 @@ pub fn summary(lands: uint, deck: uint, uncolored_lands: uint) {
     {
         table.set(0, 0, LStr(format!("{}/{}({})", lands, deck, uncolored_lands)));
         table.set(0, 1, RStr("--".to_string()));
-        for cless in closed(1u, 7).iter() { 
-            table.set(0, 1u + cless, UInt(cless)) 
+        for cless in closed(1u32, 7).iter() { 
+            table.set(0, 1 + cless as usize, U32(cless)) 
         }
     }
     
-    for cmana in closed(2u, 5u).iter() {
+    for cmana in closed(2, 5).iter() {
         for bmana in closed(1, cmana/2).iter() {
             let amana = cmana - bmana;
             
             let gstr = pm2(amana, bmana, cmana - amana - bmana);
             table.set(cmana-1, 0, RStr(gstr));   
             
-            for cless in closed(0u, 7).iter() { 
+            for cless in closed(0, 7).iter() { 
                 
                 let arate = (amana as f64) / (amana + bmana) as f64;
                 let cmc = cmana + cless;
@@ -303,7 +302,7 @@ pub fn summary(lands: uint, deck: uint, uncolored_lands: uint) {
                           if res == 0 { Empty } 
                           //else if res == (lands - uncolored_lands) as int { RStr("**") }
                           else if res == -1 { RStr("**".to_string()) }
-                                  else { Int(res) })
+                                  else { I32(res) })
             }
         }
     }
@@ -312,14 +311,14 @@ pub fn summary(lands: uint, deck: uint, uncolored_lands: uint) {
     table.print(format!("{} lands, {} colorless", lands, uncolored_lands).as_slice());
 }
 
-fn pm(colored_mana:uint, cmc:uint) -> String {
+fn pm(colored_mana:usize, cmc:usize) -> String {
     let nc = cmc - colored_mana;
     let mut res = if nc > 0 { nc.to_string() } else { "".to_string() };
     res.push_str(&*repeat('C').take(colored_mana).collect::<String>());
     res
 }  
 
-pub fn summary_c(lands: uint, deck: uint) {
+pub fn summary_c(lands: usize, deck: usize) {
     use interval::closed;
 
     // Making my adjusted tables
@@ -328,16 +327,16 @@ pub fn summary_c(lands: uint, deck: uint) {
     {
         table.set(0, 0, LStr(format!("{}/{}", lands, deck)));
         table.set(0, 1, RStr("--".to_string()));
-        for cless in closed(1i, 7).iter() { 
-            table.set(0, (1 + cless) as uint, Int(cless)) 
+        for cless in closed(1, 7).iter() { 
+            table.set(0, (1 + cless) as usize, I32(cless)) 
         };
     }
     
-    for cmana in closed(1u, 4u).iter() {
+    for cmana in closed(1, 4).iter() {
         let gstr = pm(cmana, cmana);
         table.set(cmana, 0, RStr(gstr));                
         
-        for cless in closed(0u, 7).iter() {                     
+        for cless in closed(0, 7).iter() {                     
             let cmc = cmana + cless;
             let draws = cmc - 1;
             let goal = |&: hand: ColoredPile| { 
@@ -347,11 +346,11 @@ pub fn summary_c(lands: uint, deck: uint) {
                 ok
             };
             let res = single::cards(lands, deck, draws, 0.90, goal);
-            table.set(cmana, 1u+cless,
+            table.set(cmana, 1+cless,
                       if res == 0 { Empty } 
-                      //else if res == (lands - uncolored_lands) as int { RStr("**") }
+                      //else if res == (lands - uncolored_lands) as i32 { RStr("**") }
                       else if res == -1 { RStr("**".to_string()) }
-                      else { Int(res) })
+                      else { I32(res) })
         }
     }
     
@@ -362,13 +361,13 @@ pub fn summary_c(lands: uint, deck: uint) {
 pub fn investigate()
 {
     #[inline(always)]
-    fn min(a:uint, b:uint) -> uint { if a < b { a } else { b } }
+    fn min(a:usize, b:usize) -> usize { if a < b { a } else { b } }
     
     #[inline(always)]
-    fn is_land(idx: uint) -> bool { idx == 0 || idx == 1 || idx == 2 }
+    fn is_land(idx: usize) -> bool { idx == 0 || idx == 1 || idx == 2 }
     
-    fn can_cast(la:uint, lb:uint, lab:uint, lx:uint,
-                a: uint, b: uint, x: uint) -> bool {
+    fn can_cast(la:usize, lb:usize, lab:usize, lx:usize,
+                a: usize, b: usize, x: usize) -> bool {
         // tap for A
         let ta = min(la, a);
         let (la, a) = (la - ta, a - ta);
@@ -408,36 +407,36 @@ pub fn investigate()
     {
         use std::iter::range_inclusive;
         
-        static A  :uint = 0;
-        static B  :uint = 1;
-        static C  :uint = 2;
-        static AB :uint = 3;
-        static BC :uint = 4;
-        static AC :uint = 5;
-        static S1 :uint = 6;
-        static S2 :uint = 7;
-        static O  :uint = 8;
+        static A  :usize = 0;
+        static B  :usize = 1;
+        static C  :usize = 2;
+        static AB :usize = 3;
+        static BC :usize = 4;
+        static AC :usize = 5;
+        static S1 :usize = 6;
+        static S2 :usize = 7;
+        static O  :usize = 8;
         
         // a,b,c,ab,bc,ac,s,o
-        fn is_land(idx: uint) -> bool { idx < 6 }
+        fn is_land(idx: usize) -> bool { idx < 6 }
 
         let info = GenPileKeys::new(9, is_land);
         
-        fn cc(hand: GenPile, a: uint, b: uint, x: uint) -> bool {
+        fn cc(hand: GenPile, a: usize, b: usize, x: usize) -> bool {
             can_cast(hand[A] + hand[AC], hand[B] + hand[BC], hand[AB], hand[C],
                      a, b, x)
         }
         
         let turn = 3;
 
-        for cmc2s in range_inclusive(2u, 16) {
-            for s1 in range_inclusive(1u, cmc2s-1) {
+        for cmc2s in range_inclusive(2, 16) {
+            for s1 in range_inclusive(1, cmc2s-1) {
                 let s2 = cmc2s - s1;
                 
                 let mut best_p = 0.0;
-                let mut best_a = 0u;
+                let mut best_a = 0;
                 
-                for a in range_inclusive(0u, 17) {
+                for a in range_inclusive(0, 17) {
                     let b = 17 - a;
                     
                     let deck = GenPile::new(vec![a, b, 0,
@@ -472,7 +471,7 @@ pub fn investigate()
 }
 
 // Making the Frank 1 colored mana table:
-pub fn frank(colored_mana: uint, cmc: uint) -> Table {
+pub fn frank(colored_mana: usize, cmc: usize) -> Table {
     use interval::closed;
 
     let mut t1 = Table::new(4, 8);
@@ -481,28 +480,28 @@ pub fn frank(colored_mana: uint, cmc: uint) -> Table {
     
     t1.set(0, 0, LStr(ps));
     
-    for turn in closed(1i, 7).iter() { t1.set(0u, turn as uint, Int(turn)) };
+    for turn in closed(1, 7).iter() { t1.set(0, turn as usize, I32(turn)) };
 
-    let manas = vec!(16u, 17, 18);
+    let manas = vec!(16, 17, 18);
     let mut lines = manas.iter().map(|l| {
         let f = 10.0f64;
-        (40u, *l, 0u, (f-1.0)/f) 
+        (40, *l, 0, (f-1.0)/f) 
     }).enumerate();
     
     for (line_no, line) in lines {
         let (d, l, e, pc) = line;
-        let sym = if e == 0u {'p'} else {'d'};
-        t1.set(1u+line_no, 0u, LStr(format!("{} lands {}", l as uint, sym)));
+        let sym = if e == 0 {'p'} else {'d'};
+        t1.set(1+line_no, 0, LStr(format!("{} lands {}", l as usize, sym)));
         
-        for turn in closed(1u, 7u).iter() {
-            let draws = turn - 1u + e;
+        for turn in closed(1, 7).iter() {
+            let draws = turn - 1 + e;
             let goal = |&: hand: ColoredPile| { 
                 hand.colored() >= colored_mana // colors okay
                     && hand.lands() >= cmc // enough lands for cmc
                     && turn >= cmc // one land per turn
             };
             let res = single::cards(l, d, draws, pc, goal);
-            t1.set(1u+line_no, turn, if res == 0i { Empty } else { Int(res) }) 
+            t1.set(1+line_no, turn, if res == 0 { Empty } else { I32(res) }) 
         }
     };
     
@@ -535,7 +534,7 @@ pub fn frank_table()
 	frank(7, 7).print("");
 }
 
-pub fn show_card_text(txt : &str, width : uint)
+pub fn show_card_text(txt : &str, width : usize)
 {
     let mut col = 0;
     let mut indent = 0;

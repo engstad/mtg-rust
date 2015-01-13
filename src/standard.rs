@@ -41,7 +41,7 @@ impl LandCardInfo {
         format!("{}", self.name)
     }
 
-    pub fn source(&self, deck: &Vec<(&LandCardInfo, uint)>) -> Mana {
+    pub fn source(&self, deck: &Vec<(&LandCardInfo, u32)>) -> Mana {
 
         fn basic(c: Color) -> &'static str {
             match c {
@@ -52,7 +52,7 @@ impl LandCardInfo {
         if self.landtype == LandType::FetchLand || self.landtype == LandType::TappedFetchLand {
             let colors = vec![U, W, B, R, G];
 
-            colors.iter().fold(Mana::new(0, 0, 0, 0, 0, 0), |acc, &color| {
+            colors.iter().fold(Mana::zero(), |acc, &color| {
 
                 // To fetch a color c, we must be able to fetch a land with the following subtypes.
                 if deck.iter().any(|&(tgt, n)| n > 0 && 
@@ -68,7 +68,7 @@ impl LandCardInfo {
             })
         }
         else {
-            self.produces.iter().fold(Mana::new(0, 0, 0, 0, 0, 0), |a, &c| a + c.source())
+            self.produces.iter().fold(Mana::zero(), |a, &c| a + c.source())
         }
     }
 
@@ -98,7 +98,7 @@ impl LandCardInfo {
 
 //
 //
-pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db LandCardInfo, uint)>
+pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db LandCardInfo, u32)>
 {
     lands.split('\n').filter_map(|line| { 
         let caps:Vec<&str> = line.trim().splitn(1, ' ').collect(); 
@@ -107,9 +107,9 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
 
         let l0 = caps[0].len();
         let n = if l0 > 1 && caps[0].chars().last().unwrap() == 'x' {
-            caps[0][0..l0-1].parse::<uint>()
+            caps[0][0..l0-1].parse::<u32>()
         } else {
-            caps[0].parse::<uint>()
+            caps[0].parse::<u32>()
         };
 
         let l = db.iter().find(|&nm| nm.name == caps[1] ||
@@ -133,7 +133,7 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
     }).collect()
 }
 
-pub fn analyze(deck: &str) -> uint
+pub fn analyze(deck: &str) -> u32
 {
     use std::io::File;
     
@@ -151,7 +151,7 @@ pub fn analyze(deck: &str) -> uint
 
     {
         use table::{Table, left, right};
-        use table::TableElem::{LStr, UInt};
+        use table::TableElem::{LStr, U32};
         let mut table = Table::new(1+ls.len(), 3);
 
         {
@@ -161,7 +161,7 @@ pub fn analyze(deck: &str) -> uint
         }
 
         for (row, &(card, num)) in ls.iter().enumerate() {
-            table.set(1 + row, 0, UInt(num));
+            table.set(1 + row, 0, U32(num));
             table.set(1 + row, 1, LStr(card.show()));
             table.set(1 + row, 2, LStr((card.source(&ls) * num).src()));
         }
@@ -170,28 +170,28 @@ pub fn analyze(deck: &str) -> uint
     }
 
     let lds = ls.iter()
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
+        .fold((0u32, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let unt = ls.iter().filter(|&&(c, _)| c.untapped())
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
+        .fold((0u32, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let tap = ls.iter().filter(|&&(c, _)| !c.untapped())
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
+        .fold((0u32, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
 
     println!("{:2} {:-30} {:-5}\n", lds.0, "Cards".to_string(), lds.1.src());
     println!("{:2} {:-30} {:-5}", unt.0, "Untapped".to_string(), unt.1.src());
     println!("{:2} {:-30} {:-5}\n", tap.0, "Tapped".to_string(), tap.1.src());
 
     let basics = ls.iter().filter(|&&(c, _)| c.landtype == LandType::BasicLand)
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
+        .fold((0u32, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let fetches = ls.iter().filter(|&&(c, _)| c.landtype == LandType::FetchLand)
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
+        .fold((0u32, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let scrys = ls.iter().filter(|&&(c, _)| c.landtype == LandType::ScryLand)
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
+        .fold((0u32, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let pains = ls.iter().filter(|&&(c, _)| c.landtype == LandType::PainLand)
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
+        .fold((0u32, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let refus = ls.iter().filter(|&&(c, _)| c.landtype == LandType::RefuLand)
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
+        .fold((0u32, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
     let specs = ls.iter().filter(|&&(c, _)| c.landtype == LandType::TappedLand || c.landtype == LandType::UntappedLand)
-        .fold((0u, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
+        .fold((0u32, Mana::zero()), |(l, m), &(c, n)| { (l + n, m + c.source(&ls) * n) });
 
     println!("{:2} {:-30} {:-5}", basics.0, "Basics".to_string(), basics.1.src());
     println!("{:2} {:-30} {:-5}", fetches.0, "Fetch-lands".to_string(), fetches.1.src());

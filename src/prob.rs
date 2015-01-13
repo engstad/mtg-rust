@@ -6,7 +6,7 @@ use core::num::*;
 
 pub fn perc(x:f64) -> f64 { 100.0 * x }
 
-pub fn pow_acc(x:int, n:int, acc:i64) -> i64
+pub fn pow_acc(x:i64, n:i64, acc:i64) -> i64
 {
     if n == 0 {
 	    return acc;

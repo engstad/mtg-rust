@@ -6,12 +6,12 @@ pub enum Color { W, U, B, R, G, C }
 impl Color {
     pub fn source(&self) -> Mana {
         match *self {
-            Color::W => Mana::w(1u), 
-            Color::U => Mana::u(1u), 
-            Color::B => Mana::b(1u), 
-            Color::R => Mana::r(1u),
-            Color::G => Mana::g(1u),
-            Color::C => Mana::c(1u)
+            Color::W => Mana::w(1), 
+            Color::U => Mana::u(1), 
+            Color::B => Mana::b(1), 
+            Color::R => Mana::r(1),
+            Color::G => Mana::g(1),
+            Color::C => Mana::c(1)
         }
     }    
 
