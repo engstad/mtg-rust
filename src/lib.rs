@@ -4,12 +4,8 @@
 #![feature(slicing_syntax)]
 #![feature(unboxed_closures)]
 
-extern crate collections;
 extern crate regex;
 extern crate curl;
-extern crate core;
-extern crate libc;
-//extern crate serialize;
 extern crate "rustc-serialize" as rustc_serialize;
 
 pub mod prob;

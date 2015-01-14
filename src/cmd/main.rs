@@ -1,11 +1,5 @@
 #![feature(slicing_syntax)]
 
-extern crate collections;
-extern crate regex;
-extern crate serialize;
-extern crate curl;
-extern crate core;
-extern crate libc;
 extern crate mtg;
 
 //use mtg::logic::*;
@@ -32,12 +26,12 @@ fn main() {
 
     if args.len() == 1 || (args.len() == 2 && (args[1] == "dump" || args[1] == "fetch")) {
         let mut cs = vec![];
-        cs.push_all(fetch_set("FRF").as_slice());
-        cs.push_all(fetch_set("KTK").as_slice());
-        cs.push_all(fetch_set("M15").as_slice());
-        cs.push_all(fetch_set("JOU").as_slice());
-        cs.push_all(fetch_set("BNG").as_slice());
-        cs.push_all(fetch_set("THS").as_slice());
+        cs.push_all(&*fetch_set("FRF"));
+        cs.push_all(&*fetch_set("KTK"));
+        cs.push_all(&*fetch_set("M15"));
+        cs.push_all(&*fetch_set("JOU"));
+        cs.push_all(&*fetch_set("BNG"));
+        cs.push_all(&*fetch_set("THS"));
         
         cs.sort_by(|a, b| a.mana_cost.cmc().cmp(&b.mana_cost.cmc()));
         //cs.sort_by(|a, b| b.card_text.len().cmp(&a.card_text.len()));
@@ -68,13 +62,12 @@ fn main() {
                          else { "".to_string() });
                 if c.card_text.len() > 0 {
                     println!("{}", rep('-', width));
-                    show_card_text(c.card_text.as_slice(), width);
+                    show_card_text(&*c.card_text, width);
                 }
                 println!("{}\n", rep('=', width));
 
                 if fetch_images {
-                    let jpg = fetch_img(c.expansion.as_slice(), 
-                                        format!("{}", c.image_name).as_slice());
+                    let jpg = fetch_img(&*c.expansion, &*c.image_name);
                     
                     let mut f = File::create(&Path::new(format!("pics/{}-{}.jpg", 
                                                                 c.expansion, c.image_name)));
@@ -90,10 +83,10 @@ fn main() {
     //    sdl_main(args[2].as_slice())
     //}
     //else 
-    else if args.len() == 2 && args[1].as_slice() == "land"	{
+    else if args.len() == 2 && args[1] == "land"	{
 		investigate()
     }
-    else if args.len() == 2 && args[1].as_slice() == "duals" {
+    else if args.len() == 2 && args[1] == "duals" {
 		let mut dp = Table::new (18, 2);
 		for a in closed(0, 17).iter() {
 			let goal = |&:hand: DualPile | {(hand.a >= 1) || hand.ab >= 1 };
@@ -104,7 +97,7 @@ fn main() {
 		}
 		dp.print("Duals");
     }
-    else if args.len() >= 2 && args[1].as_slice() == "table" {
+    else if args.len() >= 2 && args[1] == "table" {
         let l = if args.len() == 3 { args[2].parse().unwrap_or(0) } else { 0 };
         if l == 0 {
 	        for i in closed(16, 18).iter() { summary_c(i, 40); }
@@ -116,22 +109,22 @@ fn main() {
             summary_c(l, 60)
         }
     }
-    else if args.len() == 2 && args[1].as_slice() == "frank" {
+    else if args.len() == 2 && args[1] == "frank" {
         frank_table()
     }
-    else if args.len() == 3 && args[1].as_slice() == "pow" {
-        let a = args[2].parse::<i32>().unwrap_or(0);
+    else if args.len() == 3 && args[1] == "pow" {
+        let a = args[2].parse().unwrap_or(0i32);
         for k in closed(0, 10).iter() {
             println!("{}^{} = {}", a, k, mtg::prob::pow_acc(a as i64, k, 1));
         }
     }
-    else if args.len() == 4 && args[1].as_slice() == "C" {
+    else if args.len() == 4 && args[1] == "C" {
         let a:u64 = args[2].parse().unwrap_or(0);
         let b:u64 = args[3].parse().unwrap_or(1);
         
         println!("c({:3}, {:2}) = {:60.0}", a, b, mtg::prob::c(a, b));
     }
-    else if args.len() == 2 && args[1].as_slice() == "dice" {
+    else if args.len() == 2 && args[1] == "dice" {
         /*
         println!("{:3} {:6}  {:6}  {:6}  {:6}  {:6}  {:6}   | {:6}  {:6}  {:6}  {:6}  {:6}",
                  "#D", 0, 1u, 2u, 3u, 4u, 5u, "  >= 1", "  >= 2", "  >= 3", "  >= 4", "  >= 5");
@@ -239,7 +232,7 @@ fn main() {
         dt.print("Action Dice")
     }
     else if args.len() == 2 {
-        let lands = mtg::standard::analyze(args[1].as_slice());
+        let lands = mtg::standard::analyze(&*args[1]);
         summary_c(lands as usize, 60);
     }
     else if false {
