@@ -1,0 +1,12 @@
+4 Nomad Outpost
+4 Mystic Monastery
+4 UBt
+4 UBf
+1 URp
+1 WBp
+1 WUf
+1 BRf
+1 W
+2 U
+2 B
+1 R
