@@ -3,7 +3,7 @@ use colors::Color::{W,U,B,R,G,C};
 use std::ops::{Add, Sub, Mul};
 use std::iter::repeat;
 
-#[derive(Show, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct Mana {
     pub w : u32,
     pub u : u32,

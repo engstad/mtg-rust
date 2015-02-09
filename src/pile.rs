@@ -78,7 +78,7 @@ impl Pile for GenPile {
     type Key = usize;
 
     fn num_keys(&self) -> usize { self.k.num_keys }
-    fn all<'a>(&'a self) -> Vec<usize> { range(0, self.num_keys()).collect() }
+    fn all<'a>(&'a self) -> Vec<usize> { (0 .. self.num_keys()).collect() }
     fn get(&self, k: usize) -> usize { 
         self.e[k]
     }
@@ -112,12 +112,12 @@ impl GenPile {
 
     pub fn iter(&self, n : usize, ks : GenPileKeys) -> GenPile {
         let sz = self.num_keys();
-        let l = range(0, sz).map(|idx| if idx == 0 { n } else { 0 }).collect();
+        let l = (0 .. sz).map(|idx| if idx == 0 { n } else { 0 }).collect();
         GenPile { e : l, k : ks }
     }
 
     pub fn subsets(&self, n : usize) -> Vec<GenPile> {
-        MultiSubSetIterator::new(self.e.as_slice(), n)
+        MultiSubSetIterator::new(&*self.e, n)
             .map(|e| GenPile { e:e, k:self.k })
             .collect()
     }
@@ -137,7 +137,7 @@ impl Index<usize> for GenPile {
 }
 
 
-impl fmt::Show for GenPile {
+impl fmt::Debug for GenPile {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {        
         try!(write!(fmt, "("));
         for (i,v) in self.e.iter().enumerate() {
@@ -162,7 +162,7 @@ impl Iterator for GenPile {
             Some(res)
         } else {
             let len = self.e.len();
-            for i in range(1, len-1) {
+            for i in (1 .. len-1) {
                 if self.get(i) > 0 {
                     self.e[0] = self.get(i) - 1; 
                     self.e[i+1] += 1;
@@ -191,7 +191,7 @@ impl LandPile for GenPile {
     }
 }
 
-#[derive(Copy, Show)]
+#[derive(Copy, Debug)]
 pub enum Colored { C, N, S }
 
 #[derive(Copy)]
@@ -281,7 +281,7 @@ impl Iterator for ColoredPile {
     }
 }
 
-impl fmt::Show for ColoredPile {
+impl fmt::Debug for ColoredPile {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {        
         write!(fmt, "(c:{:3}, x:{:3}, s:{:3})", 
                self.e[0], self.e[1], self.e[2])        
@@ -315,7 +315,7 @@ impl Pile for DualPile {
 
     fn num_keys(&self) -> usize { 5 }
 
-    fn all<'a>(&'a self) -> Vec<usize> { range(0, self.num_keys()).collect() }
+    fn all<'a>(&'a self) -> Vec<usize> { (0 .. self.num_keys()).collect() }
 
     fn get(&self, k: usize) -> usize { match k { 0 => self.a,
                                                1 => self.b,
@@ -390,7 +390,7 @@ impl Iterator for DualPile {
     }
 }
 
-impl fmt::Show for DualPile {
+impl fmt::Debug for DualPile {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {        
         write!(fmt, "[a:{:3}, b:{:3}, ab:{:3}, x:{:3}, l:{:3}]", 
                self.a, self.b, self.ab, self.x, self.s)        
@@ -429,7 +429,7 @@ pub fn mc_next(mset: &[usize], nums: &mut[usize]) -> bool {
     }
 
     if !changed {
-        for i in range(0, k) {
+        for i in (0 .. k) {
             nums[i] = mset[i]
         }
     }

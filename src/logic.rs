@@ -483,7 +483,7 @@ pub fn frank(colored_mana: usize, cmc: usize) -> Table {
     for turn in closed(1, 7).iter() { t1.set(0, turn as usize, I32(turn)) };
 
     let manas = vec!(16, 17, 18);
-    let mut lines = manas.iter().map(|l| {
+    let lines = manas.iter().map(|l| {
         let f = 10.0f64;
         (40, *l, 0, (f-1.0)/f) 
     }).enumerate();

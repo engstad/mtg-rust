@@ -3,6 +3,10 @@
 #![allow(dead_code)]
 #![feature(slicing_syntax)]
 #![feature(unboxed_closures)]
+#![feature(core)]
+#![feature(collections)] 
+#![feature(path)]
+#![feature(io)]
 
 extern crate regex;
 extern crate curl;

@@ -1,4 +1,10 @@
 #![feature(slicing_syntax)]
+#![feature(main)]
+#![feature(io)]
+#![feature(os)]
+#![feature(path)]
+#![feature(core)]
+#![feature(collections)]
 
 extern crate mtg;
 
@@ -10,7 +16,7 @@ use mtg::table::Table;
 use mtg::table::TableElem::{LStr, RStr, U32 /*, I32, Empty */};
 use mtg::mtgjson::{fetch_set, fetch_img};
 use mtg::interval::*;
-use std::io::File;
+use std::old_io::File;
 use std::iter::repeat;
 
 #[inline(always)]
@@ -46,11 +52,9 @@ fn main() {
                 // !c.colors.iter().any(|s| *s == mtg::colors::U) &&
                 // !c.colors.iter().any(|s| *s == mtg::colors::B) &&
                 !c.colors.iter().any(|s| *s == mtg::colors::Color::G) &&
-                // !c.colors.iter().any(|s| *s == mtg::colors::R) &&                
-                c.colors.iter().any(|s| (*s == mtg::colors::Color::R ||
-                                         *s == mtg::colors::Color::B ||
-                                         *s == mtg::colors::Color::U)) &&
-                c.card_types.iter().any(|s| *s == "Sorcery") &&
+                !c.colors.iter().any(|s| *s == mtg::colors::Color::W) &&
+		c.mana_cost.cmc() <= 2 &&
+                c.card_types.iter().any(|s| *s == "Sorcery" || *s == "Instant") &&
                 true
             {
                 for _ in range(0, width).iter() { print!("=") } println!("");
@@ -71,7 +75,7 @@ fn main() {
                     
                     let mut f = File::create(&Path::new(format!("pics/{}-{}.jpg", 
                                                                 c.expansion, c.image_name)));
-                    match f.write(jpg.as_slice()) {
+                    match f.write_all(jpg.as_slice()) {
                         Ok(()) => (), 
                         Err(s) => { println!("Couldn't write JPG file: {}", s); return () }
                     }

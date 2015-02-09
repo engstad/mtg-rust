@@ -3,7 +3,7 @@ use mana::Mana;
 use colors::Color::{self, U,W,B,R,G,C};
 use rustc_serialize::json;
 
-#[derive(Copy, Clone, Show, PartialEq, Eq, PartialOrd, Ord, RustcDecodable)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, RustcDecodable)]
 pub enum LandType
 {
 	BasicLand,
@@ -59,7 +59,7 @@ impl LandCardInfo {
                                    tgt.produces.iter().any(|&tgt_clr| tgt_clr == color) && // target can produce color
                                    tgt.subtypes.iter()
                                      .any(|tgt_subtype| self.produces.iter()
-                                          .any(|&src_clr| tgt_subtype.as_slice() == basic(src_clr)))) {
+                                          .any(|&src_clr| *tgt_subtype == basic(src_clr)))) {
                     acc + color.source()
                 }
                 else {
@@ -101,9 +101,13 @@ impl LandCardInfo {
 pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db LandCardInfo, u32)>
 {
     lands.split('\n').filter_map(|line| { 
-        let caps:Vec<&str> = line.trim().splitn(1, ' ').collect(); 
+        let line = line.trim();
+        let caps:Vec<&str> = line.splitn(1, ' ').collect(); 
 
-        if caps.len() != 2 { return None }
+        if caps.len() != 2 { 
+            println!("NO SPACES: {}", line);
+            return None 
+        }
 
         let l0 = caps[0].len();
         let n = if l0 > 1 && caps[0].chars().last().unwrap() == 'x' {
@@ -116,12 +120,12 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
                                      nm.short == caps[1]);
         
         match (n, l) {
-            (Some(n), Some(l)) => Some((l, n)), 
-            (None, Some(l)) => {
+            (Ok(n), Some(l)) => Some((l, n)), 
+            (Err(_), Some(l)) => {
                 println!("Could not parse count on '{}': {}", l.name, caps[0]);
                 None
             },
-            (Some(_), None) => {
+            (Ok(_), None) => {
                 println!("Could not find card named '{}' in database", caps[1]);
                 None
             },
@@ -135,7 +139,7 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
 
 pub fn analyze(deck: &str) -> u32
 {
-    use std::io::File;
+    use std::old_io::File;
     
     let text = include_str!("lands.json");
     let db:Vec<LandCardInfo> = json::decode(text).unwrap();
@@ -147,7 +151,8 @@ pub fn analyze(deck: &str) -> u32
 
     //println!("=========================\n{}================", deck);
 
-    let ls = parse_lands(deck.as_slice(), &db);    
+    let mut ls : Vec<(&LandCardInfo, u32)> = parse_lands(&*deck, &db);
+    ls.sort_by(|&a, &b| a.0.landtype.cmp(&b.0.landtype));    
 
     {
         use table::{Table, left, right};

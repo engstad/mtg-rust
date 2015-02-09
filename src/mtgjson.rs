@@ -6,7 +6,7 @@ use rustc_serialize::json;
 use mana::Mana;
 use colors::Color;
 
-#[derive(Show, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Card {
     pub card_name   : String,
     pub mana_cost   : Mana,
@@ -51,7 +51,7 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
 
     let rstr = String::from_utf8_lossy(resp.get_body());
 
-    let json = json::Json::from_str(rstr.as_slice());
+    let json = json::Json::from_str(&*rstr);
 
     fn trim(s : &str) -> &str {
         let l = s.len();

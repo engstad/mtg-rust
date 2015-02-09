@@ -13,10 +13,10 @@ pub fn pow_acc(x:i64, n:i64, acc:i64) -> i64
     }
 	else 
 	{
-		let mut res = 1_i64;
-		for _ in range(0, n)
-		{
-			res *= x as i64;
+		let mut res:i64 = 1;
+        for _ in (0..n)
+        {
+			res *= x
 		}
 		return res;
 	}
@@ -40,7 +40,7 @@ pub fn c(n: u64, k: u64) -> f64 {
 
 		let mut res:f64 = 1.0;
 
-		for j in range(0, k) {
+		for j in (0..k) {
 			let num:f64 = (n - j).to_f64().unwrap();
 			let den:f64 = (j + 1).to_f64().unwrap();
 			res = (res * num) / den;
@@ -63,7 +63,7 @@ pub fn ch(n: u64, k: u64) -> u64 {
 
 		let mut res = 1u64;
 
-		for j in range(0, k)
+		for j in (0..k)
 		{
 			let num = n - j;
 			let den = j + 1;
