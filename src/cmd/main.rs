@@ -2,6 +2,7 @@
 #![feature(main)]
 #![feature(io)]
 #![feature(os)]
+#![feature(env)]
 #![feature(path)]
 #![feature(core)]
 #![feature(collections)]
@@ -28,7 +29,9 @@ fn rep(c: char, s: usize) -> String {
 fn main() {
     //use interval::closed;
 
-    let args = std::os::args();
+    //let args = std::os::args();
+
+    let args : Vec<String> = std::env::args().map(|x| x.into_string().unwrap_or("".to_string())).collect();
 
     if args.len() == 1 || (args.len() == 2 && (args[1] == "dump" || args[1] == "fetch")) {
         let mut cs = vec![];
@@ -47,7 +50,7 @@ fn main() {
         let fetch_images = args.len() == 2 && args[1] == "fetch";
         let width = 60;
         for c in cs.iter() {
-            if // c.sub_types.iter().any(|s| s[] == "God") &&
+            if //c.sub_types.iter().any(|s| *s == "God") &&
                 !c.colors.iter().any(|s| *s == mtg::colors::Color::W) &&
                 // !c.colors.iter().any(|s| *s == mtg::colors::U) &&
                 // !c.colors.iter().any(|s| *s == mtg::colors::B) &&
