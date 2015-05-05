@@ -1,0 +1,12 @@
+5 Island
+3 Dismal Backwater
+3 Polluted Delta
+3 Temple of Deceit
+3 Temple of Epiphany
+2 Radiant Fountain
+2 Swamp
+2 Urborg, Tomb of Yawgmoth
+1 Bloodfell Caves
+1 Bloodstained Mire
+1 Mountain
+1 Swiftwater Cliffs

@@ -1,4 +1,5 @@
-use std::num::Int;
+use num::Num;
+use num::One;
 
 #[derive(Clone)]
 enum IntervalType { Open, Closed, Range, OpenClosed }
@@ -39,11 +40,11 @@ pub fn open_closed<A:Ord>(a: A, b: A) -> Interval<A> {
     Interval { start:min, end:max, rtype:IntervalType::OpenClosed }
 }
 
-impl<A : Ord + Clone + Int> Interval<A> {
+impl<A : Ord + Copy + Num> Interval<A> {
     pub fn iter<'a>(&'a self) -> IntervalIter<'a, A> {
         match self.rtype {
             IntervalType::Range | IntervalType::Closed => IntervalIter { state : self.start.clone(), range : self },
-            IntervalType::Open | IntervalType::OpenClosed => IntervalIter { state : self.start + Int::one(), range : self }
+            IntervalType::Open | IntervalType::OpenClosed => IntervalIter { state : self.start + One::one(), range : self }
         }
     }
 }
@@ -53,7 +54,7 @@ pub struct IntervalIter<'a, A:'a> {
     range: &'a Interval<A>,
 }
 
-impl<'a, A : Ord + Clone + Int> Iterator for IntervalIter<'a,A> {
+impl<'a, A : Ord + Copy + Num> Iterator for IntervalIter<'a,A> {
     type Item = A;
 
     fn next(&mut self) -> Option<A> {
@@ -61,7 +62,7 @@ impl<'a, A : Ord + Clone + Int> Iterator for IntervalIter<'a,A> {
             IntervalType::Range | IntervalType::Open => 
                 if self.state < self.range.end {
                     let result = self.state.clone();
-                    self.state = self.state + Int::one();
+                    self.state = self.state + One::one();
                     Some(result)
                 } else {
                     None
@@ -69,7 +70,7 @@ impl<'a, A : Ord + Clone + Int> Iterator for IntervalIter<'a,A> {
             IntervalType::Closed | IntervalType::OpenClosed =>
                 if self.state <= self.range.end {
                     let result = self.state.clone();
-                    self.state = self.state + Int::one();
+                    self.state = self.state + One::one();
                     Some(result)
                 } else {
                     None

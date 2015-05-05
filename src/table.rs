@@ -1,12 +1,14 @@
 use std::iter::repeat;
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, PartialOrd)]
 pub enum TableElem {
     Empty,
     LStr(String),
     RStr(String),
     I32(i32),
-    U32(u32)
+    U32(u32),
+    F32(f32),
+    F64(f64)
 }
 
 impl TableElem {
@@ -16,7 +18,9 @@ impl TableElem {
             TableElem::U32(u) => u.to_string(),
             TableElem::Empty => "".to_string(),
             TableElem::LStr(ref s) => s.to_string(),
-            TableElem::RStr(ref s) => s.to_string()
+            TableElem::RStr(ref s) => s.to_string(),
+            TableElem::F32(r) => r.to_string(),
+            TableElem::F64(r) => r.to_string()
         }
     }
 }
@@ -74,9 +78,11 @@ impl Table {
         for line in self.rows.iter() {
             for (c, elem) in line.iter().enumerate() {
                 match *elem {
-                    TableElem::I32(i)     => print!("{:w$} ", i,           w=width[c]),
-                    TableElem::U32(u)    => print!("{:w$} ", u,           w=width[c]),
-                    TableElem::Empty      => print!("{:>w$} ", "-",        w=width[c]),
+                    TableElem::I32(i)      => print!("{:w$} ", i,           w=width[c]),
+                    TableElem::U32(u)      => print!("{:w$} ", u,           w=width[c]),
+                    TableElem::F32(f)      => print!("{:w$} ", f,           w=width[c]),
+                    TableElem::F64(f)      => print!("{:w$} ", f,           w=width[c]),
+                    TableElem::Empty       => print!("{:>w$} ", "-",        w=width[c]),
                     TableElem::LStr(ref s) => print!("{:<w$} ", s.to_string(), w=width[c]),
                     TableElem::RStr(ref s) => print!("{:>w$} ", s.to_string(), w=width[c])
                 }
@@ -140,7 +146,7 @@ impl Table {
 
         tex.begin("figure");
         tex.begin("center");
-        tex.begin_opt("tabular", repeat("c").take(self.rows[0].len()).collect::<String>().as_slice());
+        tex.begin_opt("tabular", &(0..self.rows[0].len()).map({|_| "c"}).collect::<String>());
         
         for (r, line) in self.rows.iter().enumerate() {
             if r == 0 { tex.cmd("toprule") }
@@ -150,9 +156,11 @@ impl Table {
             
             for (c, elem) in line.iter().enumerate() {
                 match *elem {
-                    TableElem::I32(i)     => print!("{:w$}", i,           w=width[c]),
-                    TableElem::U32(u)    => print!("{:w$}", u,           w=width[c]),
-                    TableElem::Empty      => print!("{:>w$}", "\\cdots",        w=width[c]),
+                    TableElem::I32(i)      => print!("{:w$}", i,           w=width[c]),
+                    TableElem::U32(u)      => print!("{:w$}", u,           w=width[c]),
+                    TableElem::F32(f)      => print!("{:w$}", f,           w=width[c]),
+                    TableElem::F64(f)      => print!("{:w$}", f,           w=width[c]),
+                    TableElem::Empty       => print!("{:>w$}", "\\cdots",        w=width[c]),
                     TableElem::LStr(ref s) => print!("{:<w$}", s.to_string(), w=width[c]),
                     TableElem::RStr(ref s) => print!("{:>w$}", s.to_string(), w=width[c])
                 }

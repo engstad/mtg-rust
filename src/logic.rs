@@ -24,7 +24,7 @@ fn mull_rule(hand_size: usize) -> (usize, usize) {
 
 mod single {
     use pile::{Pile, LandPile, ColoredPile};
-    use std::iter::{range_inclusive, AdditiveIterator};
+    use std::iter::range_inclusive;
     use prob;
     use interval::closed;
 
@@ -36,7 +36,7 @@ mod single {
             ColoredPile::iter(draws)
                 .filter(|draw| deck.has(draw) && goal(hand + *draw))
                 .map(|draw| deck.prob_draw(&draw))
-                .sum()
+                .sum::<f64>()
         } else {
             prob::cond(goal(hand))
         }
@@ -52,7 +52,7 @@ mod single {
         // Probability of keeping 
         let keep = range_inclusive(lands_min, lands_max)
             .map(|lands| deck.prob_land(lands, hand_size - lands))
-            .sum();
+            .sum::<f64>();
         
         // Probability of casting (where we auto-fail if we don't have the lands)
         let cast = ColoredPile::iter(hand_size)
@@ -60,7 +60,7 @@ mod single {
             .filter(|hand| deck.has(hand))
             .map(|hand| (deck.prob_draw(&hand) * 
                          draw(hand, draws, deck - hand, |g| goal(g))))
-            .sum();
+            .sum::<f64>();
 
         // So cast * keep = chance of reaching goals, *given* no mulligan.
         (keep, cast)
@@ -96,15 +96,22 @@ mod single {
             }
         }
         return 0
-    }        
+    }
+
+    pub fn prob_color_screwed(lands: usize, colored: usize, deck: usize, cmc: usize, colored_mana: usize) -> String {
+        let deck0 = ColoredPile::new(lands, 0, deck-lands);
+        let res0 = turn0(deck0, cmc-1, |hand: ColoredPile| { hand.colored() >= colored_mana && hand.lands() >= cmc });
+        let deck1 = ColoredPile::new(colored, lands-colored, deck-lands);
+        let res1 = turn0(deck1, cmc-1, |hand: ColoredPile| { hand.colored() >= colored_mana && hand.lands() >= cmc });
+        format!("{:.1}%", res1/res0*100.0)
+    }
 }
 
 // ================================================================================
 
 pub mod dual {
     use pile::{Pile, LandPile, DualPile};
-    use std::iter::{range_inclusive, AdditiveIterator};
-    use std::num::Float;
+    use std::iter::range_inclusive;
     use prob;
     use interval::closed;
 
@@ -115,7 +122,7 @@ pub mod dual {
             DualPile::iter(draws)
                 .filter(|draw| deck.has(draw) && goal(hand + *draw))
                 .map(|draw| deck.prob_draw(&draw))
-                .sum()
+                .sum::<f64>()
         } else {
             prob::cond(goal(hand))
         }
@@ -134,7 +141,7 @@ pub mod dual {
             // Probability of keeping 
             let keep = range_inclusive(lands_min, lands_max)
                 .map(|lands| deck.prob_land(lands, hand_size - lands))
-                .sum();
+                .sum::<f64>();
             
             // Probability of casting
             let cast = DualPile::iter(hand_size)
@@ -142,7 +149,7 @@ pub mod dual {
                 .filter(|hand| deck.has(hand))
                 .map(|hand| deck.prob_draw(&hand) * draw(hand, draws, deck - hand, 
                                                  |g| goal(g)))
-                .sum();
+                .sum::<f64>();
 
             succ += mull * (cast * keep); 
             mull *= 1.0 - keep;
@@ -187,7 +194,7 @@ pub mod dual {
 
 mod gen {
     use pile::{Pile, LandPile, GenPile};
-    use std::iter::{range_inclusive, AdditiveIterator};
+    use std::iter::range_inclusive;
     use prob;
 
     fn draw<G>(hand: GenPile, draws: usize, deck: GenPile, goal: G) -> f64 
@@ -195,9 +202,9 @@ mod gen {
     {
         if draws > 0 {
             deck.subsets(draws).iter()
-                .filter(|&:&draw| goal(hand.clone() + draw.clone()))
-                .map(|&:draw| deck.prob_draw(draw))
-                .sum()
+                .filter(|&draw| goal(hand.clone() + draw.clone()))
+                .map(|draw| deck.prob_draw(draw))
+                .sum::<f64>()
         } else {
             prob::cond(goal(hand)) 
         }
@@ -215,7 +222,7 @@ mod gen {
             // Probability of keeping 
             let keep = range_inclusive(lands_min, lands_max)
                 .map(|lands| deck.prob_land(lands, hand_size - lands))
-                .sum();
+                .sum::<f64>();
             
             // Probability of casting
             let cast = deck.subsets(hand_size).iter()
@@ -228,7 +235,7 @@ mod gen {
                     };
                     d0 * p0
                 })
-                .sum();
+                .sum::<f64>();
             
             succ += mull * cast;
             mull *= 1.0 - keep;
@@ -284,7 +291,7 @@ pub fn summary(lands: usize, deck: usize, uncolored_lands: usize) {
                 let arate = (amana as f64) / (amana + bmana) as f64;
                 let cmc = cmana + cless;
                 let draws = cmc - 1;
-                let goal = |&: hand: DualPile| { 
+                let goal = |hand: DualPile| { 
                     
                     let a_left = if amana > hand.a { amana - hand.a } else { 0 };
                     let b_left = if bmana > hand.b { bmana - hand.b } else { 0 };
@@ -308,7 +315,7 @@ pub fn summary(lands: usize, deck: usize, uncolored_lands: usize) {
     }
     
     println!("");
-    table.print(format!("{} lands, {} colorless", lands, uncolored_lands).as_slice());
+    table.print(&format!("{} lands, {} colorless", lands, uncolored_lands));
 }
 
 fn pm(colored_mana:usize, cmc:usize) -> String {
@@ -339,7 +346,7 @@ pub fn summary_c(lands: usize, deck: usize) {
         for cless in closed(0, 7).iter() {                     
             let cmc = cmana + cless;
             let draws = cmc - 1;
-            let goal = |&: hand: ColoredPile| { 
+            let goal = |hand: ColoredPile| { 
                 let ok = hand.colored() >= cmana // colors okay
                     && hand.lands() >= cmc; // enough lands for cmc
                 
@@ -355,8 +362,38 @@ pub fn summary_c(lands: usize, deck: usize) {
     }
     
     println!("");
-    table.print(format!("{} lands", lands).as_slice());
+    table.print(&format!("{} lands", lands));
 }
+
+pub fn summary_perc(lands: usize, colored_lands: usize, deck: usize) {
+    use interval::closed;
+
+    // Making my adjusted tables
+    let mut table = Table::new(5, 9);
+    
+    {
+        table.set(0, 0, LStr(format!("{}/{}", lands, deck)));
+        table.set(0, 1, RStr("--".to_string()));
+        for cless in closed(1, 7).iter() { 
+            table.set(0, (1 + cless) as usize, I32(cless)) 
+        };
+    }
+    
+    for cmana in closed(1, 4).iter() {
+        let gstr = pm(cmana, cmana);
+        table.set(cmana, 0, RStr(gstr));                
+        
+        for cless in closed(0, 7).iter() {                     
+            let cmc = cmana + cless;
+            let res = single::prob_color_screwed(lands, colored_lands, deck, cmc, cmana);
+            table.set(cmana, 1+cless, RStr(res))
+        }
+    }
+    
+    println!("");
+    table.print(&format!("{}/{} lands", colored_lands, lands));
+}
+
 
 pub fn investigate()
 {
@@ -495,7 +532,7 @@ pub fn frank(colored_mana: usize, cmc: usize) -> Table {
         
         for turn in closed(1, 7).iter() {
             let draws = turn - 1 + e;
-            let goal = |&: hand: ColoredPile| { 
+            let goal = |hand: ColoredPile| { 
                 hand.colored() >= colored_mana // colors okay
                     && hand.lands() >= cmc // enough lands for cmc
                     && turn >= cmc // one land per turn

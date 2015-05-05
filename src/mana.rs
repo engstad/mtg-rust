@@ -48,8 +48,6 @@ impl Mana {
     }
     
     pub fn cmc(&self) -> u32 { 
-        use std::iter::AdditiveIterator;
-
         let v = self.as_vec();
         v.iter().map(|&x| x).sum()
     }

@@ -16,7 +16,10 @@ curl = "^0"
 rustc-serialize = "^0"
 
 [dependencies]
-regex = "^0"
+regex = "*"
+
+[dependencies]
+num = "*"
 
 # git = "https://github.com/engstad/curl-rust"
 # path = "../curl-rust"

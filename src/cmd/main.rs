@@ -1,23 +1,20 @@
-#![feature(slicing_syntax)]
 #![feature(main)]
-#![feature(io)]
-#![feature(os)]
-#![feature(env)]
-#![feature(path)]
-#![feature(core)]
 #![feature(collections)]
+#![feature(unicode)]
 
 extern crate mtg;
 
 //use mtg::logic::*;
-use mtg::logic::{show_card_text, investigate, frank_table, summary, summary_c, dual};
+use mtg::logic::{show_card_text, investigate, frank_table, summary, summary_c, summary_perc, dual};
 
 use mtg::pile::{DualPile};
 use mtg::table::Table;
 use mtg::table::TableElem::{LStr, RStr, U32 /*, I32, Empty */};
 use mtg::mtgjson::{fetch_set, fetch_img};
 use mtg::interval::*;
-use std::old_io::File;
+use std::path::Path;
+use std::fs::File;
+use std::io::Write;
 use std::iter::repeat;
 
 #[inline(always)]
@@ -31,10 +28,11 @@ fn main() {
 
     //let args = std::os::args();
 
-    let args : Vec<String> = std::env::args().map(|x| x.into_string().unwrap_or("".to_string())).collect();
+    let args : Vec<String> = std::env::args().map(|x| x.to_string()).collect();
 
     if args.len() == 1 || (args.len() == 2 && (args[1] == "dump" || args[1] == "fetch")) {
         let mut cs = vec![];
+        cs.push_all(&*fetch_set("DTK"));
         cs.push_all(&*fetch_set("FRF"));
         cs.push_all(&*fetch_set("KTK"));
         cs.push_all(&*fetch_set("M15"));
@@ -76,9 +74,12 @@ fn main() {
                 if fetch_images {
                     let jpg = fetch_img(&*c.expansion, &*c.image_name);
                     
-                    let mut f = File::create(&Path::new(format!("pics/{}-{}.jpg", 
-                                                                c.expansion, c.image_name)));
-                    match f.write_all(jpg.as_slice()) {
+                    let mut f = match File::create(&Path::new(&format!("pics/{}-{}.jpg", 
+                                                                       c.expansion, c.image_name))) {
+                        Ok(f) => f,
+                        Err(s) => { println!("Couldn't open JPG file: {}", s); return () }
+                    };
+                    match f.write_all(&jpg) {
                         Ok(()) => (), 
                         Err(s) => { println!("Couldn't write JPG file: {}", s); return () }
                     }
@@ -96,7 +97,7 @@ fn main() {
     else if args.len() == 2 && args[1] == "duals" {
 		let mut dp = Table::new (18, 2);
 		for a in closed(0, 17).iter() {
-			let goal = |&:hand: DualPile | {(hand.a >= 1) || hand.ab >= 1 };
+			let goal = |hand: DualPile | {(hand.a >= 1) || hand.ab >= 1 };
 			let td = DualPile::new (a, 17 - a, 0, 0, 23);
 			let rt = dual::turn0(td, 1, goal);
 			dp.set(a, 0, LStr(format !("{:?}", td)));
@@ -239,8 +240,11 @@ fn main() {
         dt.print("Action Dice")
     }
     else if args.len() == 2 {
-        let lands = mtg::standard::analyze(&*args[1]);
+        let (lands, colored_lands) = mtg::standard::analyze(&*args[1]);
         summary_c(lands as usize, 60);
+        for &clands in &colored_lands {
+            summary_perc(lands as usize, clands as usize, 60);
+        }
     }
     else if false {
         let l = 26;

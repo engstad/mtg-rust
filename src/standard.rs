@@ -2,6 +2,7 @@
 use mana::Mana;
 use colors::Color::{self, U,W,B,R,G,C};
 use rustc_serialize::json;
+use std::path::Path;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, RustcDecodable)]
 pub enum LandType
@@ -102,10 +103,13 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
 {
     lands.split('\n').filter_map(|line| { 
         let line = line.trim();
+
+        if line.len() == 0 { return None }
+        
         let caps:Vec<&str> = line.splitn(1, ' ').collect(); 
 
         if caps.len() != 2 { 
-            println!("NO SPACES: {}", line);
+            println!("warning: No space character in line: '{}' ({} parts)", line, caps.len());
             return None 
         }
 
@@ -137,17 +141,22 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
     }).collect()
 }
 
-pub fn analyze(deck: &str) -> u32
+pub fn analyze(deck: &str) -> (u32, Vec<u32>)
 {
-    use std::old_io::File;
+    use std::fs::File;
+    use std::io::Read;
     
     let text = include_str!("lands.json");
     let db:Vec<LandCardInfo> = json::decode(text).unwrap();
 
     let mut file = match File::open(&Path::new(deck)) {
-        Ok(f) => f, Err(e) => { println!("Error: {}", e); return 0; }
+        Ok(f) => f, Err(e) => { println!("Error: {}", e); return (0, vec![]); }
     };
-    let deck = file.read_to_string().unwrap_or("".to_string());
+    let mut deck = String::new();
+    match file.read_to_string(&mut deck) {
+       Ok(_) => (),
+       Err(e) => { println!("Error: {}", e); return (0, vec![]) }
+    };
 
     //println!("=========================\n{}================", deck);
 
@@ -205,5 +214,13 @@ pub fn analyze(deck: &str) -> u32
     println!("{:2} {:-30} {:-5}", refus.0, "Refugee lands".to_string(), refus.1.src());
     println!("{:2} {:-30} {:-5}", specs.0, "Special lands".to_string(), specs.1.src());
 
-    return lds.0;
+    let mut colors = vec![];
+
+    if lds.1.w > 0 { colors.push(lds.1.w) }
+    if lds.1.u > 0 { colors.push(lds.1.u) }
+    if lds.1.b > 0 { colors.push(lds.1.b) }
+    if lds.1.r > 0 { colors.push(lds.1.r) }
+    if lds.1.g > 0 { colors.push(lds.1.g) }
+    
+    return (lds.0, colors);
 }

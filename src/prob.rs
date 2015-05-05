@@ -1,4 +1,3 @@
-use std::num::*;
 
 //
 // First probabilities
@@ -41,8 +40,8 @@ pub fn c(n: u64, k: u64) -> f64 {
 		let mut res:f64 = 1.0;
 
 		for j in (0..k) {
-			let num:f64 = (n - j).to_f64().unwrap();
-			let den:f64 = (j + 1).to_f64().unwrap();
+			let num:f64 = (n - j) as f64;
+			let den:f64 = (j + 1) as f64;
 			res = (res * num) / den;
 		}
 

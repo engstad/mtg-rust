@@ -1,5 +1,4 @@
 use std::ops::{Index, Add, Sub};
-use std::iter::{AdditiveIterator};
 use std::fmt;
 use prob;
 use perm::MultiSubSetIterator;
@@ -131,8 +130,8 @@ impl Index<usize> for GenPile {
     type Output = usize;
 
     #[inline]
-    fn index<'a>(&'a self, i: &usize) -> &'a usize {
-        &self.e[*i]
+    fn index<'a>(&'a self, i: usize) -> &'a usize {
+        &self.e[i]
     }
 }
 
@@ -191,10 +190,10 @@ impl LandPile for GenPile {
     }
 }
 
-#[derive(Copy, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub enum Colored { C, N, S }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct ColoredPile {
     e: [usize; 3]
 }

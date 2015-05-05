@@ -62,7 +62,7 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
         match c {
             Some(j) => {
                 let n = j.to_string();
-                trim(&n[]).to_string()
+                trim(&n).to_string()
             },
             None => "".to_string()
         }
@@ -106,13 +106,13 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
                         let mana_cost = match card.find("manaCost") {
                             Some(c) => c.to_string(), None => "".to_string()
                         };                    
-                        Mana::parse(trim(&mana_cost[]))
+                        Mana::parse(trim(&mana_cost))
                     };
 
                     let colors = {
                         let cs = match card.find("colors") {
                             Some(c) => c.as_array().unwrap().iter()
-                                .map(|s| Color::parse(trim(s.to_string().as_slice()))).collect(),
+                                .map(|s| Color::parse(trim(&s.to_string()))).collect(),
                             None => vec![]
                         };                    
                         cs
