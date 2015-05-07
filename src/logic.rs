@@ -2,6 +2,8 @@ use std::iter::repeat;
 use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use table::Table;
 use table::TableElem::{LStr, RStr, I32, U32, Empty};
+use unicode_segmentation::UnicodeSegmentation;
+use unicode_width::UnicodeWidthStr;
 
 //
 // Mulligan Rule: 
@@ -577,12 +579,12 @@ pub fn show_card_text(txt : &str, width : usize)
     let mut indent = 0;
     let mut escape = false;
     let mut word : String = String::new();
-    for g in txt.graphemes(true) {
+    for g in UnicodeSegmentation::graphemes(txt, true) {
         if !escape {
             match g {
                 "\\" => escape = true,
                 " " => { 
-                    let l = word.width(false); 
+                    let l = UnicodeWidthStr::width(&*word); 
                     let brk = col + l >= width;
                     if brk { 
                         print!("\n"); 
@@ -595,7 +597,7 @@ pub fn show_card_text(txt : &str, width : usize)
                 },
                 ":" | "•" => {
                     word.push_str(g);
-                    indent = col + word.width(false) + 1;
+                    indent = col + UnicodeWidthStr::width(&*word) + 1;
                 },                
                 _ => word.push_str(g)
             }
@@ -603,7 +605,7 @@ pub fn show_card_text(txt : &str, width : usize)
             // let chars = "①②";
             match g {
                 "n" => { 
-                    let l = word.width(false);
+                    let l = UnicodeWidthStr::width(&*word);
                     if col + l >= width { 
                         print!("\n{}{}\n", 
                                repeat(' ').take(indent).collect::<String>(), word) 
@@ -620,7 +622,7 @@ pub fn show_card_text(txt : &str, width : usize)
             }
         } 
     }
-    if col + word.width(false) >= width { 
+    if col + UnicodeWidthStr::width(&*word) >= width { 
         if indent > width / 4 { indent = 4 }
         print!("\n{}", repeat(' ').take(indent).collect::<String>()) 
     }

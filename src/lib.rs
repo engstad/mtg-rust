@@ -5,12 +5,13 @@
 #![feature(collections)]
 
 #![feature(convert)]
-#![feature(unicode)]
 
 extern crate regex;
 extern crate curl;
 extern crate rustc_serialize;
 extern crate num;
+extern crate unicode_width;
+extern crate unicode_segmentation;
 
 pub mod prob;
 pub mod pile;

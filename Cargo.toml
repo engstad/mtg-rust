@@ -14,12 +14,10 @@ curl = "^0"
 
 [dependencies]
 rustc-serialize = "^0"
-
-[dependencies]
 regex = "*"
-
-[dependencies]
 num = "*"
+unicode-segmentation = "*"
+unicode-width = "*"
 
 # git = "https://github.com/engstad/curl-rust"
 # path = "../curl-rust"

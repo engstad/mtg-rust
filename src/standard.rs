@@ -106,7 +106,7 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
 
         if line.len() == 0 { return None }
         
-        let caps:Vec<&str> = line.splitn(1, ' ').collect(); 
+        let caps:Vec<&str> = line.splitn(2, ' ').collect(); 
 
         if caps.len() != 2 { 
             println!("warning: No space character in line: '{}' ({} parts)", line, caps.len());

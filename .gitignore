@@ -25,3 +25,4 @@ watch.sh
 !/examples/assets/
 /bin/
 /pics/**
+/Cargo.lock

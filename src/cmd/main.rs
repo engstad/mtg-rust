@@ -1,8 +1,8 @@
 #![feature(main)]
 #![feature(collections)]
-#![feature(unicode)]
 
 extern crate mtg;
+extern crate unicode_segmentation;
 
 //use mtg::logic::*;
 use mtg::logic::{show_card_text, investigate, frank_table, summary, summary_c, summary_perc, dual};
@@ -16,6 +16,8 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Write;
 use std::iter::repeat;
+
+use unicode_segmentation::UnicodeSegmentation;
 
 #[inline(always)]
 fn rep(c: char, s: usize) -> String {
@@ -61,7 +63,7 @@ fn main() {
                 for _ in range(0, width).iter() { print!("=") } println!("");
                 println!("[{:3}] {:40} {:6}\n({})   {:40} {}", 
                          c.expansion, c.card_name, c.mana_cost.pretty(), 
-                         c.rarity.graphemes(false).next().unwrap_or("?"),
+                         UnicodeSegmentation::graphemes(&*c.rarity, false).next().unwrap_or("?"),
                          c.card_type, 
                          if c.power.len() > 0 { format!("{}/{}", c.power, c.toughness) } 
                          else { "".to_string() });
