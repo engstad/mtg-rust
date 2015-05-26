@@ -27,7 +27,8 @@ pub trait Pile : Add + Sub {
     fn total(&self) -> usize {
         self.all()
             .iter()
-            .map(|&k| self.get(k)).sum()
+            .map(|&k| self.get(k))
+            .sum()
     }
 
     fn has(&self, other: &Self) -> bool {
