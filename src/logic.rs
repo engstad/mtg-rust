@@ -1,3 +1,5 @@
+#![feature(core)]
+
 use std::iter::repeat;
 use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
 use table::Table;
