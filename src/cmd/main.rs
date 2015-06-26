@@ -1,5 +1,4 @@
-#![feature(main)]
-#![feature(collections)]
+#![feature(vec_push_all)]
 
 extern crate mtg;
 extern crate unicode_segmentation;
@@ -24,7 +23,7 @@ fn rep(c: char, s: usize) -> String {
     repeat(c).take(s).collect()
 }
 
-#[main]
+// #[main]
 fn main() {
     //use interval::closed;
 

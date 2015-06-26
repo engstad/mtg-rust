@@ -1,9 +1,10 @@
 #![crate_type = "lib"]
 
 #![allow(dead_code)]
-//#![feature(core)]
-//#![feature(collections)]
-//#![feature(convert)]
+#![feature(iter_arith)]
+#![feature(convert)]
+#![feature(vec_push_all)]
+#![feature(range_inclusive)]
 
 extern crate regex;
 extern crate curl;
