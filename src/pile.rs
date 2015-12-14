@@ -3,10 +3,23 @@ use std::fmt;
 use prob;
 use perm::MultiSubSetIterator;
 
+pub trait Zero { fn zero() -> Self; }
+
+impl Zero for usize { fn zero() -> usize { 0 } }
+impl Zero for u32 { fn zero() -> u32 { 0 } }
+impl Zero for f64 { fn zero() -> f64 { 0.0 } }
+
+pub fn sum<I, S>(i: I) -> S where
+    I: Iterator,
+    S: Add<I::Item, Output=S> + Zero
+{
+    i.fold(S::zero(), |s, e| s + e)
+}
+
 //
 // A Pile is like a key-value map
 //
-pub trait Pile : Add + Sub {
+pub trait Pile : Add + Sub + Sized {
     type Key : Copy;
 
     fn all<'a>(&'a self) -> Vec<Self::Key>;
@@ -25,10 +38,9 @@ pub trait Pile : Add + Sub {
     }    
 
     fn total(&self) -> usize {
-        self.all()
+        sum(self.all()
             .iter()
-            .map(|&k| self.get(k))
-            .sum()
+            .map(|&k| self.get(k)))
     }
 
     fn has(&self, other: &Self) -> bool {
@@ -162,7 +174,7 @@ impl Iterator for GenPile {
             Some(res)
         } else {
             let len = self.e.len();
-            for i in (1 .. len-1) {
+            for i in 1 .. len-1 {
                 if self.get(i) > 0 {
                     self.e[0] = self.get(i) - 1; 
                     self.e[i+1] += 1;
@@ -182,8 +194,8 @@ impl Iterator for GenPile {
 
 impl LandPile for GenPile {
     fn lands(&self) -> usize { 
-        self.e.iter().enumerate()
-            .map(|(i, v)| if (self.k.is_land)(i) { *v } else { 0 }).sum()
+        sum(self.e.iter().enumerate()
+            .map(|(i, v)| if (self.k.is_land)(i) { *v } else { 0 }))
     }
 
     fn spells(&self) -> usize { 
@@ -429,7 +441,7 @@ pub fn mc_next(mset: &[usize], nums: &mut[usize]) -> bool {
     }
 
     if !changed {
-        for i in (0 .. k) {
+        for i in 0..k {
             nums[i] = mset[i]
         }
     }

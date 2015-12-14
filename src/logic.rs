@@ -25,8 +25,7 @@ fn mull_rule(hand_size: usize) -> (usize, usize) {
 }
 
 mod single {
-    use pile::{Pile, LandPile, ColoredPile};
-    use std::iter::range_inclusive;
+    use pile::{Pile, LandPile, ColoredPile, sum};
     use prob;
     use interval::closed;
 
@@ -35,10 +34,10 @@ mod single {
         where G : Fn(ColoredPile)->bool
     {
         if draws > 0 {
-            ColoredPile::iter(draws)
+            sum(ColoredPile::iter(draws)
                 .filter(|draw| deck.has(draw) && goal(hand + *draw))
                 .map(|draw| deck.prob_draw(&draw))
-                .sum::<f64>()
+                )
         } else {
             prob::cond(goal(hand))
         }
@@ -52,17 +51,17 @@ mod single {
         let (lands_min, lands_max) = super::mull_rule(hand_size);
         
         // Probability of keeping 
-        let keep = range_inclusive(lands_min, lands_max)
-            .map(|lands| deck.prob_land(lands, hand_size - lands))
-            .sum::<f64>();
+        let keep = sum((lands_min .. lands_max + 1)
+                       .map(|lands| deck.prob_land(lands, hand_size - lands))
+                       );
         
         // Probability of casting (where we auto-fail if we don't have the lands)
-        let cast = ColoredPile::iter(hand_size)
-            .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
-            .filter(|hand| deck.has(hand))
-            .map(|hand| (deck.prob_draw(&hand) * 
-                         draw(hand, draws, deck - hand, |g| goal(g))))
-            .sum::<f64>();
+        let cast:f64 = sum(ColoredPile::iter(hand_size)
+                           .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
+                           .filter(|hand| deck.has(hand))
+                           .map(|hand| (deck.prob_draw(&hand) * 
+                                        draw(hand, draws, deck - hand, |g| goal(g))))
+                           );
 
         // So cast * keep = chance of reaching goals, *given* no mulligan.
         (keep, cast)
@@ -74,7 +73,7 @@ mod single {
         let mut mull = 1.0; // the chance we mulled before
         let mut succ = 0.0;
         
-        for hand_size in range_inclusive(4, 7).rev() {
+        for hand_size in (4..7+1).rev() {
             let (keep, cast) = intern(hand_size, deck, draws, |g| goal(g));
             succ += mull * (cast * keep); 
             mull *= 1.0 - keep;
@@ -112,8 +111,7 @@ mod single {
 // ================================================================================
 
 pub mod dual {
-    use pile::{Pile, LandPile, DualPile};
-    use std::iter::range_inclusive;
+    use pile::{Pile, LandPile, DualPile, sum};
     use prob;
     use interval::closed;
 
@@ -121,10 +119,10 @@ pub mod dual {
         where G : Fn(DualPile)->bool
     {
         if draws > 0 {
-            DualPile::iter(draws)
+            sum(DualPile::iter(draws)
                 .filter(|draw| deck.has(draw) && goal(hand + *draw))
                 .map(|draw| deck.prob_draw(&draw))
-                .sum::<f64>()
+                )
         } else {
             prob::cond(goal(hand))
         }
@@ -137,21 +135,21 @@ pub mod dual {
         let mut succ = 0.0;
         //let mut tally = 0.0;
 
-        for hand_size in range_inclusive(4, 7).rev() {
+        for hand_size in (4..7+1).rev() {
             let (lands_min, lands_max) = super::mull_rule(hand_size);
             
             // Probability of keeping 
-            let keep = range_inclusive(lands_min, lands_max)
-                .map(|lands| deck.prob_land(lands, hand_size - lands))
-                .sum::<f64>();
+            let keep:f64 = sum((lands_min..lands_max+1)
+                               .map(|lands| deck.prob_land(lands, hand_size - lands))
+                               );
             
             // Probability of casting
-            let cast = DualPile::iter(hand_size)
-                .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
-                .filter(|hand| deck.has(hand))
-                .map(|hand| deck.prob_draw(&hand) * draw(hand, draws, deck - hand, 
-                                                 |g| goal(g)))
-                .sum::<f64>();
+            let cast:f64 = sum(DualPile::iter(hand_size)
+                               .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
+                               .filter(|hand| deck.has(hand))
+                               .map(|hand| deck.prob_draw(&hand) * draw(hand, draws, deck - hand, 
+                                                                        |g| goal(g)))
+                               );
 
             succ += mull * (cast * keep); 
             mull *= 1.0 - keep;
@@ -195,18 +193,17 @@ pub mod dual {
 // ================================================================================
 
 mod gen {
-    use pile::{Pile, LandPile, GenPile};
-    use std::iter::range_inclusive;
+    use pile::{Pile, LandPile, GenPile, sum};
     use prob;
 
     fn draw<G>(hand: GenPile, draws: usize, deck: GenPile, goal: G) -> f64 
         where G : Fn(GenPile)->bool
     {
         if draws > 0 {
-            deck.subsets(draws).iter()
+            sum(deck.subsets(draws).iter()
                 .filter(|&draw| goal(hand.clone() + draw.clone()))
                 .map(|draw| deck.prob_draw(draw))
-                .sum::<f64>()
+                )
         } else {
             prob::cond(goal(hand)) 
         }
@@ -218,26 +215,27 @@ mod gen {
         let mut mull = 1.0;
         let mut succ = 0.0;
         
-        for hand_size in range_inclusive(4, 7).rev() {
+        for hand_size in (4..7+1).rev() {
             let (lands_min, lands_max) = super::mull_rule(hand_size);
             
             // Probability of keeping 
-            let keep = range_inclusive(lands_min, lands_max)
-                .map(|lands| deck.prob_land(lands, hand_size - lands))
-                .sum::<f64>();
+            let keep:f64 = sum((lands_min..lands_max+1)
+                               .map(|lands| deck.prob_land(lands, hand_size - lands))
+                               );
             
             // Probability of casting
-            let cast = deck.subsets(hand_size).iter()
-                .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
-                .map(|hand| {
-                    let d0 = deck.prob_draw(hand);
-                    let p0 = {
-                        let r = deck.clone() - hand.clone();
-                        draw(hand.clone(), draws, r, |g| goal(g))
-                    };
-                    d0 * p0
-                })
-                .sum::<f64>();
+            let cast:f64 =
+                sum(
+                    deck.subsets(hand_size).iter()
+                        .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
+                        .map(|hand| {
+                            let d0 = deck.prob_draw(hand);
+                            let p0 = {
+                                let r = deck.clone() - hand.clone();
+                                draw(hand.clone(), draws, r, |g| goal(g))
+                            };
+                            d0 * p0
+                        }));
             
             succ += mull * cast;
             mull *= 1.0 - keep;
@@ -444,8 +442,6 @@ pub fn investigate()
     }
     
     {
-        use std::iter::range_inclusive;
-        
         static A  :usize = 0;
         static B  :usize = 1;
         static C  :usize = 2;
@@ -468,14 +464,14 @@ pub fn investigate()
         
         let turn = 3;
 
-        for cmc2s in range_inclusive(2, 16) {
-            for s1 in range_inclusive(1, cmc2s-1) {
+        for cmc2s in (2..16+1) {
+            for s1 in (1..cmc2s) {
                 let s2 = cmc2s - s1;
                 
                 let mut best_p = 0.0;
                 let mut best_a = 0;
                 
-                for a in range_inclusive(0, 17) {
+                for a in (0..17+1) {
                     let b = 17 - a;
                     
                     let deck = GenPile::new(vec![a, b, 0,

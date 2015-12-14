@@ -10,10 +10,10 @@ name = "mtg"
 path = "src/lib.rs"
 
 [dependencies.curl]
-curl = "^0"
+curl = "*"
 
 [dependencies]
-rustc-serialize = "^0"
+rustc-serialize = "*"
 regex = "*"
 num = "*"
 unicode-segmentation = "*"

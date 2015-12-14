@@ -1,5 +1,3 @@
-#![feature(vec_push_all)]
-
 extern crate mtg;
 extern crate unicode_segmentation;
 
@@ -29,17 +27,21 @@ fn main() {
 
     //let args = std::os::args();
 
+    println!("Starting.");
+    
     let args : Vec<String> = std::env::args().map(|x| x.to_string()).collect();
 
     if args.len() == 1 || (args.len() == 2 && (args[1] == "dump" || args[1] == "fetch")) {
         let mut cs = vec![];
-        cs.push_all(&*fetch_set("DTK"));
-        cs.push_all(&*fetch_set("FRF"));
-        cs.push_all(&*fetch_set("KTK"));
-        cs.push_all(&*fetch_set("M15"));
-        cs.push_all(&*fetch_set("JOU"));
-        cs.push_all(&*fetch_set("BNG"));
-        cs.push_all(&*fetch_set("THS"));
+        let sets = ["DTK", "KTK", "M15", "JOU", "BNG", "THS"];
+
+        for s in &sets {
+            let set = fetch_set(s);
+            if set.len() == 0 {
+                println!("Didn't receive {}\n", s);
+            }
+            for c in set { cs.push(c) };
+        }
         
         cs.sort_by(|a, b| a.mana_cost.cmc().cmp(&b.mana_cost.cmc()));
         //cs.sort_by(|a, b| b.card_text.len().cmp(&a.card_text.len()));
@@ -55,7 +57,7 @@ fn main() {
                 // !c.colors.iter().any(|s| *s == mtg::colors::B) &&
                 !c.colors.iter().any(|s| *s == mtg::colors::Color::G) &&
                 !c.colors.iter().any(|s| *s == mtg::colors::Color::W) &&
-		c.mana_cost.cmc() <= 2 &&
+		        c.mana_cost.cmc() <= 2 &&
                 c.card_types.iter().any(|s| *s == "Sorcery" || *s == "Instant") &&
                 true
             {

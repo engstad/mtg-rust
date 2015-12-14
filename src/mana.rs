@@ -2,6 +2,7 @@ use colors::Color;
 use colors::Color::{W,U,B,R,G,C};
 use std::ops::{Add, Sub, Mul};
 use std::iter::repeat;
+use pile::sum;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct Mana {
@@ -49,7 +50,7 @@ impl Mana {
     
     pub fn cmc(&self) -> u32 { 
         let v = self.as_vec();
-        v.iter().map(|&x| x).sum()
+        sum(v.iter().map(|&x| x))
     }
 
     pub fn show(&self) -> String { 

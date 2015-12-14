@@ -43,6 +43,8 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
 
     // let str = res.read_to_string().unwrap();
 
+    println!("URL: {}", loc);
+    
     let resp = match http::handle().get(loc).exec() {
         Ok(r) => r, Err(_) => return vec![]
     };
@@ -69,10 +71,10 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
     }
 
     fn to_str_list(card : &json::Json, what : &str) -> Vec<String> {
-        let empty = vec![];
+        let empty:Vec<json::Json> = vec![];        
         let subtyps = match card.find(what) {
-            Some(t) => t.as_array().unwrap().as_slice(),
-            None => empty.as_slice()
+            Some(t) => t.as_array().unwrap(),
+            None => &empty
         };
         let subtypes = subtyps
             .iter()
@@ -147,8 +149,5 @@ pub fn fetch_img(set: &str, img: &str) -> Vec<u8>
 {
     let loc = format!("http://mtgimage.com/set/{}/{}.jpg", set, img);
     let resp = http::handle().get(loc).exec().unwrap();
-    //let rstr = String::from_utf8_lossy(resp.get_body());    
-    let mut res = Vec::new();
-    res.push_all(resp.get_body());
-    res
+    Vec::from(resp.get_body())
 }
