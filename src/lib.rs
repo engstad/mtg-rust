@@ -3,11 +3,11 @@
 #![allow(dead_code)]
 #![feature(iter_arith)]
 #![feature(convert)]
-#![feature(vec_push_all)]
 #![feature(range_inclusive)]
 
 extern crate regex;
-extern crate curl;
+//extern crate curl;
+extern crate hyper;
 extern crate rustc_serialize;
 extern crate num;
 extern crate unicode_width;

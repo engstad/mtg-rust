@@ -6,11 +6,11 @@ authors = ["Pal-Kristian Engstad <mrengstad@gmail.com>"]
 tags = []
 
 [lib]
-name = "mtg"
+name = "libmtg"
 path = "src/lib.rs"
 
-[dependencies.curl]
-curl = "^0"
+#[dependencies.curl]
+#curl = "^0"
 
 [dependencies]
 rustc-serialize = "^0"
@@ -18,6 +18,7 @@ regex = "*"
 num = "*"
 unicode-segmentation = "*"
 unicode-width = "*"
+hyper = "*"
 
 # git = "https://github.com/engstad/curl-rust"
 # path = "../curl-rust"

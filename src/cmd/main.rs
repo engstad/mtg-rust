@@ -1,16 +1,16 @@
 #![feature(vec_push_all)]
 
-extern crate mtg;
+extern crate libmtg;
 extern crate unicode_segmentation;
 
 //use mtg::logic::*;
-use mtg::logic::{show_card_text, investigate, frank_table, summary, summary_c, summary_perc, dual};
+use libmtg::logic::{show_card_text, investigate, frank_table, summary, summary_c, summary_perc, dual};
 
-use mtg::pile::{DualPile};
-use mtg::table::Table;
-use mtg::table::TableElem::{LStr, RStr, U32 /*, I32, Empty */};
-use mtg::mtgjson::{fetch_set, fetch_img};
-use mtg::interval::*;
+use libmtg::pile::{DualPile};
+use libmtg::table::Table;
+use libmtg::table::TableElem::{LStr, RStr, U32 /*, I32, Empty */};
+use libmtg::mtgjson::{fetch_set, fetch_img};
+use libmtg::interval::*;
 use std::path::Path;
 use std::fs::File;
 use std::io::Write;
@@ -33,30 +33,35 @@ fn main() {
 
     if args.len() == 1 || (args.len() == 2 && (args[1] == "dump" || args[1] == "fetch")) {
         let mut cs = vec![];
+	    cs.push_all(&*fetch_set("BFZ"));
+        cs.push_all(&*fetch_set("ORI"));
         cs.push_all(&*fetch_set("DTK"));
         cs.push_all(&*fetch_set("FRF"));
         cs.push_all(&*fetch_set("KTK"));
-        cs.push_all(&*fetch_set("M15"));
-        cs.push_all(&*fetch_set("JOU"));
-        cs.push_all(&*fetch_set("BNG"));
-        cs.push_all(&*fetch_set("THS"));
+        //cs.push_all(&*fetch_set("M15"));
+        //cs.push_all(&*fetch_set("JOU"));
+        //cs.push_all(&*fetch_set("BNG"));
+        //cs.push_all(&*fetch_set("THS"));
         
-        cs.sort_by(|a, b| a.mana_cost.cmc().cmp(&b.mana_cost.cmc()));
+        //cs.sort_by(|a, b| a.mana_cost.cmc().cmp(&b.mana_cost.cmc()));
         //cs.sort_by(|a, b| b.card_text.len().cmp(&a.card_text.len()));
+        cs.sort_by(|a, b| b.card_text.cmp(&a.card_text));
 
         println!("{} cards", cs.len());
 
         let fetch_images = args.len() == 2 && args[1] == "fetch";
         let width = 60;
         for c in cs.iter() {
-            if //c.sub_types.iter().any(|s| *s == "God") &&
-                !c.colors.iter().any(|s| *s == mtg::colors::Color::W) &&
-                // !c.colors.iter().any(|s| *s == mtg::colors::U) &&
-                // !c.colors.iter().any(|s| *s == mtg::colors::B) &&
-                !c.colors.iter().any(|s| *s == mtg::colors::Color::G) &&
-                !c.colors.iter().any(|s| *s == mtg::colors::Color::W) &&
-		c.mana_cost.cmc() <= 2 &&
-                c.card_types.iter().any(|s| *s == "Sorcery" || *s == "Instant") &&
+            if
+                // c.sub_types.iter().any(|s| *s == "God") &&
+                // !c.colors.iter().any(|s| *s == libmtg::colors::Color::W) &&
+                // !c.colors.iter().any(|s| *s == libmtg::colors::U) &&
+                // !c.colors.iter().any(|s| *s == libmtg::colors::B) &&
+                // !c.colors.iter().any(|s| *s == libmtg::colors::Color::G) &&
+                // !c.colors.iter().any(|s| *s == libmtg::colors::Color::W) &&
+		        // c.mana_cost.cmc() <= 2 &&
+                // c.card_types.iter().any(|s| *s == "Sorcery" || *s == "Instant") &&
+                c.card_types.iter().any(|s| *s == "Land") &&
                 true
             {
                 for _ in range(0, width).iter() { print!("=") } println!("");
@@ -74,11 +79,13 @@ fn main() {
 
                 if fetch_images {
                     let jpg = fetch_img(&*c.expansion, &*c.image_name);
+
+                    println!("Got {} bytes for {} :\n{}\n", jpg.len(), c.image_name, String::from_utf8(jpg.clone()).unwrap());
                     
                     let mut f = match File::create(&Path::new(&format!("pics/{}-{}.jpg", 
                                                                        c.expansion, c.image_name))) {
                         Ok(f) => f,
-                        Err(s) => { println!("Couldn't open JPG file: {}", s); return () }
+                        Err(s) => { println!("Couldn't create JPG file: {}", s); return () }
                     };
                     match f.write_all(&jpg) {
                         Ok(()) => (), 
@@ -92,7 +99,7 @@ fn main() {
     //    sdl_main(args[2].as_slice())
     //}
     //else 
-    else if args.len() == 2 && args[1] == "land"	{
+    else if args.len() == 2 && args[1] == "land" {
 		investigate()
     }
     else if args.len() == 2 && args[1] == "duals" {
@@ -124,14 +131,14 @@ fn main() {
     else if args.len() == 3 && args[1] == "pow" {
         let a = args[2].parse().unwrap_or(0i32);
         for k in closed(0, 10).iter() {
-            println!("{}^{} = {}", a, k, mtg::prob::pow_acc(a as i64, k, 1));
+            println!("{}^{} = {}", a, k, libmtg::prob::pow_acc(a as i64, k, 1));
         }
     }
     else if args.len() == 4 && args[1] == "C" {
         let a:u64 = args[2].parse().unwrap_or(0);
         let b:u64 = args[3].parse().unwrap_or(1);
         
-        println!("c({:3}, {:2}) = {:60.0}", a, b, mtg::prob::c(a, b));
+        println!("c({:3}, {:2}) = {:60.0}", a, b, libmtg::prob::c(a, b));
     }
     else if args.len() == 2 && args[1] == "dice" {
         /*
@@ -140,10 +147,10 @@ fn main() {
         for n in closed(2u, 10).iter() {
             let mut count = [0i, 0, 0, 0, 0, 0];
             
-            let num_diff = mtg::prob::pow(6, n as i32, 1) as u32;
+            let num_diff = libmtg::prob::pow(6, n as i32, 1) as u32;
             
             for p in range(0, num_diff).iter() {
-                let res = Vec::from_fn(n, |i| (p / mtg::prob::pow(6, i as i32, 1) as u32) % 6); // 0-5
+                let res = Vec::from_fn(n, |i| (p / libmtg::prob::pow(6, i as i32, 1) as u32) % 6); // 0-5
                 let mut freq = [0, 0, 0, 0, 0, 0];
                 for r in res.iter() { freq[*r] += 1 };
                 if freq[4] >= 2 { count[5] += 1 }
@@ -196,15 +203,15 @@ fn main() {
             //println!("d({},{},{})=?", d, n, b);
             let r = if n == 0 { 0 } 
             else if d == 0 {
-                mtg::prob::pow_acc(6, n as i64, 1) as u64 - 
+                libmtg::prob::pow_acc(6, n as i64, 1) as u64 - 
                     closed(1u64, 5).iter().fold(0u64, |acc, od| {
                         acc + doubles(od, n, b)
                     })
             }
             else {
                 closed(2u64, n).iter().fold(0u64, |acc, k| {
-                    let c:u64 = mtg::prob::ch(n, k);
-                    let p:u64 = mtg::prob::pow_acc(b as i64, (n-k) as i64, 1) as u64;
+                    let c:u64 = libmtg::prob::ch(n, k);
+                    let p:u64 = libmtg::prob::pow_acc(b as i64, (n-k) as i64, 1) as u64;
                     //println!("k: {} -- (c, p) = ({}, {})", k, c, p);
                     let q:u64 = if n >= k + 2 && d < 5 && b > 1 {
                         closed(d+1, 5).iter()
@@ -230,18 +237,18 @@ fn main() {
         for n in closed(2, 10).iter() {
             dt.set(n - 1, 0, U32(n as u32));
             for i in closed(0, 5).iter() {
-                let r = doubles(i as u64, n as u64, 5) as f64 / mtg::prob::pow_acc(6, n as i64, 1) as f64;
+                let r = doubles(i as u64, n as u64, 5) as f64 / libmtg::prob::pow_acc(6, n as i64, 1) as f64;
                 dt.set(n - 1, 1 + i, LStr(format!("{:4.0}% ", r * 100.0)));
             }
             for i in closed(1, 5).iter() {
-                let r = closed(i, 5).iter().fold(0.0, |acc, c| acc + doubles(c as u64, n as u64, 5) as f64 / mtg::prob::pow_acc(6, n as i64, 1) as f64);
+                let r = closed(i, 5).iter().fold(0.0, |acc, c| acc + doubles(c as u64, n as u64, 5) as f64 / libmtg::prob::pow_acc(6, n as i64, 1) as f64);
                 dt.set(n - 1, 7 + i, LStr(format!("{:4.0}% ", r * 100.0)));
             }            
         }
         dt.print("Action Dice")
     }
     else if args.len() == 2 {
-        let (lands, colored_lands) = mtg::standard::analyze(&*args[1]);
+        let (lands, colored_lands) = libmtg::standard::analyze(&*args[1]);
         summary_c(lands as usize, 60);
         for &clands in &colored_lands {
             summary_perc(lands as usize, clands as usize, 60);
@@ -251,7 +258,7 @@ fn main() {
         let l = 26;
         let d = 60;
         for u in closed(0, 4).iter() {
-            mtg::logic::summary(l, d, u)
+            libmtg::logic::summary(l, d, u)
         }
     }
 }

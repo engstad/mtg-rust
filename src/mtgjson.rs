@@ -1,6 +1,7 @@
-//use hyper::Url;
-//use hyper::client::Request;
-use curl::http;
+
+use hyper::Client;
+use hyper::header::Connection;
+use std::io::Read;
 
 use rustc_serialize::json;
 use mana::Mana;
@@ -24,32 +25,33 @@ pub struct Card {
 }
 
 pub fn fetch_set(set : &str) -> Vec<Card> {
-    // Creating an outgoing request.
     let loc = format!("http://mtgjson.com/json/{}.json", set);
 
-    // let url = match Url::parse(loc.as_slice()) {
-    //     Ok(url) => url,
-    //     Err(e) => panic!("Invalid URL: {}", e)
-    // };
+    // Create a client.
+    let client = Client::new();
 
-    // let req = match Request::get(url) {
-    //     Ok(req) => req,
-    //     Err(err) => panic!("Failed to connect: {}", err)
-    // };
+    // Creating an outgoing request.
+    let mut res = client.get(&*loc)
+        // set a header
+        .header(Connection::close())
+        // let 'er go!
+        .send().unwrap();
 
-    // let mut res = req
-    //     .start().unwrap() // failure: Error writing Headers
-    //     .send().unwrap(); // failure: Error reading Response head.
+    // Read the Response.
+    let mut rstr = String::new();
+    res.read_to_string(&mut rstr).unwrap();
+    
+/*    
+    // Creating an outgoing request.
 
-    // let str = res.read_to_string().unwrap();
-
-    let resp = match http::handle().get(loc).exec() {
+    let <resp = match http::handle().get(loc).exec() {
         Ok(r) => r, Err(_) => return vec![]
     };
 
     if resp.get_code() != 200 { return vec![] }
 
     let rstr = String::from_utf8_lossy(resp.get_body());
+*/
 
     let json = json::Json::from_str(&*rstr);
 
@@ -146,9 +148,19 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
 pub fn fetch_img(set: &str, img: &str) -> Vec<u8>
 {
     let loc = format!("http://mtgimage.com/set/{}/{}.jpg", set, img);
-    let resp = http::handle().get(loc).exec().unwrap();
-    //let rstr = String::from_utf8_lossy(resp.get_body());    
-    let mut res = Vec::new();
-    res.push_all(resp.get_body());
-    res
+
+    // Create a client.
+    let client = Client::new();
+
+    // Creating an outgoing request.
+    let mut res = client.get(&*loc)
+        // set a header
+        .header(Connection::close())
+        // let 'er go!
+        .send().unwrap();
+
+    // Read the Response.
+    let mut ret = Vec::new();
+    res.read_to_end(&mut ret).unwrap();
+    ret
 }

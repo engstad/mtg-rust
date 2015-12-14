@@ -6,7 +6,7 @@ use perm::MultiSubSetIterator;
 //
 // A Pile is like a key-value map
 //
-pub trait Pile : Add + Sub {
+pub trait Pile : Add + Sub + Sized {
     type Key : Copy;
 
     fn all<'a>(&'a self) -> Vec<Self::Key>;
