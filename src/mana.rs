@@ -96,10 +96,8 @@ impl Mana {
     pub fn parse(s: &str) -> Mana {
         use regex::Regex;
 
-        let re = match Regex::new(r"\{([0-9]+|X|W|U|B|R|G|C)\}") {
-            Ok(r) => r,
-            Err(e) => panic!("{:?}", e)
-        };
+        let re = Regex::new(r"\{([0-9]+|X|W|U|B|R|G|C)\}").unwrap(); // Want to panic!() here if regex is wrong
+        
         let mut mana = Mana::zero();
         for cap in re.captures_iter(s) {
             let m = match cap.at(1) {

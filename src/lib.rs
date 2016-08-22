@@ -2,6 +2,7 @@
 
 #![allow(dead_code)]
 #![feature(inclusive_range_syntax)]
+#![feature(question_mark)]
 
 extern crate regex;
 //extern crate curl;

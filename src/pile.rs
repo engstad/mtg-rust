@@ -139,11 +139,11 @@ impl Index<usize> for GenPile {
 
 impl fmt::Debug for GenPile {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {        
-        try!(write!(fmt, "("));
+        write!(fmt, "(")?;
         for (i,v) in self.e.iter().enumerate() {
-            try!(write!(fmt, "{}", v));
+            write!(fmt, "{}", v)?;
             if i < self.e.len() - 1 {
-                try!(write!(fmt, ","))
+                write!(fmt, ",")?
             }
         }
         write!(fmt, ")")

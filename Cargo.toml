@@ -19,6 +19,7 @@ num = "*"
 unicode-segmentation = "*"
 unicode-width = "*"
 hyper = "*"
+itertools = "*"
 
 # git = "https://github.com/engstad/curl-rust"
 # path = "../curl-rust"

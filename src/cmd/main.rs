@@ -1,5 +1,6 @@
 extern crate libmtg;
 extern crate unicode_segmentation;
+extern crate itertools;
 
 //use mtg::logic::*;
 use libmtg::logic::{show_card_text, investigate, frank_table, summary_c, summary_perc, dual};
@@ -13,6 +14,7 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Write;
 use std::iter::repeat;
+use itertools::*;
 
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -57,17 +59,19 @@ fn main() {
 
         let fetch_images = args.len() == 2 && args[1] == "fetch";
         let width = 60;
-        for c in cs.iter() {
+        for c in cs.iter().sorted_by(|a, b|
+                                     match a.mana_cost.cmc().cmp(&b.mana_cost.cmc()) {
+                                         std::cmp::Ordering::Equal => a.rarity.cmp(&b.rarity),
+                                         d => d
+                                     }) {
             if
                 // c.sub_types.iter().any(|s| *s == "God") &&
-                // !c.colors.iter().any(|s| *s == libmtg::colors::Color::W) &&
-                // !c.colors.iter().any(|s| *s == libmtg::colors::Color::U) &&
-                !c.colors.iter().any(|s| *s == libmtg::colors::Color::B) &&
-                !c.colors.iter().any(|s| *s == libmtg::colors::Color::G) &&
-                !c.colors.iter().any(|s| *s == libmtg::colors::Color::R) &&
+                c.mana_cost.b == 0 &&
+                c.mana_cost.r == 0 &&
+                c.mana_cost.g == 0 &&
 		        // c.mana_cost.cmc() <= 2 &&
                 c.card_types.iter().any(|s| *s == "Creature") &&
-                (c.card_text.find("Flash").is_some() || c.card_text.find("flash").is_some()) &&
+                //(c.card_text.find("Flash").is_some() || c.card_text.find("flash").is_some()) &&
                 //c.card_types.iter().any(|s| *s == "Land") &&
                 // !c.super_types.iter().any(|s| *s == "Basic") &&
                 /*((c.card_text.find("{B}").is_some() || c.card_text.find("Swamp").is_some()) ||
@@ -76,13 +80,13 @@ fn main() {
                 !(c.card_text.find("{W}").is_some() || c.card_text.find("Plains").is_some()) &&
                 !(c.card_text.find("{G}").is_some() || c.card_text.find("Forest").is_some()) &&            */
                 //c.rarity == "Mythic" &&
-                // c.sub_types.iter().any(|s| *s == "Zombie") &&
+                c.sub_types.iter().any(|s| *s == "Spirit") &&
                 true
             {
                 for _ in range(0, width).iter() { print!("=") } println!("");
                 println!("[{:3}] {:40} {:6}\n({})   {:40} {}", 
                          c.expansion, c.card_name, c.mana_cost.pretty(), 
-                         UnicodeSegmentation::graphemes(&*c.rarity, false).next().unwrap_or("?"),
+                         UnicodeSegmentation::graphemes(c.rarity.short(), false).next().unwrap_or("?"),
                          c.card_type, 
                          if c.power.len() > 0 { format!("{}/{}", c.power, c.toughness) } 
                          else { "".to_string() });
