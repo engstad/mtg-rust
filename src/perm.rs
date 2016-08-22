@@ -47,7 +47,7 @@ impl<'a> Iterator for MultiSubSetIterator<'a> {
                         let s = if k + m > n { k + m - n } else { 0 };
                         let e = if k < m { k } else { m };
                         
-                        for i in (s .. e + 1).rev() {
+                        for i in (s...e).rev() {
                             let mut na = top.a.clone();
                             na[t] = i;
                             let new_top = Stack{ k:k-i, l:t, n:n-m, a:na };

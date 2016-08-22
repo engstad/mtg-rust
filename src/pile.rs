@@ -162,7 +162,7 @@ impl Iterator for GenPile {
             Some(res)
         } else {
             let len = self.e.len();
-            for i in (1 .. len-1) {
+            for i in 1 .. len-1 {
                 if self.get(i) > 0 {
                     self.e[0] = self.get(i) - 1; 
                     self.e[i+1] += 1;
@@ -429,7 +429,7 @@ pub fn mc_next(mset: &[usize], nums: &mut[usize]) -> bool {
     }
 
     if !changed {
-        for i in (0 .. k) {
+        for i in 0..k {
             nums[i] = mset[i]
         }
     }

@@ -26,7 +26,6 @@ fn mull_rule(hand_size: usize) -> (usize, usize) {
 
 mod single {
     use pile::{Pile, LandPile, ColoredPile};
-    use std::iter::range_inclusive;
     use prob;
     use interval::closed;
 
@@ -52,7 +51,7 @@ mod single {
         let (lands_min, lands_max) = super::mull_rule(hand_size);
         
         // Probability of keeping 
-        let keep = range_inclusive(lands_min, lands_max)
+        let keep = (lands_min...lands_max)
             .map(|lands| deck.prob_land(lands, hand_size - lands))
             .sum::<f64>();
         
@@ -74,7 +73,7 @@ mod single {
         let mut mull = 1.0; // the chance we mulled before
         let mut succ = 0.0;
         
-        for hand_size in range_inclusive(4, 7).rev() {
+        for hand_size in (4...7).rev() {
             let (keep, cast) = intern(hand_size, deck, draws, |g| goal(g));
             succ += mull * (cast * keep); 
             mull *= 1.0 - keep;
@@ -113,7 +112,6 @@ mod single {
 
 pub mod dual {
     use pile::{Pile, LandPile, DualPile};
-    use std::iter::range_inclusive;
     use prob;
     use interval::closed;
 
@@ -137,11 +135,11 @@ pub mod dual {
         let mut succ = 0.0;
         //let mut tally = 0.0;
 
-        for hand_size in range_inclusive(4, 7).rev() {
+        for hand_size in (4...7).rev() {
             let (lands_min, lands_max) = super::mull_rule(hand_size);
             
             // Probability of keeping 
-            let keep = range_inclusive(lands_min, lands_max)
+            let keep = (lands_min...lands_max)
                 .map(|lands| deck.prob_land(lands, hand_size - lands))
                 .sum::<f64>();
             
@@ -196,7 +194,6 @@ pub mod dual {
 
 mod gen {
     use pile::{Pile, LandPile, GenPile};
-    use std::iter::range_inclusive;
     use prob;
 
     fn draw<G>(hand: GenPile, draws: usize, deck: GenPile, goal: G) -> f64 
@@ -218,11 +215,11 @@ mod gen {
         let mut mull = 1.0;
         let mut succ = 0.0;
         
-        for hand_size in range_inclusive(4, 7).rev() {
+        for hand_size in (4...7).rev() {
             let (lands_min, lands_max) = super::mull_rule(hand_size);
             
             // Probability of keeping 
-            let keep = range_inclusive(lands_min, lands_max)
+            let keep = (lands_min...lands_max)
                 .map(|lands| deck.prob_land(lands, hand_size - lands))
                 .sum::<f64>();
             
@@ -444,8 +441,6 @@ pub fn investigate()
     }
     
     {
-        use std::iter::range_inclusive;
-        
         static A  :usize = 0;
         static B  :usize = 1;
         static C  :usize = 2;
@@ -468,14 +463,14 @@ pub fn investigate()
         
         let turn = 3;
 
-        for cmc2s in range_inclusive(2, 16) {
-            for s1 in range_inclusive(1, cmc2s-1) {
+        for cmc2s in 2...16 {
+            for s1 in 1..cmc2s {
                 let s2 = cmc2s - s1;
                 
                 let mut best_p = 0.0;
                 let mut best_a = 0;
                 
-                for a in range_inclusive(0, 17) {
+                for a in 0...17 {
                     let b = 17 - a;
                     
                     let deck = GenPile::new(vec![a, b, 0,

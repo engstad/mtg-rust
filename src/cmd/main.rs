@@ -1,10 +1,8 @@
-#![feature(vec_push_all)]
-
 extern crate libmtg;
 extern crate unicode_segmentation;
 
 //use mtg::logic::*;
-use libmtg::logic::{show_card_text, investigate, frank_table, summary, summary_c, summary_perc, dual};
+use libmtg::logic::{show_card_text, investigate, frank_table, summary_c, summary_perc, dual};
 
 use libmtg::pile::{DualPile};
 use libmtg::table::Table;
@@ -33,16 +31,24 @@ fn main() {
 
     if args.len() == 1 || (args.len() == 2 && (args[1] == "dump" || args[1] == "fetch")) {
         let mut cs = vec![];
-	    cs.push_all(&*fetch_set("BFZ"));
-        cs.push_all(&*fetch_set("ORI"));
-        cs.push_all(&*fetch_set("DTK"));
-        cs.push_all(&*fetch_set("FRF"));
-        cs.push_all(&*fetch_set("KTK"));
-        //cs.push_all(&*fetch_set("M15"));
-        //cs.push_all(&*fetch_set("JOU"));
-        //cs.push_all(&*fetch_set("BNG"));
-        //cs.push_all(&*fetch_set("THS"));
-        
+        let sets = [
+            // "BNG", "THS", /* Born of the Gods, Theros */];
+            // "M15", "JOU", /* Magic 2015, Journey to Nyx */
+            // "KTK", "FRF", /* Khans of Tarkir, Fate Reforged (until Q2 2017)  */
+            "DTK", "ORI", /* Dragons of Tarkir, Magic Origins (until Q4 2016)  */
+            "BFZ", "OGW", /* Battle for Zendikar, Oath of the Gatw Watch (until Apr 8, 2016) */
+            "SOI", "EMN", /* Shadows over Innistrad, Eldritch Moon */
+            ];
+
+        for s in &sets {
+            let set = fetch_set(s);
+            if set.len() == 0 {
+                println!("Didn't receive {}\n", s);
+            }
+            println!("Received {} of {}", set.len(), s);
+            for c in set { cs.push(c) };
+        }        
+                
         //cs.sort_by(|a, b| a.mana_cost.cmc().cmp(&b.mana_cost.cmc()));
         //cs.sort_by(|a, b| b.card_text.len().cmp(&a.card_text.len()));
         cs.sort_by(|a, b| b.card_text.cmp(&a.card_text));
@@ -55,13 +61,22 @@ fn main() {
             if
                 // c.sub_types.iter().any(|s| *s == "God") &&
                 // !c.colors.iter().any(|s| *s == libmtg::colors::Color::W) &&
-                // !c.colors.iter().any(|s| *s == libmtg::colors::U) &&
-                // !c.colors.iter().any(|s| *s == libmtg::colors::B) &&
-                // !c.colors.iter().any(|s| *s == libmtg::colors::Color::G) &&
-                // !c.colors.iter().any(|s| *s == libmtg::colors::Color::W) &&
+                // !c.colors.iter().any(|s| *s == libmtg::colors::Color::U) &&
+                !c.colors.iter().any(|s| *s == libmtg::colors::Color::B) &&
+                !c.colors.iter().any(|s| *s == libmtg::colors::Color::G) &&
+                !c.colors.iter().any(|s| *s == libmtg::colors::Color::R) &&
 		        // c.mana_cost.cmc() <= 2 &&
-                // c.card_types.iter().any(|s| *s == "Sorcery" || *s == "Instant") &&
-                c.card_types.iter().any(|s| *s == "Land") &&
+                c.card_types.iter().any(|s| *s == "Creature") &&
+                (c.card_text.find("Flash").is_some() || c.card_text.find("flash").is_some()) &&
+                //c.card_types.iter().any(|s| *s == "Land") &&
+                // !c.super_types.iter().any(|s| *s == "Basic") &&
+                /*((c.card_text.find("{B}").is_some() || c.card_text.find("Swamp").is_some()) ||
+                 (c.card_text.find("{R}").is_some() || c.card_text.find("Mountain").is_some()) ||
+                 (c.card_text.find("{U}").is_some() || c.card_text.find("Island").is_some())) &&
+                !(c.card_text.find("{W}").is_some() || c.card_text.find("Plains").is_some()) &&
+                !(c.card_text.find("{G}").is_some() || c.card_text.find("Forest").is_some()) &&            */
+                //c.rarity == "Mythic" &&
+                // c.sub_types.iter().any(|s| *s == "Zombie") &&
                 true
             {
                 for _ in range(0, width).iter() { print!("=") } println!("");
@@ -75,9 +90,12 @@ fn main() {
                     println!("{}", rep('-', width));
                     show_card_text(&*c.card_text, width);
                 }
+                //println!("super_types = {:?}", c.super_types);
+                //println!("sub_types = {:?}", c.sub_types);
+                
                 println!("{}\n", rep('=', width));
 
-                if fetch_images {
+                if false && fetch_images {
                     let jpg = fetch_img(&*c.expansion, &*c.image_name);
 
                     println!("Got {} bytes for {} :\n{}\n", jpg.len(), c.image_name, String::from_utf8(jpg.clone()).unwrap());

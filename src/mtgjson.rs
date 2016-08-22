@@ -1,11 +1,20 @@
 
 use hyper::Client;
 use hyper::header::Connection;
-use std::io::Read;
-
-use rustc_serialize::json;
+use std::result::{Result};
+use rustc_serialize::{json};
 use mana::Mana;
 use colors::Color;
+use std::io::Read;
+
+#[derive(Debug)]
+pub enum Error {
+    General,
+    IO(::std::io::Error),
+    JsonParser(json::ParserError),
+    JsonDecoder(json::DecoderError),
+    JsonEncoder(json::EncoderError)
+}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Card {
@@ -24,7 +33,22 @@ pub struct Card {
     pub rarity      : String
 }
 
-pub fn fetch_set(set : &str) -> Vec<Card> {
+/*    
+    // Creating an outgoing request.
+
+    let <resp = match http::handle().get(loc).exec() {
+        Ok(r) => r, Err(_) => return vec![]
+    };
+
+    if resp.get_code() != 200 { return vec![] }
+
+    let rstr = String::from_utf8_lossy(resp.get_body());
+*/
+
+
+pub fn fetch_response(set: &str) -> Option<String> {
+    use std::io::{Read};
+    
     let loc = format!("http://mtgjson.com/json/{}.json", set);
 
     // Create a client.
@@ -38,22 +62,25 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
         .send().unwrap();
 
     // Read the Response.
-    let mut rstr = String::new();
-    res.read_to_string(&mut rstr).unwrap();
-    
-/*    
-    // Creating an outgoing request.
+    let mut response = String::new();
 
-    let <resp = match http::handle().get(loc).exec() {
-        Ok(r) => r, Err(_) => return vec![]
+    let status = res.read_to_string(&mut response);
+
+    return match status { Ok(_) => Some(response), _ => None }
+}
+
+pub fn fetch(set: &str) -> Result<json::Json, Error> {
+    let json_str = match fetch_response(set) {
+        Some(s) => s, None => return Err(Error::General)
     };
+    
+    let json = json::Json::from_str(&*json_str);
 
-    if resp.get_code() != 200 { return vec![] }
+    return match json { Ok(s) => Ok(s),
+                        Err(e) => Err(Error::JsonParser(e)) }
+}
 
-    let rstr = String::from_utf8_lossy(resp.get_body());
-*/
-
-    let json = json::Json::from_str(&*rstr);
+pub fn fetch_set(set: &str) -> Vec<Card> {
 
     fn trim(s : &str) -> &str {
         let l = s.len();
@@ -83,7 +110,7 @@ pub fn fetch_set(set : &str) -> Vec<Card> {
         subtypes
     }
 
-    match json {
+    match fetch(set) {
         Ok(doc) => {
             let cards = doc
                 .find("cards").unwrap()

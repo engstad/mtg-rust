@@ -1,9 +1,7 @@
 #![crate_type = "lib"]
 
 #![allow(dead_code)]
-#![feature(iter_arith)]
-#![feature(convert)]
-#![feature(range_inclusive)]
+#![feature(inclusive_range_syntax)]
 
 extern crate regex;
 //extern crate curl;
