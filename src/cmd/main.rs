@@ -37,9 +37,10 @@ fn main() {
             // "BNG", "THS", /* Born of the Gods, Theros */];
             // "M15", "JOU", /* Magic 2015, Journey to Nyx */
             // "KTK", "FRF", /* Khans of Tarkir, Fate Reforged (until Q2 2017)  */
-            "DTK", "ORI", /* Dragons of Tarkir, Magic Origins (until Q4 2016)  */
-            "BFZ", "OGW", /* Battle for Zendikar, Oath of the Gatw Watch (until Apr 8, 2016) */
+            // "DTK", "ORI", /* Dragons of Tarkir, Magic Origins (until Q4 2017)  */
+            "BFZ", "OGW", /* Battle for Zendikar, Oath of the Gate Watch (until Apr 8, 2018) */
             "SOI", "EMN", /* Shadows over Innistrad, Eldritch Moon */
+            "KLD"
             ];
 
         for s in &sets {
@@ -70,17 +71,17 @@ fn main() {
                 c.mana_cost.r == 0 &&
                 c.mana_cost.g == 0 &&
 		        // c.mana_cost.cmc() <= 2 &&
-                c.card_types.iter().any(|s| *s == "Creature") &&
+                //c.card_types.iter().any(|s| *s == "Creature") &&
                 //(c.card_text.find("Flash").is_some() || c.card_text.find("flash").is_some()) &&
-                //c.card_types.iter().any(|s| *s == "Land") &&
-                // !c.super_types.iter().any(|s| *s == "Basic") &&
-                /*((c.card_text.find("{B}").is_some() || c.card_text.find("Swamp").is_some()) ||
+                c.card_types.iter().any(|s| *s == "Land") &&
+                !c.super_types.iter().any(|s| *s == "Basic") &&
+                ((c.card_text.find("{B}").is_some() || c.card_text.find("Swamp").is_some()) ||
                  (c.card_text.find("{R}").is_some() || c.card_text.find("Mountain").is_some()) ||
                  (c.card_text.find("{U}").is_some() || c.card_text.find("Island").is_some())) &&
                 !(c.card_text.find("{W}").is_some() || c.card_text.find("Plains").is_some()) &&
-                !(c.card_text.find("{G}").is_some() || c.card_text.find("Forest").is_some()) &&            */
+                !(c.card_text.find("{G}").is_some() || c.card_text.find("Forest").is_some()) &&            
                 //c.rarity == "Mythic" &&
-                c.sub_types.iter().any(|s| *s == "Spirit") &&
+                //c.sub_types.iter().any(|s| *s == "") &&
                 true
             {
                 for _ in range(0, width).iter() { print!("=") } println!("");
