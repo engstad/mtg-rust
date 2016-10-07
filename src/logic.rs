@@ -37,7 +37,7 @@ mod single {
             ColoredPile::iter(draws)
                 .filter(|draw| deck.has(draw) && goal(hand + *draw))
                 .map(|draw| deck.prob_draw(&draw))
-                .sum::<f64>()
+                .sum()
         } else {
             prob::cond(goal(hand))
         }
@@ -56,12 +56,12 @@ mod single {
             .sum::<f64>();
         
         // Probability of casting (where we auto-fail if we don't have the lands)
-        let cast = ColoredPile::iter(hand_size)
-            .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
-            .filter(|hand| deck.has(hand))
-            .map(|hand| (deck.prob_draw(&hand) * 
-                         draw(hand, draws, deck - hand, |g| goal(g))))
-            .sum::<f64>();
+        let cast:f64 = ColoredPile::iter(hand_size)
+                           .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
+                           .filter(|hand| deck.has(hand))
+                           .map(|hand| (deck.prob_draw(&hand) * 
+                                        draw(hand, draws, deck - hand, |g| goal(g))))
+                           .sum();
 
         // So cast * keep = chance of reaching goals, *given* no mulligan.
         (keep, cast)
@@ -122,7 +122,7 @@ pub mod dual {
             DualPile::iter(draws)
                 .filter(|draw| deck.has(draw) && goal(hand + *draw))
                 .map(|draw| deck.prob_draw(&draw))
-                .sum::<f64>()
+                .sum()
         } else {
             prob::cond(goal(hand))
         }
@@ -144,12 +144,12 @@ pub mod dual {
                 .sum::<f64>();
             
             // Probability of casting
-            let cast = DualPile::iter(hand_size)
+            let cast:f64 = DualPile::iter(hand_size)
                 .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
                 .filter(|hand| deck.has(hand))
                 .map(|hand| deck.prob_draw(&hand) * draw(hand, draws, deck - hand, 
-                                                 |g| goal(g)))
-                .sum::<f64>();
+                                                         |g| goal(g)))
+                .sum();
 
             succ += mull * (cast * keep); 
             mull *= 1.0 - keep;
@@ -203,7 +203,7 @@ mod gen {
             deck.subsets(draws).iter()
                 .filter(|&draw| goal(hand.clone() + draw.clone()))
                 .map(|draw| deck.prob_draw(draw))
-                .sum::<f64>()
+                .sum()
         } else {
             prob::cond(goal(hand)) 
         }
@@ -224,7 +224,8 @@ mod gen {
                 .sum::<f64>();
             
             // Probability of casting
-            let cast = deck.subsets(hand_size).iter()
+            let cast:f64 =
+                deck.subsets(hand_size).iter()
                 .filter(|hand| hand.lands() >= lands_min && hand.lands() <= lands_max)
                 .map(|hand| {
                     let d0 = deck.prob_draw(hand);
@@ -234,7 +235,7 @@ mod gen {
                     };
                     d0 * p0
                 })
-                .sum::<f64>();
+                .sum();
             
             succ += mull * cast;
             mull *= 1.0 - keep;

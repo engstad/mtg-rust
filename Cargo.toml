@@ -9,13 +9,11 @@ tags = []
 name = "libmtg"
 path = "src/lib.rs"
 
-#[dependencies.curl]
-#curl = "^0"
-
 [dependencies]
-rustc-serialize = "^0"
+rustc-serialize = "*"
 regex = "*"
 num = "*"
+curl = "*"
 unicode-segmentation = "*"
 unicode-width = "*"
 hyper = "*"

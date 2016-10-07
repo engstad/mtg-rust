@@ -155,10 +155,10 @@ pub fn fetch_set(set: &str) -> Vec<Card> {
     }
 
     fn to_str_list(card : &json::Json, what : &str) -> Vec<String> {
-        let empty = vec![];
+        let empty:Vec<json::Json> = vec![];        
         let subtyps = match card.find(what) {
-            Some(t) => t.as_array().unwrap().as_slice(),
-            None => empty.as_slice()
+            Some(t) => t.as_array().unwrap(),
+            None => &empty
         };
         let subtypes = subtyps
             .iter()
@@ -247,4 +247,6 @@ pub fn fetch_img(set: &str, img: &str) -> Vec<u8>
     let mut ret = Vec::new();
     res.read_to_end(&mut ret).unwrap();
     ret
+    //let resp = http::handle().get(loc).exec().unwrap();
+    //Vec::from(resp.get_body())
 }

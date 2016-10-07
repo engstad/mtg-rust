@@ -29,6 +29,8 @@ fn main() {
 
     //let args = std::os::args();
 
+    println!("Starting.");
+
     let args : Vec<String> = std::env::args().map(|x| x.to_string()).collect();
 
     if args.len() == 1 || (args.len() == 2 && (args[1] == "dump" || args[1] == "fetch")) {
@@ -52,7 +54,6 @@ fn main() {
             for c in set { cs.push(c) };
         }        
                 
-        //cs.sort_by(|a, b| a.mana_cost.cmc().cmp(&b.mana_cost.cmc()));
         //cs.sort_by(|a, b| b.card_text.len().cmp(&a.card_text.len()));
         cs.sort_by(|a, b| b.card_text.cmp(&a.card_text));
 

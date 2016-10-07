@@ -60,7 +60,7 @@ impl Table {
         let min_width = 4; 
         let mut width_tbl : Vec<usize> = 
             repeat(min_width).take(self.rows[0].len()).collect();
-        let width = width_tbl.as_mut_slice();
+        let width = &mut width_tbl;
         
         for row in self.rows.iter() {
             for (c, elem) in row.iter().enumerate() {
@@ -99,7 +99,7 @@ impl Table {
         let min_width = 0; 
         let mut width_tbl = 
             repeat(min_width).take(self.rows[0].len()).collect::<Vec<usize>>();
-        let width = width_tbl.as_mut_slice();
+        let width = &mut width_tbl;
         
         for row in self.rows.iter() {
             for (c, elem) in row.iter().enumerate() {

@@ -3,6 +3,19 @@ use std::fmt;
 use prob;
 use perm::MultiSubSetIterator;
 
+pub trait Zero { fn zero() -> Self; }
+
+impl Zero for usize { fn zero() -> usize { 0 } }
+impl Zero for u32 { fn zero() -> u32 { 0 } }
+impl Zero for f64 { fn zero() -> f64 { 0.0 } }
+
+pub fn sum<I, S>(i: I) -> S where
+    I: Iterator,
+    S: Add<I::Item, Output=S> + Zero
+{
+    i.fold(S::zero(), |s, e| s + e)
+}
+
 //
 // A Pile is like a key-value map
 //
@@ -25,10 +38,9 @@ pub trait Pile : Add + Sub + Sized {
     }    
 
     fn total(&self) -> usize {
-        self.all()
+        sum(self.all()
             .iter()
-            .map(|&k| self.get(k))
-            .sum()
+            .map(|&k| self.get(k)))
     }
 
     fn has(&self, other: &Self) -> bool {
@@ -182,8 +194,8 @@ impl Iterator for GenPile {
 
 impl LandPile for GenPile {
     fn lands(&self) -> usize { 
-        self.e.iter().enumerate()
-            .map(|(i, v)| if (self.k.is_land)(i) { *v } else { 0 }).sum()
+        sum(self.e.iter().enumerate()
+            .map(|(i, v)| if (self.k.is_land)(i) { *v } else { 0 }))
     }
 
     fn spells(&self) -> usize { 
