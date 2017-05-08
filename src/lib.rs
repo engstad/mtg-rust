@@ -2,7 +2,6 @@
 
 #![allow(dead_code)]
 #![feature(inclusive_range_syntax)]
-#![feature(question_mark)]
 
 extern crate regex;
 //extern crate curl;
@@ -14,7 +13,7 @@ extern crate unicode_segmentation;
 
 pub mod prob;
 pub mod pile;
-pub mod standard;
+pub mod land;
 pub mod table;
 pub mod perm;
 pub mod interval;

@@ -42,7 +42,7 @@ fn main() {
             // "DTK", "ORI", /* Dragons of Tarkir, Magic Origins (until Q4 2017)  */
             "BFZ", "OGW", /* Battle for Zendikar, Oath of the Gate Watch (until Apr 8, 2018) */
             "SOI", "EMN", /* Shadows over Innistrad, Eldritch Moon */
-            "KLD"
+            "KLD", "AER", /* Kaladesh, Aether Revolt */
             ];
 
         for s in &sets {
@@ -67,6 +67,7 @@ fn main() {
                                          d => d
                                      }) {
             if
+                /*
                 // c.sub_types.iter().any(|s| *s == "God") &&
                 c.mana_cost.b == 0 &&
                 c.mana_cost.r == 0 &&
@@ -76,16 +77,22 @@ fn main() {
                 //(c.card_text.find("Flash").is_some() || c.card_text.find("flash").is_some()) &&
                 c.card_types.iter().any(|s| *s == "Land") &&
                 !c.super_types.iter().any(|s| *s == "Basic") &&
-                ((c.card_text.find("{B}").is_some() || c.card_text.find("Swamp").is_some()) ||
-                 (c.card_text.find("{R}").is_some() || c.card_text.find("Mountain").is_some()) ||
-                 (c.card_text.find("{U}").is_some() || c.card_text.find("Island").is_some())) &&
+                {
+                    let b = c.card_text.find("{B}").is_some() || c.card_text.find("Swamp").is_some();
+                    let r = c.card_text.find("{R}").is_some() || c.card_text.find("Mountain").is_some();
+                    let u = c.card_text.find("{U}").is_some() || c.card_text.find("Island").is_some();
+                    (b && r) || (r && u) || (u && b)
+                } &&
                 !(c.card_text.find("{W}").is_some() || c.card_text.find("Plains").is_some()) &&
                 !(c.card_text.find("{G}").is_some() || c.card_text.find("Forest").is_some()) &&            
-                //c.rarity == "Mythic" &&
+                //
                 //c.sub_types.iter().any(|s| *s == "") &&
+             */
+                //c.rarity == "Mythic" &&
+                c.expansion == "AER" &&
                 true
             {
-                for _ in range(0, width).iter() { print!("=") } println!("");
+                for _ in 0..width { print!("=") } println!("");
                 println!("[{:3}] {:40} {:6}\n({})   {:40} {}", 
                          c.expansion, c.card_name, c.mana_cost.pretty(), 
                          UnicodeSegmentation::graphemes(c.rarity.short(), false).next().unwrap_or("?"),
@@ -272,7 +279,7 @@ fn main() {
         dt.print("Action Dice")
     }
     else if args.len() == 2 {
-        let (lands, colored_lands) = libmtg::standard::analyze(&*args[1]);
+        let (lands, colored_lands) = libmtg::land::analyze(&*args[1]);
         summary_c(lands as usize, 60);
         for &clands in &colored_lands {
             summary_perc(lands as usize, clands as usize, 60);

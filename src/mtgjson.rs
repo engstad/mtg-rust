@@ -10,7 +10,7 @@ use hyper;
 
 #[derive(Debug)]
 pub enum MtgError {
-    General,
+    General(String),
     IO(Error),
     Hyper(hyper::Error),
     JsonParser(json::ParserError),
@@ -50,18 +50,19 @@ impl From<hyper::Error> for MtgError {
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
 pub enum Rarity {
-    Mythic, Rare, Uncommon, Common, Special
+    Mythic, Rare, Uncommon, Common, BasicLand, Special
 }
 
 impl Rarity {
     pub fn parse(s: &str) -> Result<Rarity, MtgError> {
         match s {
-            "Mythic" => Ok(Rarity::Mythic),
+            "Mythic Rare" => Ok(Rarity::Mythic),
             "Rare" => Ok(Rarity::Rare),
             "Uncommon" => Ok(Rarity::Uncommon),
             "Common" => Ok(Rarity::Common),
             "Special" => Ok(Rarity::Special),
-            _ => Err(MtgError::General)
+            "Basic Land" => Ok(Rarity::BasicLand),
+            _ => Err(MtgError::General(String::from(s)))
         }
     }
 
@@ -71,7 +72,8 @@ impl Rarity {
             Rarity::Rare => "R",
             Rarity::Uncommon => "U",
             Rarity::Common => "C",
-            Rarity::Special => "S"
+            Rarity::Special => "S",
+            Rarity::BasicLand => "L"
         }
     }
 }
@@ -184,7 +186,7 @@ pub fn fetch_set(set: &str) -> Vec<Card> {
                     let subtypes = to_str_list(card, "subtypes");
                     let image = to_str(card.find("imageName"));
                     let text  = to_str(card.find("text"));
-                    let rarity:Rarity = Rarity::parse(&*to_str(card.find("rarity"))).unwrap_or(Rarity::Special);
+                    let rarity:Rarity = Rarity::parse(&*to_str(card.find("rarity"))).unwrap(); //.unwrap_or(Rarity::Special);
                     let power = to_str(card.find("power"));
                     let toughness = to_str(card.find("toughness"));
                     

@@ -10,11 +10,11 @@ tags = []
 name = "mtg-gui"
 path = "sdl_main.rs"
 
-[dependencies.curl]
-curl = "^0"
+#[dependencies.curl]
+#curl = "^0"
 
 [dependencies.sdl2]
-sdl2 = "^0"
+sdl2 = "*"
 
 # git = "https://github.com/AngryLawyer/rust-sdl2"
 
