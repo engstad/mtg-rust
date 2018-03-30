@@ -8,15 +8,16 @@ use libmtg::logic::{show_card_text, investigate, frank_table, summary_c, summary
 use libmtg::pile::{DualPile};
 use libmtg::table::Table;
 use libmtg::table::TableElem::{LStr, RStr, U32 /*, I32, Empty */};
-use libmtg::mtgjson::{fetch_set, fetch_img};
+use libmtg::mtgjson::fetch_set;
 use libmtg::interval::*;
-use std::path::Path;
-use std::fs::File;
-use std::io::Write;
+//use std::path::Path;
+//use std::fs::File;
+//use std::io::Write;
 use std::iter::repeat;
 use itertools::*;
 
 use unicode_segmentation::UnicodeSegmentation;
+use libmtg::mtgjson::Rarity;
 
 #[inline(always)]
 fn rep(c: char, s: usize) -> String {
@@ -40,9 +41,12 @@ fn main() {
             // "M15", "JOU", /* Magic 2015, Journey to Nyx */
             // "KTK", "FRF", /* Khans of Tarkir, Fate Reforged (until Q2 2017)  */
             // "DTK", "ORI", /* Dragons of Tarkir, Magic Origins (until Q4 2017)  */
-            "BFZ", "OGW", /* Battle for Zendikar, Oath of the Gate Watch (until Apr 8, 2018) */
-            "SOI", "EMN", /* Shadows over Innistrad, Eldritch Moon */
-            "KLD", "AER", /* Kaladesh, Aether Revolt */
+            // "BFZ", "OGW", /* Battle for Zendikar, Oath of the Gate Watch (until Apr 8, 2018) */
+            // "SOI", "EMN", /* Shadows over Innistrad, Eldritch Moon */
+            // "KLD",
+                   "AER", /* Kaladesh, Aether Revolt */
+            "AKH", "HOU", /* Amonkhet, Hours of Devastation */
+            "XLN", "RIX"  /* Ixalan, Rivals of Ixalan */
             ];
 
         for s in &sets {
@@ -52,14 +56,14 @@ fn main() {
             }
             println!("Received {} of {}", set.len(), s);
             for c in set { cs.push(c) };
-        }        
-                
+        }
+
         //cs.sort_by(|a, b| b.card_text.len().cmp(&a.card_text.len()));
         cs.sort_by(|a, b| b.card_text.cmp(&a.card_text));
 
         println!("{} cards", cs.len());
 
-        let fetch_images = args.len() == 2 && args[1] == "fetch";
+        //let fetch_images = args.len() == 2 && args[1] == "fetch";
         let width = 60;
         for c in cs.iter().sorted_by(|a, b|
                                      match a.mana_cost.cmc().cmp(&b.mana_cost.cmc()) {
@@ -84,20 +88,20 @@ fn main() {
                     (b && r) || (r && u) || (u && b)
                 } &&
                 !(c.card_text.find("{W}").is_some() || c.card_text.find("Plains").is_some()) &&
-                !(c.card_text.find("{G}").is_some() || c.card_text.find("Forest").is_some()) &&            
+                !(c.card_text.find("{G}").is_some() || c.card_text.find("Forest").is_some()) &&
                 //
                 //c.sub_types.iter().any(|s| *s == "") &&
              */
-                //c.rarity == "Mythic" &&
-                c.expansion == "AER" &&
+                c.rarity == Rarity::Mythic &&
+                //c.expansion == "AER" &&
                 true
             {
                 for _ in 0..width { print!("=") } println!("");
-                println!("[{:3}] {:40} {:6}\n({})   {:40} {}", 
-                         c.expansion, c.card_name, c.mana_cost.pretty(), 
+                println!("[{:3}] {:40} {:6}\n({})   {:40} {}",
+                         c.expansion, c.card_name, c.mana_cost.pretty(),
                          UnicodeSegmentation::graphemes(c.rarity.short(), false).next().unwrap_or("?"),
-                         c.card_type, 
-                         if c.power.len() > 0 { format!("{}/{}", c.power, c.toughness) } 
+                         c.card_type,
+                         if c.power.len() > 0 { format!("{}/{}", c.power, c.toughness) }
                          else { "".to_string() });
                 if c.card_text.len() > 0 {
                     println!("{}", rep('-', width));
@@ -105,31 +109,15 @@ fn main() {
                 }
                 //println!("super_types = {:?}", c.super_types);
                 //println!("sub_types = {:?}", c.sub_types);
-                
+
                 println!("{}\n", rep('=', width));
-
-                if false && fetch_images {
-                    let jpg = fetch_img(&*c.expansion, &*c.image_name);
-
-                    println!("Got {} bytes for {} :\n{}\n", jpg.len(), c.image_name, String::from_utf8(jpg.clone()).unwrap());
-                    
-                    let mut f = match File::create(&Path::new(&format!("pics/{}-{}.jpg", 
-                                                                       c.expansion, c.image_name))) {
-                        Ok(f) => f,
-                        Err(s) => { println!("Couldn't create JPG file: {}", s); return () }
-                    };
-                    match f.write_all(&jpg) {
-                        Ok(()) => (), 
-                        Err(s) => { println!("Couldn't write JPG file: {}", s); return () }
-                    }
-                }
             }
         }
     }
     //else if args.len() == 3 && args[1].as_slice() == "pic" {
     //    sdl_main(args[2].as_slice())
     //}
-    //else 
+    //else
     else if args.len() == 2 && args[1] == "land" {
 		investigate()
     }
@@ -152,7 +140,7 @@ fn main() {
         }
         else if l <= 19 {
             summary_c(l, 40);
-        } else { 
+        } else {
             summary_c(l, 60)
         }
     }
@@ -168,7 +156,7 @@ fn main() {
     else if args.len() == 4 && args[1] == "C" {
         let a:u64 = args[2].parse().unwrap_or(0);
         let b:u64 = args[3].parse().unwrap_or(1);
-        
+
         println!("c({:3}, {:2}) = {:60.0}", a, b, libmtg::prob::c(a, b));
     }
     else if args.len() == 2 && args[1] == "dice" {
@@ -177,9 +165,9 @@ fn main() {
                  "#D", 0, 1u, 2u, 3u, 4u, 5u, "  >= 1", "  >= 2", "  >= 3", "  >= 4", "  >= 5");
         for n in closed(2u, 10).iter() {
             let mut count = [0i, 0, 0, 0, 0, 0];
-            
+
             let num_diff = libmtg::prob::pow(6, n as i32, 1) as u32;
-            
+
             for p in range(0, num_diff).iter() {
                 let res = Vec::from_fn(n, |i| (p / libmtg::prob::pow(6, i as i32, 1) as u32) % 6); // 0-5
                 let mut freq = [0, 0, 0, 0, 0, 0];
@@ -200,41 +188,41 @@ fn main() {
             for i in closed(1u, 5).iter() {
                 let r = count[i..6u].iter().fold(0.0, |acc, c| acc + (*c as f64) / (num_diff as f64));
                 dt.set(n - 1, 6 + i, LStr(format!("{:6.1}% ", r * 100.0)));
-            }            
+            }
         }
 
         dt.print("Action Dice")
         */
-        
-        // 
+
+        //
         // 5's are easy: 2 : 1/36
         //               3 : (C(3,2) * 5 + 1)/6^3 [55x, 5x5, x55]
-        //               
+        //
         // 4: 55xx, 5x5x, 5xx5, x5x5, xx55, where x!=5, i.e.: C(4,2)*5^2 = 150
         //    Also, 555x, 55x5, 5x55, x555, where x!=5, i.e.: C(4,3)*5   = 20
         //    Also, 5555                                i.e.: C(4,4)     = 1
         //
-        // -- 
+        // --
         //
         // 4's is harder, must also account for non 5's.
         //
         // 44xxx, 4x4xx, .., xxx44 : C(5,2) * 5^3 = 10 * 5^3 = 1,250
-        // x's: 55x, 5x5, x55, C(3, 1) * 4        = 10 * 13  =   130 
-        //      555            C(3, 0) 
+        // x's: 55x, 5x5, x55, C(3, 1) * 4        = 10 * 13  =   130
+        //      555            C(3, 0)
         // 444xx, 44x4x, .., xx444 : C(5,3) * 5^2 = 10 * 5^2 =   250
         // x's: 55                                = 10 * 1   =    10
         // 4444x, 444x4, .., x4444 : C(5,4) * 5^1 =  5 * 5   =    25
         // 44444                   : C(5,5) * 5^0 =  1 * 1   =     1
-        // 
+        //
 
 
         // Counting the number of ways to get doubles of `d`, where we
         // thrown `n` dice and we assume that there are `b` x's.
-        fn doubles(d: u64, n: u64, b: u64) -> u64 {            
+        fn doubles(d: u64, n: u64, b: u64) -> u64 {
             //println!("d({},{},{})=?", d, n, b);
-            let r = if n == 0 { 0 } 
+            let r = if n == 0 { 0 }
             else if d == 0 {
-                libmtg::prob::pow_acc(6, n as i64, 1) as u64 - 
+                libmtg::prob::pow_acc(6, n as i64, 1) as u64 -
                     closed(1u64, 5).iter().fold(0u64, |acc, od| {
                         acc + doubles(od, n, b)
                     })
@@ -247,9 +235,9 @@ fn main() {
                     let q:u64 = if n >= k + 2 && d < 5 && b > 1 {
                         closed(d+1, 5).iter()
                             .fold(0u64, |acc, s| acc + doubles(s, n - k, b - 1)) as u64
-                    } 
-                    else { 
-                        0 
+                    }
+                    else {
+                        0
                     };
                     //println!(" : C({},{}) = {} : {} * ({} - {}) = {}", n, k, c, c, p, q, c * (p - q));
                     acc + c * (p - q)
@@ -274,7 +262,7 @@ fn main() {
             for i in closed(1, 5).iter() {
                 let r = closed(i, 5).iter().fold(0.0, |acc, c| acc + doubles(c as u64, n as u64, 5) as f64 / libmtg::prob::pow_acc(6, n as i64, 1) as f64);
                 dt.set(n - 1, 7 + i, LStr(format!("{:4.0}% ", r * 100.0)));
-            }            
+            }
         }
         dt.print("Action Dice")
     }
@@ -293,4 +281,3 @@ fn main() {
         }
     }
 }
-

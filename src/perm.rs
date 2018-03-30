@@ -7,7 +7,7 @@ pub struct MultiSubSetIterator<'a> {
 }
 
 #[derive(Clone, Debug)]
-struct Stack { 
+struct Stack {
     k : usize,       // how many left to add
     n : usize,       // how many left to chose from
     l : usize,       // where we are next
@@ -19,8 +19,8 @@ impl<'a> MultiSubSetIterator<'a> {
         let l = ns.len();
         let n = ns.iter().fold(0, |a,&b| a+b);
         let a = repeat(0).take(ns.len()).collect::<_>();
-        MultiSubSetIterator { 
-            ns : ns.clone(), 
+        MultiSubSetIterator {
+            ns : ns.clone(),
             stack : vec![Stack{k:k, l:l, n:n, a:a}]
         }
     }
@@ -35,7 +35,7 @@ impl<'a> Iterator for MultiSubSetIterator<'a> {
                 None => return None,
                 Some(top) => {
                     let k = top.k;
-                    if k == 0 { 
+                    if k == 0 {
                         return Some(top.a.clone())
                     }
                     else {
@@ -43,17 +43,17 @@ impl<'a> Iterator for MultiSubSetIterator<'a> {
                         let n = top.n;
                         let t = l - 1;
                         let m = self.ns[t];
-                        
+
                         let s = if k + m > n { k + m - n } else { 0 };
                         let e = if k < m { k } else { m };
-                        
-                        for i in (s...e).rev() {
+
+                        for i in (s ..= e).rev() {
                             let mut na = top.a.clone();
                             na[t] = i;
                             let new_top = Stack{ k:k-i, l:t, n:n-m, a:na };
                             self.stack.push(new_top);
                         }
-                    }        
+                    }
                 }
             }
         }
@@ -62,9 +62,10 @@ impl<'a> Iterator for MultiSubSetIterator<'a> {
 
 #[test]
 pub fn test_gen() {
-    for it in MultiSubSetIterator::new(vec![2,4,1], 2) {
-        println!("{}", it);
+    let vals = [2usize, 4, 1];
+    for it in MultiSubSetIterator::new(&vals, 2) {
+        println!("{:?}", it);
     }
-    
+
     println!("---------------------------------------------------");
 }

@@ -1,26 +1,37 @@
-
-use hyper::Client;
-use hyper::header::Connection;
 use std::result::{Result};
 use rustc_serialize::{json};
 use mana::Mana;
 use colors::Color;
-use std::io::{Read, Error};
-use hyper;
+use std::io::Error;
+use url;
+use reqwest;
 
 #[derive(Debug)]
 pub enum MtgError {
     General(String),
     IO(Error),
-    Hyper(hyper::Error),
     JsonParser(json::ParserError),
     JsonDecoder(json::DecoderError),
-    JsonEncoder(json::EncoderError)
+    JsonEncoder(json::EncoderError),
+    UrlError(url::ParseError),
+    Reqwest(reqwest::Error)
 }
 
 impl From<Error> for MtgError {
     fn from(err: Error) -> MtgError {
         MtgError::IO(err)
+    }
+}
+
+impl From<url::ParseError> for MtgError {
+    fn from(err: url::ParseError) -> MtgError {
+        MtgError::UrlError(err)
+    }
+}
+
+impl From<reqwest::Error> for MtgError {
+    fn from(err: reqwest::Error) -> MtgError {
+        MtgError::Reqwest(err)
     }
 }
 
@@ -39,12 +50,6 @@ impl From<json::DecoderError> for MtgError {
 impl From<json::EncoderError> for MtgError {
     fn from(err: json::EncoderError) -> MtgError {
         MtgError::JsonEncoder(err)
-    }
-}
-
-impl From<hyper::Error> for MtgError {
-    fn from(err: hyper::Error) -> MtgError {
-        MtgError::Hyper(err)
     }
 }
 
@@ -95,47 +100,11 @@ pub struct Card {
     pub rarity      : Rarity
 }
 
-/*    
-    // Creating an outgoing request.
-
-    let <resp = match http::handle().get(loc).exec() {
-        Ok(r) => r, Err(_) => return vec![]
-    };
-
-    if resp.get_code() != 200 { return vec![] }
-
-    let rstr = String::from_utf8_lossy(resp.get_body());
-*/
-
-
-pub fn fetch_response(set: &str) -> Result<String, MtgError> {
-    use std::io::{Read};
-    
-    let loc = format!("http://mtgjson.com/json/{}.json", set);
-
-    // Create a client.
-    let client = Client::new();
-
-    // Creating an outgoing request.
-    let mut res = client.get(&*loc)
-        // set a header
-        .header(Connection::close())
-        // let 'er go!
-        .send()?;
-
-    // Read the Response.
-    let mut response = String::new();
-
-    res.read_to_string(&mut response)?;
-
-    Ok(response)
-}
-
 pub fn fetch(set: &str) -> Result<json::Json, MtgError> {
-    let json_str = fetch_response(set)?;
-    
-    let json = json::Json::from_str(&*json_str)?;
-
+    let loc = format!("http://mtgjson.com/json/{}.json", set);
+    let url = url::Url::parse(loc.as_str())?;
+    let text = reqwest::get(url)?.text()?;
+    let json = json::Json::from_str(text.as_str())?;
     return Ok(json);
 }
 
@@ -157,7 +126,7 @@ pub fn fetch_set(set: &str) -> Vec<Card> {
     }
 
     fn to_str_list(card : &json::Json, what : &str) -> Vec<String> {
-        let empty:Vec<json::Json> = vec![];        
+        let empty:Vec<json::Json> = vec![];
         let subtyps = match card.find(what) {
             Some(t) => t.as_array().unwrap(),
             None => &empty
@@ -178,22 +147,22 @@ pub fn fetch_set(set: &str) -> Vec<Card> {
             cards.iter()
                 .map(|card| {
                     //println!("{}", card.to_pretty_str());
-                                
-                    let name = to_str(card.find("name"));                
+
+                    let name = to_str(card.find("name"));
                     let typ  = to_str(card.find("type"));
                     let styps = to_str_list(card, "supertypes");
-                    let typs = to_str_list(card, "types");                    
+                    let typs = to_str_list(card, "types");
                     let subtypes = to_str_list(card, "subtypes");
                     let image = to_str(card.find("imageName"));
                     let text  = to_str(card.find("text"));
                     let rarity:Rarity = Rarity::parse(&*to_str(card.find("rarity"))).unwrap(); //.unwrap_or(Rarity::Special);
                     let power = to_str(card.find("power"));
                     let toughness = to_str(card.find("toughness"));
-                    
+
                     let cost = {
                         let mana_cost = match card.find("manaCost") {
                             Some(c) => c.to_string(), None => "".to_string()
-                        };                    
+                        };
                         Mana::parse(trim(&mana_cost))
                     };
 
@@ -202,11 +171,11 @@ pub fn fetch_set(set: &str) -> Vec<Card> {
                             Some(c) => c.as_array().unwrap().iter()
                                 .map(|s| Color::parse(trim(&s.to_string()))).collect(),
                             None => vec![]
-                        };                    
+                        };
                         cs
                     };
 
-                    
+
                     let c = Card {
                         card_name   : name,
                         card_type   : typ,
@@ -221,34 +190,12 @@ pub fn fetch_set(set: &str) -> Vec<Card> {
                         expansion   : set.to_string(),
                         colors      : colors,
                         rarity      : rarity
-                    };               
-                    
+                    };
+
                     c
                 })
-                .collect::<Vec<Card>>()                     
+                .collect::<Vec<Card>>()
         },
         Err(err) => panic!("Error: {:?}", err)
     }
-}
-
-pub fn fetch_img(set: &str, img: &str) -> Vec<u8>
-{
-    let loc = format!("http://mtgimage.com/set/{}/{}.jpg", set, img);
-
-    // Create a client.
-    let client = Client::new();
-
-    // Creating an outgoing request.
-    let mut res = client.get(&*loc)
-        // set a header
-        .header(Connection::close())
-        // let 'er go!
-        .send().unwrap();
-
-    // Read the Response.
-    let mut ret = Vec::new();
-    res.read_to_end(&mut ret).unwrap();
-    ret
-    //let resp = http::handle().get(loc).exec().unwrap();
-    //Vec::from(resp.get_body())
 }

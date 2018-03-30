@@ -20,8 +20,8 @@ impl Mana {
         Mana { w: w, u: u, b: b, r: r, g: g, c: c, n: n, x: x }
     }
 
-    pub fn zero() -> Mana { 
-        Mana::new(0, 0, 0, 0, 0, 0, 0, 0) 
+    pub fn zero() -> Mana {
+        Mana::new(0, 0, 0, 0, 0, 0, 0, 0)
     }
 
     pub fn w(n: u32) -> Mana { Mana::new(n, 0, 0, 0, 0, 0, 0, 0) }
@@ -34,35 +34,35 @@ impl Mana {
     pub fn x(n: u32) -> Mana { Mana::new(0, 0, 0, 0, 0, 0, 0, n) }
 
     pub fn reset(&self, color: Color) -> Mana {
-        match color { 
-            W => Mana::new(0, self.u, self.b, self.r, self.g, self.c, self.n, self.x), 
-            U => Mana::new(self.w, 0, self.b, self.r, self.g, self.c, self.n, self.x), 
-            B => Mana::new(self.w, self.u, 0, self.r, self.g, self.c, self.n, self.x), 
-            R => Mana::new(self.w, self.u, self.b, 0, self.g, self.c, self.n, self.x), 
-            G => Mana::new(self.w, self.u, self.b, self.r, 0, self.c, self.n, self.x), 
-            C => Mana::new(self.w, self.u, self.b, self.r, self.g, 0, self.n, self.x), 
-            //X => Mana::new(self.w, self.u, self.b, self.r, self.g, self.c, 0, self.x), 
+        match color {
+            W => Mana::new(0, self.u, self.b, self.r, self.g, self.c, self.n, self.x),
+            U => Mana::new(self.w, 0, self.b, self.r, self.g, self.c, self.n, self.x),
+            B => Mana::new(self.w, self.u, 0, self.r, self.g, self.c, self.n, self.x),
+            R => Mana::new(self.w, self.u, self.b, 0, self.g, self.c, self.n, self.x),
+            G => Mana::new(self.w, self.u, self.b, self.r, 0, self.c, self.n, self.x),
+            C => Mana::new(self.w, self.u, self.b, self.r, self.g, 0, self.n, self.x),
+            //X => Mana::new(self.w, self.u, self.b, self.r, self.g, self.c, 0, self.x),
         }
     }
 
     pub fn as_vec(&self) -> Vec<u32> {
         vec![self.w, self.u, self.b, self.r, self.g, self.c, self.n, self.x]
     }
-    
+
     pub fn cmc(&self) -> u32 {
         self.w + self.u + self.b + self.r + self.g + self.c + self.n
     }
 
-    pub fn show(&self) -> String { 
+    pub fn show(&self) -> String {
         format!("({:2},{:2},{:2},{:2},{:2},{:2},{:2},{:2})",
                 self.w, self.u, self.b, self.r, self.g, self.c, self.n, self.x)
     }
-    
+
     pub fn pretty(&self) -> String {
         let ns = if self.n > 0 { self.n.to_string() } else { "".to_string() };
         format!("{}{}{}{}{}{}{}{}",
                 repeat('X').take(self.x as usize).collect::<String>(),
-                ns, 
+                ns,
                 repeat('W').take(self.w as usize).collect::<String>(),
                 repeat('U').take(self.u as usize).collect::<String>(),
                 repeat('B').take(self.b as usize).collect::<String>(),
@@ -77,10 +77,10 @@ impl Mana {
             if v > 0 {
 			    format!("{}{:2}{}", if spc { " " } else { "" }, v, l)
 		    }
-		    else { 
+		    else {
                 (if spc {"    "} else {"   "}).to_string()
             }
-	    }        
+	    }
 
         let w = f(self.w, 'W', false);
         let u = f(self.u, 'U', true);
@@ -96,29 +96,29 @@ impl Mana {
     pub fn parse(s: &str) -> Mana {
         use regex::Regex;
 
-        let re = Regex::new(r"\{([0-9]+|X|W|U|B|R|G|C)\}").unwrap(); // Want to panic!() here if regex is wrong
-        
+        let re = Regex::new(r"\{([0-9]+|X|W|U|B|R|G|C)\}").unwrap();
+        // Want to panic!() here if regex is wrong
+
         let mut mana = Mana::zero();
         for cap in re.captures_iter(s) {
-            let m = match cap.at(1) {
-                Some("W") => Mana::w(1),
-                Some("U") => Mana::u(1),
-                Some("B") => Mana::b(1),
-                Some("R") => Mana::r(1),
-                Some("G") => Mana::g(1),
-                Some("C") => Mana::c(1),
-                Some("X") => Mana::x(1),
-                Some(n) => {
+            let m = match &cap[1] {
+                "W" => Mana::w(1),
+                "U" => Mana::u(1),
+                "B" => Mana::b(1),
+                "R" => Mana::r(1),
+                "G" => Mana::g(1),
+                "C" => Mana::c(1),
+                "X" => Mana::x(1),
+                n => {
                     let v = n.parse::<u32>();
                     Mana::n(v.unwrap_or(0))
-                },
-                None => Mana::n(0)
+                }
             };
             mana = mana.add(m)
         }
 
         //println!("{:20} => {:20} :: {:20}", s, mana.show(), mana.pretty());
-        
+
         mana
     }
 }
