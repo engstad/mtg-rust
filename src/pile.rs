@@ -1,7 +1,7 @@
 use std::ops::{Index, Add, Sub};
 use std::fmt;
-use prob;
-use perm::MultiSubSetIterator;
+use crate::prob;
+use crate::perm::MultiSubSetIterator;
 
 pub trait Zero { fn zero() -> Self; }
 
@@ -23,19 +23,19 @@ pub trait Pile : Add + Sub + Sized {
     type Key : Copy;
 
     fn all<'a>(&'a self) -> Vec<Self::Key>;
-    fn get<'a>(&'a self, Self::Key) -> usize;
+    fn get<'a>(&'a self, key: Self::Key) -> usize;
     fn num_keys(&self) -> usize;
 
     fn prob_draw(&self, draw: &Self) -> f64 {
         let (n, k, c) =
             self.all().iter()
             .map(|k| (self.get(*k), draw.get(*k)))
-            .fold((0, 0, 1.0), 
-                  |(n, k, c), (n_i, k_i)| 
+            .fold((0, 0, 1.0),
+                  |(n, k, c), (n_i, k_i)|
                   (n + n_i, k + k_i, c * prob::c(n_i as u64, k_i as u64)));
 
         c / prob::c(n as u64, k as u64)
-    }    
+    }
 
     fn total(&self) -> usize {
         sum(self.all()
@@ -91,7 +91,7 @@ impl Pile for GenPile {
 
     fn num_keys(&self) -> usize { self.k.num_keys }
     fn all<'a>(&'a self) -> Vec<usize> { (0 .. self.num_keys()).collect() }
-    fn get(&self, k: usize) -> usize { 
+    fn get(&self, k: usize) -> usize {
         self.e[k]
     }
 }
@@ -114,7 +114,7 @@ impl Sub for GenPile {
         assert!(self.has(&other));
         GenPile::new(self.e.iter().zip(other.e.iter()).map(|(&i0, &i1)| i0-i1).collect(),
                      self.k)
-    }        
+    }
 }
 
 impl GenPile {
@@ -150,7 +150,7 @@ impl Index<usize> for GenPile {
 
 
 impl fmt::Debug for GenPile {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {        
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "(")?;
         for (i,v) in self.e.iter().enumerate() {
             write!(fmt, "{}", v)?;
@@ -176,7 +176,7 @@ impl Iterator for GenPile {
             let len = self.e.len();
             for i in 1 .. len-1 {
                 if self.get(i) > 0 {
-                    self.e[0] = self.get(i) - 1; 
+                    self.e[0] = self.get(i) - 1;
                     self.e[i+1] += 1;
                     self.e[i] = 0;
                     return Some(res)
@@ -193,13 +193,13 @@ impl Iterator for GenPile {
 }
 
 impl LandPile for GenPile {
-    fn lands(&self) -> usize { 
+    fn lands(&self) -> usize {
         sum(self.e.iter().enumerate()
             .map(|(i, v)| if (self.k.is_land)(i) { *v } else { 0 }))
     }
 
-    fn spells(&self) -> usize { 
-        self.total() - self.lands() 
+    fn spells(&self) -> usize {
+        self.total() - self.lands()
     }
 }
 
@@ -225,9 +225,9 @@ impl ColoredPile {
     fn to_usize(w:Colored) -> usize { w as usize }
 
     fn from_usize(n: usize) -> Option<Colored> {
-        match n { 0 => Some(Colored::C), 
-                  1 => Some(Colored::N), 
-                  2 => Some(Colored::S), 
+        match n { 0 => Some(Colored::C),
+                  1 => Some(Colored::N),
+                  2 => Some(Colored::S),
                   _ => None }
     }
 }
@@ -238,7 +238,7 @@ impl Pile for ColoredPile {
     fn all(&self) -> Vec<Colored> { vec![Colored::C, Colored::N, Colored::S] }
     fn num_keys(&self) -> usize { 3 }
 
-    fn get(&self, k: Colored) -> usize { 
+    fn get(&self, k: Colored) -> usize {
         self.e[ColoredPile::to_usize(k)]
     }
 }
@@ -247,8 +247,8 @@ impl Add for ColoredPile {
     type Output = ColoredPile;
 
     fn add(self, other: ColoredPile) -> ColoredPile {
-        ColoredPile::new(self.e[0] + other.e[0], 
-                         self.e[1] + other.e[1], 
+        ColoredPile::new(self.e[0] + other.e[0],
+                         self.e[1] + other.e[1],
                          self.e[2] + other.e[2])
     }
 }
@@ -259,10 +259,10 @@ impl Sub for ColoredPile {
     fn sub(self, other: ColoredPile) -> ColoredPile {
         assert!(self.has(&other));
 
-        ColoredPile::new(self.e[0] - other.e[0], 
-                         self.e[1] - other.e[1], 
+        ColoredPile::new(self.e[0] - other.e[0],
+                         self.e[1] - other.e[1],
                          self.e[2] - other.e[2])
-    }        
+    }
 }
 
 impl LandPile for ColoredPile {
@@ -279,7 +279,7 @@ impl Iterator for ColoredPile {
             self.e[0] -= 1;
             self.e[1] += 1;
             Some(res)
-        } else if self.e[1] > 0 { 
+        } else if self.e[1] > 0 {
             self.e[0] += self.e[1] - 1;
             self.e[2] += 1;
             self.e[1] = 0;
@@ -294,15 +294,15 @@ impl Iterator for ColoredPile {
 }
 
 impl fmt::Debug for ColoredPile {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {        
-        write!(fmt, "(c:{:3}, x:{:3}, s:{:3})", 
-               self.e[0], self.e[1], self.e[2])        
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "(c:{:3}, x:{:3}, s:{:3})",
+               self.e[0], self.e[1], self.e[2])
     }
 }
 
 #[derive(Copy, Clone)]
 pub struct DualPile {
-    pub a:  usize, 
+    pub a:  usize,
     pub b:  usize, // non-colored lands
     pub ab: usize,
     pub x:  usize,
@@ -331,7 +331,7 @@ impl Pile for DualPile {
 
     fn get(&self, k: usize) -> usize { match k { 0 => self.a,
                                                1 => self.b,
-                                               2 => self.ab, 
+                                               2 => self.ab,
                                                3 => self.x,
                                                4 => self.s,
                                                _ => panic!("out of range") } }
@@ -341,8 +341,8 @@ impl Add for DualPile {
     type Output = DualPile;
 
     fn add(self, other: DualPile) -> DualPile {
-        DualPile::new(self.a + other.a, 
-                      self.b + other.b, 
+        DualPile::new(self.a + other.a,
+                      self.b + other.b,
                       self.ab + other.ab,
                       self.x + other.x,
                       self.s + other.s)
@@ -353,8 +353,8 @@ impl Sub for DualPile {
     type Output = DualPile;
 
     fn sub(self, other: DualPile) -> DualPile {
-        DualPile::new(self.a - other.a, 
-                      self.b - other.b, 
+        DualPile::new(self.a - other.a,
+                      self.b - other.b,
                       self.ab - other.ab,
                       self.x - other.x,
                       self.s - other.s)
@@ -375,7 +375,7 @@ impl Iterator for DualPile {
             self.a -= 1;
             self.b += 1;
             Some(res)
-        } else if self.b > 0 { 
+        } else if self.b > 0 {
             // a = 0, b > 0
             self.a += self.b - 1;
             self.ab += 1;
@@ -383,9 +383,9 @@ impl Iterator for DualPile {
             Some(res)
         } else if self.ab > 0 {
             // a = 0, b = 0, ab > 0
-            self.a += self.ab - 1; 
+            self.a += self.ab - 1;
             self.x += 1;
-            self.ab = 0;                
+            self.ab = 0;
             Some(res)
         } else if self.x > 0 {
             // a = 0, b = 0, ab = 0, x > 0
@@ -403,9 +403,9 @@ impl Iterator for DualPile {
 }
 
 impl fmt::Debug for DualPile {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {        
-        write!(fmt, "[a:{:3}, b:{:3}, ab:{:3}, x:{:3}, l:{:3}]", 
-               self.a, self.b, self.ab, self.x, self.s)        
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "[a:{:3}, b:{:3}, ab:{:3}, x:{:3}, l:{:3}]",
+               self.a, self.b, self.ab, self.x, self.s)
     }
 }
 

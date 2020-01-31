@@ -2,8 +2,6 @@
 
 #![allow(dead_code)]
 
-#![feature(test)]
-
 extern crate regex;
 extern crate reqwest;
 extern crate rustc_serialize;

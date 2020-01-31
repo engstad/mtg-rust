@@ -1,7 +1,7 @@
 use std::iter::repeat;
-use pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
-use table::Table;
-use table::TableElem::{LStr, RStr, I32, U32, Empty};
+use crate::pile::{GenPile, GenPileKeys, DualPile, LandPile, ColoredPile};
+use crate::table::Table;
+use crate::table::TableElem::{LStr, RStr, I32, U32, Empty};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 
@@ -25,9 +25,8 @@ fn mull_rule(hand_size: usize) -> (usize, usize) {
 }
 
 mod single {
-    use pile::{Pile, LandPile, ColoredPile};
-    use prob;
-    use interval::closed;
+    use crate::pile::{Pile, LandPile, ColoredPile};
+    use crate::prob;
 
     fn draw<G>(hand: ColoredPile, draws: usize, deck: ColoredPile,
             goal: G) -> f64
@@ -89,7 +88,7 @@ mod single {
         let deck1 = ColoredPile::new(lands, 0, deck-lands);
         let r1 = turn0(deck1, draws, |g| goal(g));
 
-        for k in closed(0, lands).iter() {
+        for k in 0..=lands {
             let deck0 = ColoredPile::new(k, lands-k, deck-lands);
             let r0 = turn0(deck0, draws, |g| goal(g));
             if r0 >= perc * r1 {
@@ -111,9 +110,8 @@ mod single {
 // ================================================================================
 
 pub mod dual {
-    use pile::{Pile, LandPile, DualPile};
-    use prob;
-    use interval::closed;
+    use crate::pile::{Pile, LandPile, DualPile};
+    use crate::prob;
 
     fn draw<G>(hand: DualPile, draws: usize, deck: DualPile, goal: G) -> f64
         where G : Fn(DualPile)->bool
@@ -173,7 +171,7 @@ pub mod dual {
             return -1
         }
 
-        for ab in closed(0, lands).iter() {
+        for ab in 0..=lands {
             let mono = lands - ab - uncolored;
             let a = ((mono as f64) * a_rate + 0.5).round() as usize;
             let b = mono - a;
@@ -193,8 +191,8 @@ pub mod dual {
 // ================================================================================
 
 mod gen {
-    use pile::{Pile, LandPile, GenPile};
-    use prob;
+    use crate::pile::{Pile, LandPile, GenPile};
+    use crate::prob;
 
     fn draw<G>(hand: GenPile, draws: usize, deck: GenPile, goal: G) -> f64
         where G : Fn(GenPile)->bool
@@ -275,26 +273,24 @@ fn pm2(a:usize, b:usize, c:usize) -> String {
 
 // Summary of [lands] lands in a [D] card deck
 pub fn summary(lands: usize, deck: usize, uncolored_lands: usize) {
-    use interval::closed;
-
     let mut table = Table::new(5, 9);
 
     {
         table.set(0, 0, LStr(format!("{}/{}({})", lands, deck, uncolored_lands)));
         table.set(0, 1, RStr("--".to_string()));
-        for cless in closed(1u32, 7).iter() {
+        for cless in 1u32..=7 {
             table.set(0, 1 + cless as usize, U32(cless))
         }
     }
 
-    for cmana in closed(2, 5).iter() {
-        for bmana in closed(1, cmana/2).iter() {
+    for cmana in 2..=5 {
+        for bmana in 1..=cmana/2 {
             let amana = cmana - bmana;
 
             let gstr = pm2(amana, bmana, cmana - amana - bmana);
             table.set(cmana-1, 0, RStr(gstr));
 
-            for cless in closed(0, 7).iter() {
+            for cless in 0..=7 {
 
                 let arate = (amana as f64) / (amana + bmana) as f64;
                 let cmc = cmana + cless;
@@ -334,7 +330,6 @@ fn pm(colored_mana:usize, cmc:usize) -> String {
 }
 
 pub fn summary_c(lands: usize, deck: usize) {
-    use interval::closed;
 
     // Making my adjusted tables
     let mut table = Table::new(5, 9);
@@ -342,16 +337,16 @@ pub fn summary_c(lands: usize, deck: usize) {
     {
         table.set(0, 0, LStr(format!("{}/{}", lands, deck)));
         table.set(0, 1, RStr("--".to_string()));
-        for cless in closed(1, 7).iter() {
+        for cless in 1..=7 {
             table.set(0, (1 + cless) as usize, I32(cless))
         };
     }
 
-    for cmana in closed(1, 4).iter() {
+    for cmana in 1..=4 {
         let gstr = pm(cmana, cmana);
         table.set(cmana, 0, RStr(gstr));
 
-        for cless in closed(0, 7).iter() {
+        for cless in 0..=7 {
             let cmc = cmana + cless;
             let draws = cmc - 1;
             let goal = |hand: ColoredPile| {
@@ -374,24 +369,22 @@ pub fn summary_c(lands: usize, deck: usize) {
 }
 
 pub fn summary_perc(lands: usize, colored_lands: usize, deck: usize) {
-    use interval::closed;
-
     // Making my adjusted tables
     let mut table = Table::new(5, 9);
 
     {
         table.set(0, 0, LStr(format!("{}/{}", lands, deck)));
         table.set(0, 1, RStr("--".to_string()));
-        for cless in closed(1, 7).iter() {
+        for cless in 1..=7 {
             table.set(0, (1 + cless) as usize, I32(cless))
         };
     }
 
-    for cmana in closed(1, 4).iter() {
+    for cmana in 1..=4 {
         let gstr = pm(cmana, cmana);
         table.set(cmana, 0, RStr(gstr));
 
-        for cless in closed(0, 7).iter() {
+        for cless in 0..=7 {
             let cmc = cmana + cless;
             let res = single::prob_color_screwed(lands, colored_lands, deck, cmc, cmana);
             table.set(cmana, 1+cless, RStr(res))
@@ -515,15 +508,13 @@ pub fn investigate()
 
 // Making the Frank 1 colored mana table:
 pub fn frank(colored_mana: usize, cmc: usize) -> Table {
-    use interval::closed;
-
     let mut t1 = Table::new(4, 8);
 
     let ps = pm(colored_mana, cmc);
 
     t1.set(0, 0, LStr(ps));
 
-    for turn in closed(1, 7).iter() { t1.set(0, turn as usize, I32(turn)) };
+    for turn in 1..=7 { t1.set(0, turn as usize, I32(turn)) };
 
     let manas = vec!(16, 17, 18);
     let lines = manas.iter().map(|l| {
@@ -536,7 +527,7 @@ pub fn frank(colored_mana: usize, cmc: usize) -> Table {
         let sym = if e == 0 {'p'} else {'d'};
         t1.set(1+line_no, 0, LStr(format!("{} lands {}", l as usize, sym)));
 
-        for turn in closed(1, 7).iter() {
+        for turn in 1..=7 {
             let draws = turn - 1 + e;
             let goal = |hand: ColoredPile| {
                 hand.colored() >= colored_mana // colors okay

@@ -1,5 +1,5 @@
-use colors::Color;
-use colors::Color::{W,U,B,R,G,C};
+use crate::colors::Color;
+use crate::colors::Color::{W,U,B,R,G,C};
 use std::ops::{Add, Sub, Mul};
 use std::iter::repeat;
 

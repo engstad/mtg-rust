@@ -1,6 +1,6 @@
 //use collections::treemap::TreeMap;
-use mana::Mana;
-use colors::Color::{self, U,W,B,R,G,C};
+use crate::mana::Mana;
+use crate::colors::Color::{self, U,W,B,R,G,C};
 use rustc_serialize::json;
 use std::path::Path;
 
@@ -23,7 +23,7 @@ pub enum LandType
 	CheckLand,
 	ManLand,
 	StorageLand,
-	FilterLand, 
+	FilterLand,
     LifeLand
 }
 
@@ -38,7 +38,7 @@ pub struct LandCardInfo {
 }
 
 impl LandCardInfo {
-    pub fn show(&self) -> String { 
+    pub fn show(&self) -> String {
         format!("{}", self.name)
     }
 
@@ -56,7 +56,7 @@ impl LandCardInfo {
             colors.iter().fold(Mana::zero(), |acc, &color| {
 
                 // To fetch a color c, we must be able to fetch a land with the following subtypes.
-                if deck.iter().any(|&(tgt, n)| n > 0 && 
+                if deck.iter().any(|&(tgt, n)| n > 0 &&
                                    tgt.produces.iter().any(|&tgt_clr| tgt_clr == color) && // target can produce color
                                    tgt.subtypes.iter()
                                      .any(|tgt_subtype| self.produces.iter()
@@ -64,7 +64,7 @@ impl LandCardInfo {
                     acc + color.source()
                 }
                 else {
-                    acc 
+                    acc
                 }
             })
         }
@@ -73,7 +73,7 @@ impl LandCardInfo {
         }
     }
 
-    fn untapped(&self) -> bool { 
+    fn untapped(&self) -> bool {
         match self.landtype {
             LandType::AlphaLand => true,
             LandType::BasicLand => true,
@@ -93,24 +93,24 @@ impl LandCardInfo {
             LandType::ManLand => false,
             LandType::FilterLand => true,
             LandType::LifeLand => false
-	    }	
-    }    
+	    }
+    }
 }
 
 //
 //
 pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db LandCardInfo, u32)>
 {
-    lands.split('\n').filter_map(|line| { 
+    lands.split('\n').filter_map(|line| {
         let line = line.trim();
 
         if line.len() == 0 { return None }
-        
-        let caps:Vec<&str> = line.splitn(2, ' ').collect(); 
 
-        if caps.len() != 2 { 
+        let caps:Vec<&str> = line.splitn(2, ' ').collect();
+
+        if caps.len() != 2 {
             println!("warning: No space character in line: '{}' ({} parts)", line, caps.len());
-            return None 
+            return None
         }
 
         let l0 = caps[0].len();
@@ -122,9 +122,9 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
 
         let l = db.iter().find(|&nm| nm.name == caps[1] ||
                                      nm.short == caps[1]);
-        
+
         match (n, l) {
-            (Ok(n), Some(l)) => Some((l, n)), 
+            (Ok(n), Some(l)) => Some((l, n)),
             (Err(_), Some(l)) => {
                 println!("Could not parse count on '{}': {}", l.name, caps[0]);
                 None
@@ -135,7 +135,7 @@ pub fn parse_lands<'db>(lands: &str, db: &'db Vec<LandCardInfo>) -> Vec<(&'db La
             },
             _ => {
                 println!("Invalid line: {} {}", caps[0], caps[1]);
-                None 
+                None
             }
         }
     }).collect()
@@ -145,7 +145,7 @@ pub fn analyze(deck: &str) -> (u32, Vec<u32>)
 {
     use std::fs::File;
     use std::io::Read;
-    
+
     let text = include_str!("lands.json");
     let db:Vec<LandCardInfo> = json::decode(text).unwrap();
 
@@ -161,11 +161,11 @@ pub fn analyze(deck: &str) -> (u32, Vec<u32>)
     //println!("=========================\n{}================", deck);
 
     let mut ls : Vec<(&LandCardInfo, u32)> = parse_lands(&*deck, &db);
-    ls.sort_by(|&a, &b| a.0.landtype.cmp(&b.0.landtype));    
+    ls.sort_by(|&a, &b| a.0.landtype.cmp(&b.0.landtype));
 
     {
-        use table::{Table, left, right};
-        use table::TableElem::{LStr, U32};
+        use crate::table::{Table, left, right};
+        use crate::table::TableElem::{LStr, U32};
         let mut table = Table::new(1+ls.len(), 3);
 
         {
@@ -221,6 +221,6 @@ pub fn analyze(deck: &str) -> (u32, Vec<u32>)
     if lds.1.b > 0 { colors.push(lds.1.b) }
     if lds.1.r > 0 { colors.push(lds.1.r) }
     if lds.1.g > 0 { colors.push(lds.1.g) }
-    
+
     return (lds.0, colors);
 }

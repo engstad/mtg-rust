@@ -8,6 +8,7 @@ tags = []
 [lib]
 name = "libmtg"
 path = "src/lib.rs"
+edition = "2018"
 
 [dependencies]
 rustc-serialize = "*"
@@ -16,7 +17,7 @@ num = "*"
 curl = "*"
 unicode-segmentation = "*"
 unicode-width = "*"
-reqwest = "*"
+reqwest = { version = "0.10", features = ["blocking", "json"]  }
 url = "*"
 itertools = "*"
 
@@ -26,4 +27,5 @@ itertools = "*"
 
 [[bin]]
 name = "mtg"
+edition = "2018"
 path = "src/cmd/main.rs"

@@ -1,7 +1,6 @@
-use std::result::{Result};
 use rustc_serialize::{json};
-use mana::Mana;
-use colors::Color;
+use crate::mana::Mana;
+use crate::colors::Color;
 use std::io::Error;
 use url;
 use reqwest;
@@ -103,7 +102,7 @@ pub struct Card {
 pub fn fetch(set: &str) -> Result<json::Json, MtgError> {
     let loc = format!("http://mtgjson.com/json/{}.json", set);
     let url = url::Url::parse(loc.as_str())?;
-    let text = reqwest::get(url)?.text()?;
+    let text = reqwest::blocking::get(url)?.text()?;
     let json = json::Json::from_str(text.as_str())?;
     return Ok(json);
 }
@@ -196,6 +195,6 @@ pub fn fetch_set(set: &str) -> Vec<Card> {
                 })
                 .collect::<Vec<Card>>()
         },
-        Err(err) => panic!("Error: {:?}", err)
+        _ => panic!("Couldn't load")
     }
 }

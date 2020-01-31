@@ -1,4 +1,4 @@
-use mana::Mana;
+use crate::mana::Mana;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, RustcDecodable)]
 pub enum Color { W, U, B, R, G, C }
